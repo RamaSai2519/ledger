@@ -15,4 +15,6 @@ CONFIG = {
     "login_max_attempts": int(os.environ.get("LOGIN_MAX_ATTEMPTS", "5")),
     "login_lockout_minutes": int(os.environ.get("LOGIN_LOCKOUT_MINUTES", "15")),
     "debug": _get_bool("DEBUG", False),
+    "firebase_credentials_json": os.environ.get("FIREBASE_CREDENTIALS_JSON", ""),
+    "bill_due_reminder_days": int(os.environ.get("BILL_DUE_REMINDER_DAYS", "3")),
 }

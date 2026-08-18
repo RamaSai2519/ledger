@@ -61,3 +61,42 @@ def serialize_transaction(txn: dict) -> dict:
         "created_at": _iso(txn.get("created_at")),
         "updated_at": _iso(txn.get("updated_at")),
     }
+
+
+def serialize_budget(budget: dict) -> dict:
+    return {
+        "id": _str_id(budget["_id"]),
+        "household_id": _str_id(budget.get("household_id")),
+        "scope": budget.get("scope"),
+        "scope_ref_id": _str_id(budget.get("scope_ref_id")),
+        "amount": budget.get("amount"),
+        "period": budget.get("period", "monthly"),
+        "threshold_percents": budget.get("threshold_percents", [80, 100]),
+        "created_at": _iso(budget.get("created_at")),
+        "updated_at": _iso(budget.get("updated_at")),
+    }
+
+
+def serialize_budget_progress(progress: dict) -> dict:
+    return {
+        "budget_id": _str_id(progress.get("budget_id")),
+        "spent": progress.get("spent"),
+        "amount": progress.get("amount"),
+        "percent": progress.get("percent"),
+        "period_start": _iso(progress.get("period_start")),
+        "period_end": _iso(progress.get("period_end")),
+        "thresholds": progress.get("thresholds"),
+        "crossed_thresholds": progress.get("crossed_thresholds"),
+    }
+
+
+def serialize_notification(notification: dict) -> dict:
+    return {
+        "id": _str_id(notification["_id"]),
+        "household_id": _str_id(notification.get("household_id")),
+        "user_id": _str_id(notification.get("user_id")),
+        "type": notification.get("type"),
+        "payload": notification.get("payload", {}),
+        "is_read": notification.get("is_read", False),
+        "created_at": _iso(notification.get("created_at")),
+    }

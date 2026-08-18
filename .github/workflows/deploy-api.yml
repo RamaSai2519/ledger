@@ -52,6 +52,11 @@ jobs:
           TF_VAR_lambda_zip_path: ../../services/api/build/ledger-api.zip
           TF_VAR_mongo_uri: ${{ secrets.MONGO_URI }}
           TF_VAR_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
+          # Empty until the user completes the one-time Firebase console
+          # setup and adds this repo secret (LED-5) — Terraform passes
+          # through an empty string default until then, and shared/fcm.py
+          # no-ops FCM sends when it's unset.
+          TF_VAR_firebase_credentials_json: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
         run: terraform plan -out=tfplan
 
       - name: Terraform apply

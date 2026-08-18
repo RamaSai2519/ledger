@@ -4,15 +4,23 @@ from flask import request
 from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 from flask_restful import Resource
 
+from models.budget_create import main as budget_create
+from models.budget_delete import main as budget_delete
+from models.budget_list import main as budget_list
+from models.budget_progress import main as budget_progress
+from models.budget_update import main as budget_update
 from models.category_create import main as category_create
 from models.category_delete import main as category_delete
 from models.category_list import main as category_list
 from models.category_update import main as category_update
+from models.fcm_token_register import main as fcm_token_register
 from models.household_create import main as household_create
 from models.household_invite_code import main as household_invite_code
 from models.household_join import main as household_join
 from models.login import main as login
 from models.logout import main as logout
+from models.notification_list import main as notification_list
+from models.notification_read import main as notification_read
 from models.pin_set import main as pin_set
 from models.refresh import main as refresh
 from models.signup import main as signup
@@ -168,3 +176,47 @@ class TransactionTransfer(Resource):
     @jwt_required()
     def post(self):
         return transaction_transfer.process(request.get_json(force=True) or {}, get_jwt_identity())
+
+
+class FcmTokenRegister(Resource):
+    @jwt_required()
+    def post(self):
+        return fcm_token_register.process(request.get_json(force=True) or {}, get_jwt_identity())
+
+
+class Budgets(Resource):
+    @jwt_required()
+    def get(self):
+        return budget_list.process(get_jwt_identity(), request.args.to_dict())
+
+    @jwt_required()
+    def post(self):
+        return budget_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+
+
+class BudgetDetail(Resource):
+    @jwt_required()
+    def patch(self, budget_id):
+        return budget_update.process(budget_id, request.get_json(force=True) or {}, get_jwt_identity())
+
+    @jwt_required()
+    def delete(self, budget_id):
+        return budget_delete.process(budget_id, get_jwt_identity())
+
+
+class BudgetProgress(Resource):
+    @jwt_required()
+    def get(self, budget_id):
+        return budget_progress.process(budget_id, get_jwt_identity())
+
+
+class Notifications(Resource):
+    @jwt_required()
+    def get(self):
+        return notification_list.process(get_jwt_identity(), request.args.to_dict())
+
+
+class NotificationRead(Resource):
+    @jwt_required()
+    def post(self, notification_id):
+        return notification_read.process(notification_id, get_jwt_identity())

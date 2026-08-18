@@ -12,12 +12,14 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      ENV                  = var.env
-      MONGO_URI            = var.mongo_uri
-      MONGO_DB_NAME        = var.mongo_db_name
-      JWT_SECRET_KEY       = var.jwt_secret_key
-      ACCESS_TOKEN_MINUTES = tostring(var.access_token_minutes)
-      REFRESH_TOKEN_DAYS   = tostring(var.refresh_token_days)
+      ENV                       = var.env
+      MONGO_URI                 = var.mongo_uri
+      MONGO_DB_NAME             = var.mongo_db_name
+      JWT_SECRET_KEY            = var.jwt_secret_key
+      ACCESS_TOKEN_MINUTES      = tostring(var.access_token_minutes)
+      REFRESH_TOKEN_DAYS        = tostring(var.refresh_token_days)
+      FIREBASE_CREDENTIALS_JSON = var.firebase_credentials_json
+      BILL_DUE_REMINDER_DAYS    = tostring(var.bill_due_reminder_days)
     }
   }
 

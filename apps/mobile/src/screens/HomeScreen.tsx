@@ -1,10 +1,11 @@
 import React from 'react';
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
+import {useQueries, useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Wallet} from '@/api/client';
-import {transactionsApi, walletsApi} from '@/api/client';
+import type {Budget} from '@/api/client';
+import {budgetsApi, transactionsApi, walletsApi} from '@/api/client';
 import {MoneyText} from '@/components/MoneyText';
 import {usePartnerAccent} from '@/hooks/usePartnerAccent';
 import {useAuthStore} from '@/state/authStore';
@@ -37,6 +38,53 @@ function TransactionRow({txn}: {txn: import('@/api/client').Transaction}) {
         style={styles.txnAmount}
       />
     </View>
+  );
+}
+
+// Compact budget-status widget (LED-5): top 1-3 budgets by percent-used,
+// tap-through to the full Budgets screen. Fetches every budget's progress
+// in parallel via useQueries rather than one useQuery per rendered row,
+// since the widget needs all of them loaded together to rank by percent
+// before deciding which 1-3 to show.
+function BudgetStatusWidget({navigation}: {navigation: Props['navigation']}) {
+  const budgetsQuery = useQuery({queryKey: ['budgets'], queryFn: () => budgetsApi.list()});
+  const budgets = budgetsQuery.data?.budgets ?? [];
+
+  const progressQueries = useQueries({
+    queries: budgets.map((b) => ({
+      queryKey: ['budgets', b.id, 'progress'],
+      queryFn: () => budgetsApi.progress(b.id),
+      enabled: budgets.length > 0,
+    })),
+  });
+
+  if (budgetsQuery.isLoading || budgets.length === 0) return null;
+
+  const ranked = budgets
+    .map((budget, i) => ({budget, progress: progressQueries[i]?.data}))
+    .filter((entry): entry is {budget: Budget; progress: NonNullable<typeof entry.progress>} => !!entry.progress)
+    .sort((a, b) => b.progress.percent - a.progress.percent)
+    .slice(0, 3);
+
+  if (ranked.length === 0) return null;
+
+  return (
+    <Pressable style={styles.budgetWidget} onPress={() => navigation.navigate('BudgetsList')}>
+      <Text style={styles.sectionTitle}>Budgets</Text>
+      {ranked.map(({budget, progress}) => {
+        const percent = Math.min(100, Math.max(0, progress.percent));
+        const color = progress.percent >= 100 ? colors.negative : progress.percent >= (budget.threshold_percents[0] ?? 80) ? colors.accent : colors.positive;
+        return (
+          <View key={budget.id} style={styles.budgetRow}>
+            <Text style={styles.budgetLabel}>{budget.scope === 'overall' ? 'Overall' : budget.scope}</Text>
+            <View style={styles.budgetBarTrack}>
+              <View style={[styles.budgetBarFill, {width: `${percent}%`, backgroundColor: color}]} />
+            </View>
+            <Text style={[styles.budgetPercent, {color}]}>{progress.percent.toFixed(0)}%</Text>
+          </View>
+        );
+      })}
+    </Pressable>
   );
 }
 
@@ -80,7 +128,12 @@ export function HomeScreen({navigation}: Props) {
         <Pressable onPress={() => navigation.navigate('Categories')}>
           <Text style={styles.link}>Categories</Text>
         </Pressable>
+        <Pressable onPress={() => navigation.navigate('Notifications')}>
+          <Text style={styles.link}>Notifications</Text>
+        </Pressable>
       </View>
+
+      <BudgetStatusWidget navigation={navigation} />
 
       <Text style={styles.sectionTitle}>Recent transactions</Text>
       {transactionsQuery.isLoading && <Text style={styles.stateText}>Loading…</Text>}
@@ -139,4 +192,17 @@ const styles = StyleSheet.create({
   txnMerchant: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
   txnDate: {color: colors.textSecondary, fontSize: 12, marginTop: 2},
   txnAmount: {fontSize: 14},
+  budgetWidget: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  budgetRow: {flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm},
+  budgetLabel: {color: colors.textPrimary, fontSize: 13, width: 70},
+  budgetBarTrack: {flex: 1, height: 6, borderRadius: radius.pill, backgroundColor: colors.border, overflow: 'hidden'},
+  budgetBarFill: {height: '100%', borderRadius: radius.pill},
+  budgetPercent: {fontSize: 12, fontWeight: '700', width: 36, textAlign: 'right'},
 });

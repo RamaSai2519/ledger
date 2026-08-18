@@ -1,14 +1,20 @@
 from flask_restful import Api
 
 from services.resources import (
+    BudgetDetail,
+    BudgetProgress,
+    Budgets,
     CategoryDetail,
     Categories,
+    FcmTokenRegister,
     Health,
     HouseholdCreate,
     HouseholdInviteCode,
     HouseholdJoin,
     Login,
     Logout,
+    NotificationRead,
+    Notifications,
     PinSet,
     Refresh,
     Signup,
@@ -44,3 +50,12 @@ def register_routes(api: Api) -> None:
     api.add_resource(Transactions, "/transactions")
     api.add_resource(TransactionTransfer, "/transactions/transfer")
     api.add_resource(TransactionDetail, "/transactions/<string:transaction_id>")
+
+    api.add_resource(FcmTokenRegister, "/users/fcm-token")
+
+    api.add_resource(Budgets, "/budgets")
+    api.add_resource(BudgetDetail, "/budgets/<string:budget_id>")
+    api.add_resource(BudgetProgress, "/budgets/<string:budget_id>/progress")
+
+    api.add_resource(Notifications, "/notifications")
+    api.add_resource(NotificationRead, "/notifications/<string:notification_id>/read")

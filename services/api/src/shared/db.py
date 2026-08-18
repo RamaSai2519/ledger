@@ -36,6 +36,14 @@ def get_revoked_tokens_collection():
     return get_db()["revoked_tokens"]
 
 
+def get_budgets_collection():
+    return get_db()["budgets"]
+
+
+def get_notifications_collection():
+    return get_db()["notifications"]
+
+
 def get_client():
     # Ensures the client is initialized, then returns it directly for
     # session/transaction use (start_session lives on the client, not the db).

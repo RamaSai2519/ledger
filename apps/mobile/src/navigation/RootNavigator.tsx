@@ -15,6 +15,9 @@ import {WalletFormScreen} from '@/screens/WalletFormScreen';
 import {WalletReconcileScreen} from '@/screens/WalletReconcileScreen';
 import {TransactionFormScreen} from '@/screens/TransactionFormScreen';
 import {CategoriesScreen} from '@/screens/CategoriesScreen';
+import {BudgetsListScreen} from '@/screens/BudgetsListScreen';
+import {BudgetFormScreen} from '@/screens/BudgetFormScreen';
+import {NotificationsScreen} from '@/screens/NotificationsScreen';
 import {colors} from '@/theme/tokens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,6 +52,13 @@ export function RootNavigator() {
           options={{headerShown: true, title: 'Transaction'}}
         />
         <Stack.Screen name="Categories" component={CategoriesScreen} options={{headerShown: true, title: 'Categories'}} />
+        <Stack.Screen name="BudgetsList" component={BudgetsListScreen} options={{headerShown: true, title: 'Budgets'}} />
+        <Stack.Screen name="BudgetForm" component={BudgetFormScreen} options={{headerShown: true, title: 'Budget'}} />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{headerShown: true, title: 'Notifications'}}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

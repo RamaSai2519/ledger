@@ -12,4 +12,7 @@ export type RootStackParamList = {
   WalletReconcile: {walletId: string};
   TransactionForm: {transactionId?: string; walletId?: string} | undefined;
   Categories: undefined;
+  BudgetsList: undefined;
+  BudgetForm: {budgetId?: string} | undefined;
+  Notifications: undefined;
 };

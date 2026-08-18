@@ -265,4 +265,79 @@ export const transactionsApi = {
     request<Transaction>('/transactions/transfer', {method: 'POST', body: input}),
 };
 
+// ---- Budgets & Notifications (LED-5) ----
+
+export type BudgetScope = 'category' | 'wallet' | 'overall';
+
+export type Budget = {
+  id: string;
+  household_id: string;
+  scope: BudgetScope;
+  scope_ref_id: string | null;
+  amount: number;
+  period: 'monthly';
+  threshold_percents: number[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type BudgetCreateInput = {
+  scope: BudgetScope;
+  amount: number;
+  scope_ref_id?: string;
+  threshold_percents?: number[];
+};
+
+export type BudgetUpdateInput = Partial<{amount: number; threshold_percents: number[]}>;
+
+export type BudgetProgress = {
+  budget_id: string;
+  spent: number;
+  amount: number;
+  percent: number;
+  period_start: string;
+  period_end: string;
+  thresholds: number[];
+  crossed_thresholds: number[];
+};
+
+export const budgetsApi = {
+  list: (params?: {scope?: BudgetScope}) =>
+    request<{budgets: Budget[]}>(withQuery('/budgets', params as Record<string, string>)),
+  create: (input: BudgetCreateInput) => request<Budget>('/budgets', {method: 'POST', body: input}),
+  update: (id: string, input: BudgetUpdateInput) => request<Budget>(`/budgets/${id}`, {method: 'PATCH', body: input}),
+  remove: (id: string) => request<{id: string; deleted: boolean}>(`/budgets/${id}`, {method: 'DELETE'}),
+  progress: (id: string) => request<BudgetProgress>(`/budgets/${id}/progress`),
+};
+
+export type NotificationType = 'budget_threshold' | 'budget_exceeded' | 'sms_suggestion' | 'digest' | 'bill_due';
+
+export type Notification = {
+  id: string;
+  household_id: string;
+  user_id: string;
+  type: NotificationType;
+  payload: Record<string, unknown>;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type NotificationListResult = {
+  notifications: Notification[];
+  page: number;
+  page_size: number;
+  total: number;
+  has_more: boolean;
+};
+
+export const notificationsApi = {
+  list: (params?: {page?: number; page_size?: number}) =>
+    request<NotificationListResult>(withQuery('/notifications', params as Record<string, string>)),
+  markRead: (id: string) => request<Notification>(`/notifications/${id}/read`, {method: 'POST'}),
+};
+
+export const fcmApi = {
+  registerToken: (token: string) => request<{registered: boolean}>('/users/fcm-token', {method: 'POST', body: {token}}),
+};
+
 export {ApiError};

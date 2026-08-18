@@ -12,6 +12,7 @@ aws-wsgi = "0.2.7"
 pymongo = "4.9.2"
 bcrypt = "4.2.0"
 python-dotenv = "1.0.1"
+firebase-admin = "6.5.0"
 
 [dev-packages]
 pytest = "*"
