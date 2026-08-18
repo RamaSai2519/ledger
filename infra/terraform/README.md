@@ -170,6 +170,17 @@ aws iam put-role-policy \
 Put the resulting role ARN in the GitHub Actions repo secret
 `AWS_DEPLOY_ROLE_ARN` (see workflow).
 
+**Extended (2026-08-18, LED-5):** `scheduler.tf` introduced a new resource
+type (EventBridge Scheduler + its own execution role `ledger-scheduler`),
+so the deploy role's policy was extended incrementally, per this doc's own
+rule, rather than widened — a second inline policy,
+`ledger-api-deploy-scheduler-policy`, scoped to `iam:*Role*`/`PassRole` on
+`arn:aws:iam::135808951082:role/ledger-scheduler` and
+`scheduler:*Schedule*` on `arn:aws:scheduler:ap-south-1:135808951082:schedule/default/ledger-*`
+only. The existing `Lambda` statement already covered `AddPermission`/
+`GetPolicy` for the new `aws_lambda_permission` resource, so it needed no
+change.
+
 ### 3. GitHub Actions repository secrets
 
 | Secret | Notes |
