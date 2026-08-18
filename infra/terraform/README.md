@@ -79,8 +79,11 @@ cat > /tmp/ledger-trust-policy.json <<'EOF'
     "Principal": { "Federated": "arn:aws:iam::135808951082:oidc-provider/token.actions.githubusercontent.com" },
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
-      "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-      "StringLike": { "token.actions.githubusercontent.com:sub": "repo:RamaSai2519/ledger:ref:refs/heads/master" }
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+        "token.actions.githubusercontent.com:repository": "RamaSai2519/ledger"
+      },
+      "StringLike": { "token.actions.githubusercontent.com:sub": "repo:RamaSai2519*/ledger*:ref:refs/heads/master" }
     }
   }]
 }
@@ -89,6 +92,21 @@ EOF
 aws iam create-role \
   --role-name ledger-api-deploy \
   --assume-role-policy-document file:///tmp/ledger-trust-policy.json
+```
+
+**Gotcha hit live (2026-08-18):** GitHub's actual OIDC `sub` claim is
+`repo:<owner>@<owner-id>/<repo>@<repo-id>:ref:refs/heads/<branch>` — it
+includes numeric owner/repo IDs the exact-match `repo:owner/repo:ref:...`
+pattern from AWS's own docs doesn't account for. Confirmed via CloudTrail
+(`aws cloudtrail lookup-events --lookup-attributes
+AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity`) after the
+first deploy failed with `Not authorized to perform
+sts:AssumeRoleWithWebIdentity` despite an apparently-correct trust policy —
+the `StringLike` pattern above with wildcards after the owner/repo names,
+plus a `StringEquals` on the `repository` claim for tighter scoping, is
+what actually works.
+
+```sh
 
 cat > /tmp/ledger-deploy-policy.json <<'EOF'
 {
