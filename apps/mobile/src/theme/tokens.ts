@@ -31,3 +31,16 @@ export const radius = {
   lg: 20,
   pill: 999,
 } as const;
+
+// Typography roles per DESIGN_BRIEF.md §"Typography" — display (hero
+// numbers/screen titles), body (everything else), monetary (all amounts in
+// lists/tables, tabular figures so columns align). No custom font files are
+// bundled yet, so display/body use system font weight+size differentiation;
+// monetary uses the real `tabular-nums` font-variant feature (supported by
+// RN's Text on both platforms) rather than a bespoke face — this can be
+// swapped for the design's actual tabular face once it's added as an asset.
+export const typography = {
+  display: {fontSize: 34, fontWeight: '700', letterSpacing: -0.5} as const,
+  body: {fontSize: 15, fontWeight: '400'} as const,
+  monetary: {fontVariant: ['tabular-nums'], fontWeight: '600'} as const,
+} as const;

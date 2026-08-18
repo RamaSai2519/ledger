@@ -9,6 +9,12 @@ import {HouseholdChoiceScreen} from '@/screens/HouseholdChoiceScreen';
 import {HouseholdCreateScreen} from '@/screens/HouseholdCreateScreen';
 import {HouseholdJoinScreen} from '@/screens/HouseholdJoinScreen';
 import {HomeScreen} from '@/screens/HomeScreen';
+import {WalletsListScreen} from '@/screens/WalletsListScreen';
+import {WalletDetailScreen} from '@/screens/WalletDetailScreen';
+import {WalletFormScreen} from '@/screens/WalletFormScreen';
+import {WalletReconcileScreen} from '@/screens/WalletReconcileScreen';
+import {TransactionFormScreen} from '@/screens/TransactionFormScreen';
+import {CategoriesScreen} from '@/screens/CategoriesScreen';
 import {colors} from '@/theme/tokens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -29,6 +35,20 @@ export function RootNavigator() {
         <Stack.Screen name="HouseholdCreate" component={HouseholdCreateScreen} />
         <Stack.Screen name="HouseholdJoin" component={HouseholdJoinScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="WalletsList" component={WalletsListScreen} options={{headerShown: true, title: 'Wallets'}} />
+        <Stack.Screen name="WalletDetail" component={WalletDetailScreen} options={{headerShown: true, title: 'Wallet'}} />
+        <Stack.Screen name="WalletForm" component={WalletFormScreen} options={{headerShown: true, title: 'Wallet'}} />
+        <Stack.Screen
+          name="WalletReconcile"
+          component={WalletReconcileScreen}
+          options={{headerShown: true, title: 'Reconcile'}}
+        />
+        <Stack.Screen
+          name="TransactionForm"
+          component={TransactionFormScreen}
+          options={{headerShown: true, title: 'Transaction'}}
+        />
+        <Stack.Screen name="Categories" component={CategoriesScreen} options={{headerShown: true, title: 'Categories'}} />
       </Stack.Navigator>
     </NavigationContainer>
   );

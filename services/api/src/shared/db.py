@@ -24,5 +24,20 @@ def get_categories_collection():
     return get_db()["categories"]
 
 
+def get_wallets_collection():
+    return get_db()["wallets"]
+
+
+def get_transactions_collection():
+    return get_db()["transactions"]
+
+
 def get_revoked_tokens_collection():
     return get_db()["revoked_tokens"]
+
+
+def get_client():
+    # Ensures the client is initialized, then returns it directly for
+    # session/transaction use (start_session lives on the client, not the db).
+    get_db()
+    return _client

@@ -6,4 +6,10 @@ export type RootStackParamList = {
   HouseholdCreate: undefined;
   HouseholdJoin: undefined;
   Home: undefined;
+  WalletsList: undefined;
+  WalletDetail: {walletId: string};
+  WalletForm: {walletId?: string} | undefined;
+  WalletReconcile: {walletId: string};
+  TransactionForm: {transactionId?: string; walletId?: string} | undefined;
+  Categories: undefined;
 };
