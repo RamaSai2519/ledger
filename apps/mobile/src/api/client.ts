@@ -1,9 +1,8 @@
 import {useAuthStore} from '@/state/authStore';
 
-// Set to the deployed API Gateway URL once services/api is live
-// (`terraform output api_url` in infra/terraform); empty string fails
-// loudly rather than silently pointing at localhost in a release build.
-const API_BASE_URL = '';
+// `terraform output api_url` in infra/terraform — update if the stack is
+// ever torn down and recreated (API Gateway assigns a new id).
+const API_BASE_URL = 'https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com';
 
 class ApiError extends Error {
   status: number;

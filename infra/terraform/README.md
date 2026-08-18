@@ -188,3 +188,13 @@ terraform init -backend-config=backend.hcl
 terraform plan   # review before apply, always
 terraform apply
 ```
+
+## Status
+
+**Deployed and live (2026-08-18).** Bootstrap (state bucket, lock table,
+OIDC deploy role) done, all four secrets set, `.github/workflows/deploy-api.yml`
+has applied cleanly on push and via manual dispatch. `terraform output
+api_url` → `https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com/` —
+curl-verified live, including a full signup → login → household create →
+join → invite-code flow against a real MongoDB Atlas cluster, not just
+`/actions/health`.

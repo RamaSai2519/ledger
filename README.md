@@ -9,10 +9,12 @@ agent) working in this repo.
 
 ## Status
 
-Phase 0 (scaffold) and Phase 1 (auth & household) are built and tested.
-Phases 2-7 (core ledger, budgets, insights, SMS pipeline, recurring
-transactions, polish) are tracked as Jira backlog, not yet built — see
-`IMPLEMENTATION_PLAN.md` §15.
+Phase 0 (scaffold) and Phase 1 (auth & household) are built, tested, and
+**deployed live**: https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com
+(Lambda `ledger-api` + HTTP API Gateway, `ap-south-1`, backed by a real
+MongoDB Atlas cluster). Phases 2-7 (core ledger, budgets, insights, SMS
+pipeline, recurring transactions, polish) are tracked as Jira backlog, not
+yet built — see `IMPLEMENTATION_PLAN.md` §15.
 
 ## Layout
 

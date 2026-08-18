@@ -5,9 +5,11 @@ via Terraform + GitHub Actions. See
 [`docs/decisions/0002-flask-rest-api.md`](../../docs/decisions/0002-flask-rest-api.md)
 and [`docs/decisions/0003-terraform-github-actions-zip-lambda.md`](../../docs/decisions/0003-terraform-github-actions-zip-lambda.md).
 
-**Status:** Phase 1 (Auth & Household) implemented and tested locally
-(mongomock-backed pytest suite, 26/26 passing). Not yet deployed — see
-`infra/terraform/README.md`'s bootstrap section for what's needed first.
+**Status:** Phase 1 (Auth & Household) implemented, tested locally
+(mongomock-backed pytest suite, 26/26 passing), and **deployed live** at
+https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com against a real
+MongoDB Atlas cluster — signup/login/household-create/join/invite-code
+curl-verified end to end against the real stack, not just locally.
 
 ## Layout
 
