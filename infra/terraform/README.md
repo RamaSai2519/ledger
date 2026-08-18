@@ -9,7 +9,7 @@ isolated from journeymen's — both projects happen to deploy into the same
 AWS account (`135808951082`, `ap-south-1`) under the same IAM user, so
 name/state isolation is what keeps them from colliding.
 
-Deployed by `.github/workflows/deploy-api.yml` on every push to `main` that
+Deployed by `.github/workflows/deploy-api.yml` on every push to `master` that
 touches `services/api/**` or `infra/terraform/**`. Nothing here should be
 `terraform apply`'d by hand for routine deploys — only for the one-time
 bootstrap below, or local debugging.
@@ -80,7 +80,7 @@ cat > /tmp/ledger-trust-policy.json <<'EOF'
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
       "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-      "StringLike": { "token.actions.githubusercontent.com:sub": "repo:<github-org>/ledger:ref:refs/heads/main" }
+      "StringLike": { "token.actions.githubusercontent.com:sub": "repo:RamaSai2519/ledger:ref:refs/heads/master" }
     }
   }]
 }

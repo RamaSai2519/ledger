@@ -21,7 +21,7 @@ and ECR management overhead with no benefit for a Flask app this size).
   required because `aws-wsgi` only understands the v1.0 REST-API-style
   event shape, not HttpApi's v2.0 default).
 - `.github/workflows/deploy-api.yml` builds the zip and applies Terraform on
-  every push to `main` touching `services/api/**`/`infra/terraform/**`,
+  every push to `master` touching `services/api/**`/`infra/terraform/**`,
   authenticating via GitHub OIDC role assumption — no long-lived AWS keys
   in CI.
 - State backend (S3 + DynamoDB lock table) and the OIDC deploy role are
