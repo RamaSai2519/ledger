@@ -17,6 +17,10 @@ from models.fcm_token_register import main as fcm_token_register
 from models.household_create import main as household_create
 from models.household_invite_code import main as household_invite_code
 from models.household_join import main as household_join
+from models.insight_category_breakdown import main as insight_category_breakdown
+from models.insight_income_vs_expense import main as insight_income_vs_expense
+from models.insight_net_worth_history import main as insight_net_worth_history
+from models.insight_trends import main as insight_trends
 from models.login import main as login
 from models.logout import main as logout
 from models.notification_list import main as notification_list
@@ -208,6 +212,30 @@ class BudgetProgress(Resource):
     @jwt_required()
     def get(self, budget_id):
         return budget_progress.process(budget_id, get_jwt_identity())
+
+
+class InsightTrends(Resource):
+    @jwt_required()
+    def get(self):
+        return insight_trends.process(get_jwt_identity(), request.args.to_dict())
+
+
+class InsightIncomeVsExpense(Resource):
+    @jwt_required()
+    def get(self):
+        return insight_income_vs_expense.process(get_jwt_identity(), request.args.to_dict())
+
+
+class InsightCategoryBreakdown(Resource):
+    @jwt_required()
+    def get(self):
+        return insight_category_breakdown.process(get_jwt_identity(), request.args.to_dict())
+
+
+class InsightNetWorthHistory(Resource):
+    @jwt_required()
+    def get(self):
+        return insight_net_worth_history.process(get_jwt_identity(), request.args.to_dict())
 
 
 class Notifications(Resource):

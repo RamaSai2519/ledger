@@ -44,6 +44,10 @@ def get_notifications_collection():
     return get_db()["notifications"]
 
 
+def get_net_worth_snapshots_collection():
+    return get_db()["net_worth_snapshots"]
+
+
 def get_client():
     # Ensures the client is initialized, then returns it directly for
     # session/transaction use (start_session lives on the client, not the db).

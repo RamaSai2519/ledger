@@ -336,6 +336,57 @@ export const notificationsApi = {
   markRead: (id: string) => request<Notification>(`/notifications/${id}/read`, {method: 'POST'}),
 };
 
+// ---- Insights (LED-6) ----
+
+export type InsightPeriod = 'daily' | 'monthly' | 'yearly';
+
+export type TrendPoint = {bucket: string; expense: number; income: number};
+export type TrendsResult = {period: InsightPeriod; from: string; to: string; points: TrendPoint[]};
+
+export type IncomeVsExpensePoint = {bucket: string; income: number; expense: number; net: number};
+export type IncomeVsExpenseResult = {
+  period: InsightPeriod;
+  from: string;
+  to: string;
+  points: IncomeVsExpensePoint[];
+};
+
+export type CategoryBreakdownItem = {
+  category_id: string;
+  category_name: string;
+  category_color: string | null;
+  category_icon: string | null;
+  amount: number;
+};
+export type CategoryBreakdownResult = {
+  period: InsightPeriod;
+  from: string;
+  to: string;
+  items: CategoryBreakdownItem[];
+};
+
+export type NetWorthSnapshot = {
+  date: string | null;
+  total_assets: number;
+  total_liabilities: number;
+  net_worth: number;
+  per_wallet_breakdown: Record<string, number>;
+};
+export type NetWorthHistoryResult = {from: string; to: string; snapshots: NetWorthSnapshot[]};
+
+export type InsightRangeParams = {period?: InsightPeriod; from?: string; to?: string};
+
+export const insightsApi = {
+  trends: (params?: InsightRangeParams) =>
+    request<TrendsResult>(withQuery('/insights/trends', params as Record<string, string>)),
+  incomeVsExpense: (params?: InsightRangeParams) =>
+    request<IncomeVsExpenseResult>(withQuery('/insights/income-vs-expense', params as Record<string, string>)),
+  categoryBreakdown: (params?: InsightRangeParams) =>
+    request<CategoryBreakdownResult>(withQuery('/insights/category-breakdown', params as Record<string, string>)),
+  netWorthHistory: (params?: {from?: string; to?: string}) =>
+    request<NetWorthHistoryResult>(withQuery('/insights/net-worth-history', params)),
+};
+
 export const fcmApi = {
   registerToken: (token: string) => request<{registered: boolean}>('/users/fcm-token', {method: 'POST', body: {token}}),
 };

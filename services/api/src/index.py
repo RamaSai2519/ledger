@@ -10,6 +10,7 @@ from flask_restful import Api
 from jobs.bill_due_reminders import run_bill_due_reminders
 from jobs.budget_threshold_check import run_budget_threshold_check
 from jobs.digest_notifications import run_daily_digest
+from jobs.net_worth_snapshot import run_net_worth_snapshot
 from shared.after_request import register_error_handlers
 from shared.configs import CONFIG
 from shared.db import get_revoked_tokens_collection
@@ -48,6 +49,7 @@ SCHEDULED_JOBS = {
     "budget_threshold_check": run_budget_threshold_check,
     "digest_notifications": run_daily_digest,
     "bill_due_reminders": run_bill_due_reminders,
+    "net_worth_snapshot": run_net_worth_snapshot,
 }
 
 

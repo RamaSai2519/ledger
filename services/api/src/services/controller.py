@@ -11,6 +11,10 @@ from services.resources import (
     HouseholdCreate,
     HouseholdInviteCode,
     HouseholdJoin,
+    InsightCategoryBreakdown,
+    InsightIncomeVsExpense,
+    InsightNetWorthHistory,
+    InsightTrends,
     Login,
     Logout,
     NotificationRead,
@@ -56,6 +60,11 @@ def register_routes(api: Api) -> None:
     api.add_resource(Budgets, "/budgets")
     api.add_resource(BudgetDetail, "/budgets/<string:budget_id>")
     api.add_resource(BudgetProgress, "/budgets/<string:budget_id>/progress")
+
+    api.add_resource(InsightTrends, "/insights/trends")
+    api.add_resource(InsightIncomeVsExpense, "/insights/income-vs-expense")
+    api.add_resource(InsightCategoryBreakdown, "/insights/category-breakdown")
+    api.add_resource(InsightNetWorthHistory, "/insights/net-worth-history")
 
     api.add_resource(Notifications, "/notifications")
     api.add_resource(NotificationRead, "/notifications/<string:notification_id>/read")

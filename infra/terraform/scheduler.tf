@@ -98,3 +98,26 @@ resource "aws_scheduler_schedule" "bill_due_reminders" {
     input    = jsonencode({ job = "bill_due_reminders" })
   }
 }
+
+# Net worth snapshot (LED-6) — once a day, after other nightly jobs so wallet
+# balances have settled for any late-arriving reconciliations that same day.
+# Reuses the same ledger-scheduler role / Lambda target as the other three
+# schedules above, so no new IAM permissions are needed beyond what already
+# covers scheduler:CreateSchedule/UpdateSchedule/DeleteSchedule/GetSchedule +
+# iam:PassRole for aws_iam_role.ledger_scheduler (see ADR 0005) — flagging
+# this assumption so it can be double-checked before apply.
+resource "aws_scheduler_schedule" "net_worth_snapshot" {
+  name                         = "ledger-net-worth-snapshot"
+  schedule_expression          = "cron(45 3 * * ? *)" # 03:45 UTC = 09:15 IST
+  schedule_expression_timezone = "UTC"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.api.arn
+    role_arn = aws_iam_role.ledger_scheduler.arn
+    input    = jsonencode({ job = "net_worth_snapshot" })
+  }
+}

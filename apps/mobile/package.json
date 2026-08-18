@@ -28,6 +28,7 @@
     "@react-native/typescript-config": "0.75.4",
     "@types/jest": "^30.0.0",
     "@types/react": "^18.3.0",
+    "babel-plugin-module-resolver": "^5.0.3",
     "typescript": "^5.5.4"
   },
   "engines": {

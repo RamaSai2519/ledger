@@ -128,6 +128,9 @@ export function HomeScreen({navigation}: Props) {
         <Pressable onPress={() => navigation.navigate('Categories')}>
           <Text style={styles.link}>Categories</Text>
         </Pressable>
+        <Pressable onPress={() => navigation.navigate('Insights')}>
+          <Text style={styles.link}>Insights</Text>
+        </Pressable>
         <Pressable onPress={() => navigation.navigate('Notifications')}>
           <Text style={styles.link}>Notifications</Text>
         </Pressable>

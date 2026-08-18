@@ -17,6 +17,7 @@ import {TransactionFormScreen} from '@/screens/TransactionFormScreen';
 import {CategoriesScreen} from '@/screens/CategoriesScreen';
 import {BudgetsListScreen} from '@/screens/BudgetsListScreen';
 import {BudgetFormScreen} from '@/screens/BudgetFormScreen';
+import {InsightsScreen} from '@/screens/InsightsScreen';
 import {NotificationsScreen} from '@/screens/NotificationsScreen';
 import {colors} from '@/theme/tokens';
 
@@ -54,6 +55,7 @@ export function RootNavigator() {
         <Stack.Screen name="Categories" component={CategoriesScreen} options={{headerShown: true, title: 'Categories'}} />
         <Stack.Screen name="BudgetsList" component={BudgetsListScreen} options={{headerShown: true, title: 'Budgets'}} />
         <Stack.Screen name="BudgetForm" component={BudgetFormScreen} options={{headerShown: true, title: 'Budget'}} />
+        <Stack.Screen name="Insights" component={InsightsScreen} options={{headerShown: true, title: 'Insights'}} />
         <Stack.Screen
           name="Notifications"
           component={NotificationsScreen}
