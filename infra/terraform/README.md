@@ -181,6 +181,14 @@ only. The existing `Lambda` statement already covered `AddPermission`/
 `GetPolicy` for the new `aws_lambda_permission` resource, so it needed no
 change.
 
+**Gotcha hit live (2026-08-18):** the first `ledger-api-deploy-scheduler-policy`
+version omitted `iam:ListAttachedRolePolicies` on the `ledger-scheduler`
+role — the AWS provider reads that during `terraform plan` for any IAM role
+resource (to detect drift from attached managed policies), not just at
+create time, so the plan step itself failed with `AccessDenied` even though
+nothing tried to attach a managed policy. Added it alongside the inline-policy
+actions already in that statement.
+
 ### 3. GitHub Actions repository secrets
 
 | Secret | Notes |
