@@ -48,6 +48,18 @@ def get_net_worth_snapshots_collection():
     return get_db()["net_worth_snapshots"]
 
 
+def get_sms_inbox_collection():
+    return get_db()["sms_inbox"]
+
+
+def get_sms_parser_rules_collection():
+    return get_db()["sms_parser_rules"]
+
+
+def get_merchant_category_map_collection():
+    return get_db()["merchant_category_map"]
+
+
 def get_client():
     # Ensures the client is initialized, then returns it directly for
     # session/transaction use (start_session lives on the client, not the db).

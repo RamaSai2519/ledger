@@ -90,6 +90,45 @@ def serialize_budget_progress(progress: dict) -> dict:
     }
 
 
+def serialize_sms_inbox(sms: dict) -> dict:
+    return {
+        "id": _str_id(sms["_id"]),
+        "household_id": _str_id(sms.get("household_id")),
+        "user_id": _str_id(sms.get("user_id")),
+        "sender_id": sms.get("sender_id"),
+        "received_at": _iso(sms.get("received_at")),
+        "parse_status": sms.get("parse_status"),
+        "parsed_amount": sms.get("parsed_amount"),
+        "parsed_direction": sms.get("parsed_direction"),
+        "parsed_last4": sms.get("parsed_last4"),
+        "parsed_merchant": sms.get("parsed_merchant"),
+        "parsed_ref": sms.get("parsed_ref"),
+        "suggested_wallet_id": _str_id(sms.get("suggested_wallet_id")),
+        "suggested_category_id": _str_id(sms.get("suggested_category_id")),
+        "confidence_score": sms.get("confidence_score"),
+        "status": sms.get("status"),
+        "resolved_transaction_id": _str_id(sms.get("resolved_transaction_id")),
+        # raw_text is deliberately omitted (plan.md §2.3/§14 data minimization
+        # — never round-trip raw SMS text back to the client beyond the
+        # initial ingest request that sent it).
+        "created_at": _iso(sms.get("created_at")),
+        "updated_at": _iso(sms.get("updated_at")),
+    }
+
+
+def serialize_sms_parser_rule(rule: dict) -> dict:
+    return {
+        "id": _str_id(rule["_id"]),
+        "household_id": _str_id(rule.get("household_id")),
+        "bank_code": rule.get("bank_code"),
+        "sender_ids": rule.get("sender_ids", []),
+        "patterns": rule.get("patterns", []),
+        "is_active": rule.get("is_active", True),
+        "created_at": _iso(rule.get("created_at")),
+        "updated_at": _iso(rule.get("updated_at")),
+    }
+
+
 def serialize_notification(notification: dict) -> dict:
     return {
         "id": _str_id(notification["_id"]),

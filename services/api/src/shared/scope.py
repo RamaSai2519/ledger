@@ -1,6 +1,12 @@
 from bson import ObjectId
 
-from shared.db import get_budgets_collection, get_categories_collection, get_transactions_collection, get_users_collection
+from shared.db import (
+    get_budgets_collection,
+    get_categories_collection,
+    get_sms_inbox_collection,
+    get_transactions_collection,
+    get_users_collection,
+)
 from shared.output import NotFoundError, ValidationError
 
 
@@ -47,3 +53,14 @@ def get_household_budget(household_id: ObjectId, budget_id: str) -> dict:
     if not budget:
         raise NotFoundError("budget_not_found")
     return budget
+
+
+def get_household_sms_suggestion(household_id: ObjectId, sms_id: str) -> dict:
+    try:
+        oid = ObjectId(sms_id)
+    except Exception as exc:
+        raise ValidationError("invalid_sms_id") from exc
+    sms = get_sms_inbox_collection().find_one({"_id": oid, "household_id": household_id})
+    if not sms:
+        raise NotFoundError("sms_suggestion_not_found")
+    return sms
