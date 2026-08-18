@@ -4,31 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repository currently contains only planning documents — no code has been written yet:
+Phase 0 (monorepo scaffold) and Phase 1 (auth & household) are built, tested, and deployed live — see the root [`README.md`](README.md) for the live API URL and current status. Phases 2-7 are tracked as Jira issues under project **LED** (see below), not yet built.
 
-- `IMPLEMENTATION_PLAN.md` — full backend + mobile implementation plan (data model, API reference, phased roadmap)
-- `DESIGN_BRIEF.md` — visual/UX design brief for a design agent to produce Android UI mockups (no code expected from that pass)
+- `plan.md` — full backend + mobile implementation plan (data model, API reference, phased roadmap)
+- `DESIGN_BRIEF.md` — visual/UX design brief; the actual mockups it produced live in the Claude Design project linked under "Design reference" below, not as files in this repo
 
-There are no build, lint, or test commands yet because no project scaffold (Flask backend, React Native app) has been created. When implementation begins, this file should be updated with the actual commands (e.g. `pytest`, `npm test`, `flake8`/`ruff`, Android build steps) and directory layout.
+Backend: `cd services/api/src && pipenv install && pipenv run pytest -v`. Mobile: `cd apps/mobile && npm install && npm run typecheck`. See each directory's own README for the full command list and layout.
 
 ## What this project is
 
-**Ledger** (working name) — a private household expense tracker for two people sharing one pooled ledger (no expense-splitting/settle-up). Each partner has a separate login but sees the exact same shared data. Android-only mobile app + Flask/MongoDB backend. The standout feature is background parsing of incoming bank SMS to auto-suggest transactions via push notification.
+**Ledger** — a private household expense tracker for two people sharing one pooled ledger (no expense-splitting/settle-up). Each partner has a separate login but sees the exact same shared data. Android-only mobile app + Flask/MongoDB backend. The standout feature is background parsing of incoming bank SMS to auto-suggest transactions via push notification.
 
-Full product/architecture detail lives in `IMPLEMENTATION_PLAN.md`; read it before scaffolding the backend or mobile app. Key points to know going in:
+Full product/architecture detail lives in `plan.md`; read it before scaffolding the backend or mobile app. Key points to know going in:
 
 ### Tech stack (planned)
 - **Backend:** Python 3.12, Flask (Blueprints), PyMongo, Flask-JWT-Extended, Pydantic/Marshmallow, APScheduler (MVP) → Celery/Redis later, Firebase Admin SDK for FCM, Gunicorn + Nginx in Docker, MongoDB Atlas, deployed on AWS.
 - **Mobile:** React Native (bare workflow — required for a custom native SMS module, not Expo-managed), React Navigation, TanStack Query (server state) + Zustand (local UI state), a custom Kotlin `BroadcastReceiver` native module for SMS, `@react-native-firebase/messaging`, `react-native-biometrics`, encrypted local storage for tokens/PIN.
 
-### Non-negotiable constraints (from IMPLEMENTATION_PLAN.md §2)
+### Non-negotiable constraints (from plan.md §2)
 1. **Play Store SMS policy**: general apps can't get broad `READ_SMS`/`RECEIVE_SMS` approval for public listing. Distribute via sideloaded APK or Play Console Internal Testing track only — never plan for open Play Store release while SMS reading exists.
 2. **SMS parsing must be data-driven**, not hardcoded — bank message formats change without notice, so parser rules live in the `sms_parser_rules` MongoDB collection (editable without a release).
 3. **Data minimization**: only forward SMS from a curated bank/sender allow-list (filtered client-side before it ever leaves the device); purge raw SMS text after ~30 days or resolution.
 4. Use **MongoDB Atlas**, not self-hosted Mongo.
 
 ### Core domain model
-All collections are scoped by `household_id` except `users`. See `IMPLEMENTATION_PLAN.md` §4 for full field-level schemas of `users`, `households`, `wallets`, `categories`, `transactions`, `recurring_rules`, `budgets`, `notifications`, `sms_inbox`, `merchant_category_map`, `sms_parser_rules`, `net_worth_snapshots`.
+All collections are scoped by `household_id` except `users`. See `plan.md` §4 for full field-level schemas of `users`, `households`, `wallets`, `categories`, `transactions`, `recurring_rules`, `budgets`, `notifications`, `sms_inbox`, `merchant_category_map`, `sms_parser_rules`, `net_worth_snapshots`.
 
 Things that are easy to get wrong if you don't read the plan first:
 - **Balance sign convention**: for `bank_account`/`cash`, positive `current_balance` = asset. For `credit_card`/`pay_later`/`loan`, positive = liability owed. Net worth = Σassets − Σliabilities.
@@ -39,7 +39,7 @@ Things that are easy to get wrong if you don't read the plan first:
 - Net worth history is served from a **daily snapshot job** (`net_worth_snapshots`), not computed on the fly, since historical net worth requires replaying all transactions up to a date.
 
 ### API surface
-Base path `/api`; full route table (auth, users, wallets, categories, transactions, recurring, budgets, insights, sms, notifications) is in `IMPLEMENTATION_PLAN.md` §11.
+Base path `/api`; full route table (auth, users, wallets, categories, transactions, recurring, budgets, insights, sms, notifications) is in `plan.md` §11.
 
 ### Build order
 The plan defines a phased roadmap (§15): Setup → Auth & Household → Core Ledger (wallets/categories/transactions/balance engine) → Budgets & Notifications → Insights → SMS Pipeline → Recurring Transactions → Polish & Ship. Follow this order when scaffolding — later phases (SMS, recurring) assume the ledger and auth foundations from earlier phases exist.
@@ -88,3 +88,15 @@ Any API endpoint added or changed must ship with tests in the same change — no
 ## Design reference
 
 `DESIGN_BRIEF.md` specifies a dark-theme Android UI (near-black base `#0B0B12`, indigo hero accent `#5B54F9`, green/red positive/negative accents) with a signature **dual-identity accent system** — each of the two partners gets a distinct accent hue shown as a thin edge/ring/tag on transactions they logged, since this is a joint ledger rather than a solo finance app. When building UI, prefer this over a generic single-accent dark fintech look. Typography uses three distinct roles: a display face for hero numbers, a neutral sans for body text, and a **tabular-figure face specifically for monetary amounts** so columns of numbers align.
+
+The brief's high-fidelity screens live in a Claude Design project, not as files in this repo:
+**https://claude.ai/design/p/4e2b7218-8fbc-41c1-af26-2058b55579b2?file=Khaata+App.dc.html**
+
+Before implementing any screen, pull the actual mockup rather than re-deriving it from the token summary above:
+
+1. Use the `claude_design` MCP (`https://api.anthropic.com/v1/design/mcp`, authenticate via `/design-login`) to read the project. The whole project is readable, not just the linked file.
+2. Focus on `Khaata App.dc.html` for the actual screen designs — component layout, spacing, copy, states (empty/loading/error) per screen.
+3. That file imports two support files, also worth reading for context: `android-frame.jsx` (the Android device-frame/status-bar/nav-bar chrome the mockups are composed inside — not app code, just the mockup's presentation shell) and `support.js` (Claude Design's canvas runtime — infrastructure, not design content, safe to skip unless something about how the canvas renders is unclear).
+4. The project still refers to the product by its original working name, **Khaata** — that name is retired in favor of **Ledger** everywhere else (repo, package names, AWS resources, Jira). Don't propagate "Khaata" into new code or docs; treat it as a legacy label inside that one design file.
+
+For any Phase 2+ screen (wallets, transactions, budgets, insights, SMS suggestion card, etc.), treat this Claude Design project as the source of truth for the actual UI, not just the palette/type-scale summary in `DESIGN_BRIEF.md`.

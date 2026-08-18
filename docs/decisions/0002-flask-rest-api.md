@@ -4,7 +4,7 @@
 
 ## Context
 
-`IMPLEMENTATION_PLAN.md` §3 specifies Python/Flask for the backend, deployed
+`plan.md` §3 specifies Python/Flask for the backend, deployed
 as a zip Lambda. This mirrors the `models/<endpoint>/{main,validate,compute}.py`
 + `shared/{db,configs,uniservices}` structure already proven in
 `~/Projects/journeymen`'s `services/api`, which keeps request validation,

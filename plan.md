@@ -1,7 +1,9 @@
 # Khaata — Household Expense Tracker
 ## Full Implementation Plan (Backend + Mobile)
 
-Working name: **Khaata** (placeholder, change freely). Two-user household expense tracker with SMS-based transaction detection, Android-only, Flask + MongoDB backend.
+Working name: **Khaata** (placeholder, change freely) — resolved: the product is now named **Ledger** everywhere (repo `RamaSai2519/ledger`, AWS resources, Jira project `LED`). Two-user household expense tracker with SMS-based transaction detection, Android-only, Flask + MongoDB backend.
+
+**High-fidelity mockups:** a Claude Design project has the actual screens for every phase below — `https://claude.ai/design/p/4e2b7218-8fbc-41c1-af26-2058b55579b2?file=Khaata+App.dc.html`. Read it via the `claude_design` MCP (auth via `/design-login`) before implementing any screen; `Khaata App.dc.html` is the file with the designs, importing `android-frame.jsx` (device-frame chrome) and `support.js` (canvas runtime, not design content). The project still says "Khaata" — treat that as the design file's legacy label, not the product name.
 
 ---
 

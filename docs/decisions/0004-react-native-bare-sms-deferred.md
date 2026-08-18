@@ -4,7 +4,7 @@
 
 ## Context
 
-`IMPLEMENTATION_PLAN.md` §3/§13 specifies React Native bare workflow (not
+`plan.md` §3/§13 specifies React Native bare workflow (not
 Expo-managed) because the SMS auto-detection feature (§7) needs a custom
 native Kotlin `BroadcastReceiver` module that keeps working when the app is
 backgrounded/killed — not achievable in a managed Expo project without

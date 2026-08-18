@@ -2,7 +2,7 @@ import re
 
 from shared.output import ValidationError
 
-# Indian mobile numbers only — the product is INR-only per IMPLEMENTATION_PLAN.md.
+# Indian mobile numbers only — the product is INR-only per plan.md.
 MOBILE_RE = re.compile(r"^[6-9]\d{9}$")
 
 

@@ -4,7 +4,7 @@
 
 ## Context
 
-`IMPLEMENTATION_PLAN.md` specifies MongoDB Atlas as the datastore. The data
+`plan.md` specifies MongoDB Atlas as the datastore. The data
 model (wallets, transactions, categories, budgets, SMS staging, merchant
 learning map) is document-shaped and mostly household-scoped rather than
 deeply relational, and the household+wallet+category+transaction graph is
@@ -15,7 +15,7 @@ foreign keys.
 ## Decision
 
 Use MongoDB Atlas (managed), not self-hosted Mongo and not Postgres.
-Collections and fields are as specified in `IMPLEMENTATION_PLAN.md` §4.
+Collections and fields are as specified in `plan.md` §4.
 
 ## Consequences
 

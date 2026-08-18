@@ -2,7 +2,7 @@
 
 A private household expense tracker for two people sharing one pooled
 ledger. See [`DESIGN_BRIEF.md`](DESIGN_BRIEF.md) for the product/visual
-brief and [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full
+brief and [`plan.md`](plan.md) for the full
 backend + mobile architecture and phased roadmap. [`CLAUDE.md`](CLAUDE.md)
 has operating conventions (Jira, deployment, testing) for anyone (human or
 agent) working in this repo.
@@ -14,7 +14,7 @@ Phase 0 (scaffold) and Phase 1 (auth & household) are built, tested, and
 (Lambda `ledger-api` + HTTP API Gateway, `ap-south-1`, backed by a real
 MongoDB Atlas cluster). Phases 2-7 (core ledger, budgets, insights, SMS
 pipeline, recurring transactions, polish) are tracked as Jira backlog, not
-yet built — see `IMPLEMENTATION_PLAN.md` §15.
+yet built — see `plan.md` §15.
 
 ## Layout
 

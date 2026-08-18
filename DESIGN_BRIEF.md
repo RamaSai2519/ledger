@@ -2,6 +2,8 @@
 
 This is a prompt for a design agent to produce high-fidelity mobile UI mockups. No code implementation is expected from this pass — just the visual design system and screens.
 
+> **Result:** the mockups this brief produced live in a Claude Design project — `https://claude.ai/design/p/4e2b7218-8fbc-41c1-af26-2058b55579b2?file=Khaata+App.dc.html` (`Khaata App.dc.html`, importing `android-frame.jsx` and `support.js`). Read it via the `claude_design` MCP (auth via `/design-login`) when implementing any screen — it is the source of truth for actual layout/copy/states, not just the token summary below. The project still uses the brief's original working name, "Khaata"; the product itself is named **Ledger** everywhere outside that file. See `CLAUDE.md`'s Design reference section.
+
 ---
 
 ## 1. Product Context
