@@ -1,14 +1,15 @@
 from datetime import datetime, timezone
 
 from shared.db import get_wallets_collection
+from shared.interfaces import WalletDeleteInput as Input
 from shared.output import success
 from shared.scope import require_household_id
 from shared.transactions_engine import get_household_wallet
 
 
-def process(wallet_id: str, user_id: str):
-    household_id = require_household_id(user_id)
-    wallet = get_household_wallet(household_id, wallet_id)
+def process(inp: Input):
+    household_id = require_household_id(inp.user_id)
+    wallet = get_household_wallet(household_id, inp.wallet_id)
 
     # Wallets are never hard-deleted — they're referenced by transaction
     # history, which must stay intact for audit/reporting even after a

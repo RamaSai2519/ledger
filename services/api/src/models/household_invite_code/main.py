@@ -1,11 +1,12 @@
 from bson import ObjectId
 
 from shared.db import get_households_collection, get_users_collection
+from shared.interfaces import HouseholdInviteCodeInput as Input
 from shared.output import NotFoundError, success
 
 
-def process(user_id: str):
-    user = get_users_collection().find_one({"_id": ObjectId(user_id)})
+def process(inp: Input):
+    user = get_users_collection().find_one({"_id": ObjectId(inp.user_id)})
     if not user or not user.get("household_id"):
         raise NotFoundError("not_in_a_household")
 

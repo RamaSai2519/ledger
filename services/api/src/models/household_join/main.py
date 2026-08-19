@@ -1,18 +1,12 @@
-from dataclasses import dataclass
 
 from models.household_join import compute, validate
+from shared.interfaces import HouseholdJoinInput as Input
 from shared.output import success
 
 
-@dataclass
-class Input:
-    invite_code: str
-
-
-def process(request_json: dict, user_id: str):
-    inp = Input(**request_json)
+def process(inp: Input):
     validate.validate(inp)
-    household = compute.join_household(inp, user_id)
+    household = compute.join_household(inp, inp.user_id)
     return success(
         {
             "household_id": str(household["_id"]),

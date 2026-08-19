@@ -1,11 +1,12 @@
 from shared.db import get_recurring_rules_collection
+from shared.interfaces import RecurringRuleDeleteInput as Input
 from shared.output import success
 from shared.scope import get_household_recurring_rule, require_household_id
 
 
-def process(rule_id: str, user_id: str):
-    household_id = require_household_id(user_id)
-    rule = get_household_recurring_rule(household_id, rule_id)
+def process(inp: Input):
+    household_id = require_household_id(inp.user_id)
+    rule = get_household_recurring_rule(household_id, inp.rule_id)
 
     # Transactions previously created from this rule keep their
     # recurring_rule_id reference for audit/history — deleting the rule

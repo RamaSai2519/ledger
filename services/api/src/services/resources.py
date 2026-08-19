@@ -52,27 +52,33 @@ from models.wallet_get import main as wallet_get
 from models.wallet_list import main as wallet_list
 from models.wallet_reconcile import main as wallet_reconcile
 from models.wallet_update import main as wallet_update
+from shared.input import build_input
+from shared.output import success
+
+
+def _body() -> dict:
+    return request.get_json(silent=True) or {}
 
 
 class Health(Resource):
     def get(self):
-        return {"status": "SUCCESS", "data": {"status": "ok"}, "error": None}, 200
+        return success({"status": "ok"})
 
 
 class Signup(Resource):
     def post(self):
-        return signup.process(request.get_json(force=True) or {})
+        return signup.process(build_input(signup.Input, _body()))
 
 
 class Login(Resource):
     def post(self):
-        return login.process(request.get_json(force=True) or {})
+        return login.process(build_input(login.Input, _body()))
 
 
 class Refresh(Resource):
     @jwt_required(refresh=True)
     def post(self):
-        return refresh.process(get_jwt_identity())
+        return refresh.process(refresh.Input(user_id=get_jwt_identity()))
 
 
 class Logout(Resource):
@@ -80,242 +86,290 @@ class Logout(Resource):
     def post(self):
         claims = get_jwt()
         expires_at = datetime.fromtimestamp(claims["exp"], tz=timezone.utc)
-        return logout.process(claims["jti"], expires_at)
+        return logout.process(logout.Input(jti=claims["jti"], expires_at=expires_at))
 
 
 class HouseholdCreate(Resource):
     @jwt_required()
     def post(self):
-        return household_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return household_create.process(build_input(household_create.Input, _body(), user_id=get_jwt_identity()))
 
 
 class HouseholdJoin(Resource):
     @jwt_required()
     def post(self):
-        return household_join.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return household_join.process(build_input(household_join.Input, _body(), user_id=get_jwt_identity()))
 
 
 class HouseholdInviteCode(Resource):
     @jwt_required()
     def get(self):
-        return household_invite_code.process(get_jwt_identity())
+        return household_invite_code.process(household_invite_code.Input(user_id=get_jwt_identity()))
 
 
 class PinSet(Resource):
     @jwt_required()
     def post(self):
-        return pin_set.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return pin_set.process(build_input(pin_set.Input, _body(), user_id=get_jwt_identity()))
 
 
 class Wallets(Resource):
     @jwt_required()
     def get(self):
-        return wallet_list.process(get_jwt_identity(), request.args.to_dict())
+        return wallet_list.process(build_input(wallet_list.Input, request.args.to_dict(), user_id=get_jwt_identity()))
 
     @jwt_required()
     def post(self):
-        return wallet_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return wallet_create.process(_body(), get_jwt_identity())
 
 
 class WalletDetail(Resource):
     @jwt_required()
     def get(self, wallet_id):
-        return wallet_get.process(wallet_id, get_jwt_identity())
+        return wallet_get.process(wallet_get.Input(wallet_id=wallet_id, user_id=get_jwt_identity()))
 
     @jwt_required()
     def patch(self, wallet_id):
-        return wallet_update.process(wallet_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return wallet_update.process(wallet_id, _body(), get_jwt_identity())
 
     @jwt_required()
     def delete(self, wallet_id):
-        return wallet_delete.process(wallet_id, get_jwt_identity())
+        return wallet_delete.process(wallet_delete.Input(wallet_id=wallet_id, user_id=get_jwt_identity()))
 
 
 class WalletReconcile(Resource):
     @jwt_required()
     def post(self, wallet_id):
-        return wallet_reconcile.process(wallet_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return wallet_reconcile.process(wallet_id, _body(), get_jwt_identity())
 
 
 class WalletBalanceHistory(Resource):
     @jwt_required()
     def get(self, wallet_id):
-        return wallet_balance_history.process(wallet_id, get_jwt_identity(), request.args.to_dict())
+        return wallet_balance_history.process(
+            build_input(
+                wallet_balance_history.Input,
+                request.args.to_dict(),
+                aliases={"from_": "from"},
+                wallet_id=wallet_id,
+                user_id=get_jwt_identity(),
+            )
+        )
 
 
 class Categories(Resource):
     @jwt_required()
     def get(self):
-        return category_list.process(get_jwt_identity(), request.args.to_dict())
+        return category_list.process(build_input(category_list.Input, request.args.to_dict(), user_id=get_jwt_identity()))
 
     @jwt_required()
     def post(self):
-        return category_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return category_create.process(_body(), get_jwt_identity())
 
 
 class CategoryDetail(Resource):
     @jwt_required()
     def patch(self, category_id):
-        return category_update.process(category_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return category_update.process(category_id, _body(), get_jwt_identity())
 
     @jwt_required()
     def delete(self, category_id):
-        return category_delete.process(category_id, get_jwt_identity())
+        return category_delete.process(category_delete.Input(category_id=category_id, user_id=get_jwt_identity()))
 
 
 class Transactions(Resource):
     @jwt_required()
     def get(self):
-        return transaction_list.process(get_jwt_identity(), request.args.to_dict())
+        return transaction_list.process(
+            build_input(
+                transaction_list.Input,
+                request.args.to_dict(),
+                aliases={"from_": "from"},
+                requesting_user_id=get_jwt_identity(),
+            )
+        )
 
     @jwt_required()
     def post(self):
-        return transaction_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return transaction_create.process(_body(), get_jwt_identity())
 
 
 class TransactionDetail(Resource):
     @jwt_required()
     def get(self, transaction_id):
-        return transaction_get.process(transaction_id, get_jwt_identity())
+        return transaction_get.process(transaction_get.Input(transaction_id=transaction_id, user_id=get_jwt_identity()))
 
     @jwt_required()
     def patch(self, transaction_id):
-        return transaction_update.process(transaction_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return transaction_update.process(transaction_id, _body(), get_jwt_identity())
 
     @jwt_required()
     def delete(self, transaction_id):
-        return transaction_delete.process(transaction_id, get_jwt_identity())
+        return transaction_delete.process(
+            transaction_delete.Input(transaction_id=transaction_id, user_id=get_jwt_identity())
+        )
 
 
 class TransactionTransfer(Resource):
     @jwt_required()
     def post(self):
-        return transaction_transfer.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return transaction_transfer.process(_body(), get_jwt_identity())
 
 
 class FcmTokenRegister(Resource):
     @jwt_required()
     def post(self):
-        return fcm_token_register.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return fcm_token_register.process(_body(), get_jwt_identity())
 
 
 class Budgets(Resource):
     @jwt_required()
     def get(self):
-        return budget_list.process(get_jwt_identity(), request.args.to_dict())
+        return budget_list.process(build_input(budget_list.Input, request.args.to_dict(), user_id=get_jwt_identity()))
 
     @jwt_required()
     def post(self):
-        return budget_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return budget_create.process(_body(), get_jwt_identity())
 
 
 class BudgetDetail(Resource):
     @jwt_required()
     def patch(self, budget_id):
-        return budget_update.process(budget_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return budget_update.process(budget_id, _body(), get_jwt_identity())
 
     @jwt_required()
     def delete(self, budget_id):
-        return budget_delete.process(budget_id, get_jwt_identity())
+        return budget_delete.process(budget_delete.Input(budget_id=budget_id, user_id=get_jwt_identity()))
 
 
 class BudgetProgress(Resource):
     @jwt_required()
     def get(self, budget_id):
-        return budget_progress.process(budget_id, get_jwt_identity())
+        return budget_progress.process(budget_progress.Input(budget_id=budget_id, user_id=get_jwt_identity()))
 
 
 class RecurringRules(Resource):
     @jwt_required()
     def get(self):
-        return recurring_rule_list.process(get_jwt_identity(), request.args.to_dict())
+        return recurring_rule_list.process(
+            build_input(recurring_rule_list.Input, request.args.to_dict(), user_id=get_jwt_identity())
+        )
 
     @jwt_required()
     def post(self):
-        return recurring_rule_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return recurring_rule_create.process(_body(), get_jwt_identity())
 
 
 class RecurringRuleDetail(Resource):
     @jwt_required()
     def patch(self, rule_id):
-        return recurring_rule_update.process(rule_id, request.get_json(force=True) or {}, get_jwt_identity())
+        return recurring_rule_update.process(rule_id, _body(), get_jwt_identity())
 
     @jwt_required()
     def delete(self, rule_id):
-        return recurring_rule_delete.process(rule_id, get_jwt_identity())
+        return recurring_rule_delete.process(recurring_rule_delete.Input(rule_id=rule_id, user_id=get_jwt_identity()))
 
 
 class RecurringRuleSkipNext(Resource):
     @jwt_required()
     def post(self, rule_id):
-        return recurring_rule_skip_next.process(rule_id, get_jwt_identity())
+        return recurring_rule_skip_next.process(
+            recurring_rule_skip_next.Input(rule_id=rule_id, user_id=get_jwt_identity())
+        )
 
 
 class InsightTrends(Resource):
     @jwt_required()
     def get(self):
-        return insight_trends.process(get_jwt_identity(), request.args.to_dict())
+        return insight_trends.process(
+            build_input(insight_trends.Input, request.args.to_dict(), aliases={"from_": "from"}, user_id=get_jwt_identity())
+        )
 
 
 class InsightIncomeVsExpense(Resource):
     @jwt_required()
     def get(self):
-        return insight_income_vs_expense.process(get_jwt_identity(), request.args.to_dict())
+        return insight_income_vs_expense.process(
+            build_input(
+                insight_income_vs_expense.Input,
+                request.args.to_dict(),
+                aliases={"from_": "from"},
+                user_id=get_jwt_identity(),
+            )
+        )
 
 
 class InsightCategoryBreakdown(Resource):
     @jwt_required()
     def get(self):
-        return insight_category_breakdown.process(get_jwt_identity(), request.args.to_dict())
+        return insight_category_breakdown.process(
+            build_input(
+                insight_category_breakdown.Input,
+                request.args.to_dict(),
+                aliases={"from_": "from"},
+                user_id=get_jwt_identity(),
+            )
+        )
 
 
 class InsightNetWorthHistory(Resource):
     @jwt_required()
     def get(self):
-        return insight_net_worth_history.process(get_jwt_identity(), request.args.to_dict())
+        return insight_net_worth_history.process(
+            build_input(
+                insight_net_worth_history.Input,
+                request.args.to_dict(),
+                aliases={"from_": "from"},
+                user_id=get_jwt_identity(),
+            )
+        )
 
 
 class Notifications(Resource):
     @jwt_required()
     def get(self):
-        return notification_list.process(get_jwt_identity(), request.args.to_dict())
+        return notification_list.process(
+            build_input(notification_list.Input, request.args.to_dict(), requesting_user_id=get_jwt_identity())
+        )
 
 
 class NotificationRead(Resource):
     @jwt_required()
     def post(self, notification_id):
-        return notification_read.process(notification_id, get_jwt_identity())
+        return notification_read.process(
+            notification_read.Input(notification_id=notification_id, user_id=get_jwt_identity())
+        )
 
 
 class SmsIngest(Resource):
     @jwt_required()
     def post(self):
-        return sms_ingest.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return sms_ingest.process(_body(), get_jwt_identity())
 
 
 class SmsSuggestions(Resource):
     @jwt_required()
     def get(self):
-        return sms_suggestions_list.process(get_jwt_identity())
+        return sms_suggestions_list.process(sms_suggestions_list.Input(user_id=get_jwt_identity()))
 
 
 class SmsSuggestionAccept(Resource):
     @jwt_required()
     def post(self, sms_id):
-        return sms_suggestion_accept.process(sms_id, request.get_json(silent=True) or {}, get_jwt_identity())
+        return sms_suggestion_accept.process(sms_id, _body(), get_jwt_identity())
 
 
 class SmsSuggestionDismiss(Resource):
     @jwt_required()
     def post(self, sms_id):
-        return sms_suggestion_dismiss.process(sms_id, get_jwt_identity())
+        return sms_suggestion_dismiss.process(sms_suggestion_dismiss.Input(sms_id=sms_id, user_id=get_jwt_identity()))
 
 
 class SmsParserRules(Resource):
     @jwt_required()
     def get(self):
-        return sms_parser_rules_list.process(get_jwt_identity())
+        return sms_parser_rules_list.process(sms_parser_rules_list.Input(user_id=get_jwt_identity()))
 
     @jwt_required()
     def post(self):
-        return sms_parser_rules_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+        return sms_parser_rules_create.process(_body(), get_jwt_identity())

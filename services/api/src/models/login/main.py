@@ -1,19 +1,12 @@
-from dataclasses import dataclass
 
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from models.login import compute, validate
+from shared.interfaces import LoginInput as Input
 from shared.output import success
 
 
-@dataclass
-class Input:
-    mobile_number: str
-    password: str
-
-
-def process(request_json: dict):
-    inp = Input(**request_json)
+def process(inp: Input):
     validate.validate(inp)
     user = compute.authenticate(inp)
     user_id = str(user["_id"])

@@ -1,36 +1,32 @@
 from bson import ObjectId
 
+from models.notification_list import validate
 from shared.db import get_notifications_collection
+from shared.interfaces import NotificationListInput as Input
 from shared.output import success
+from shared.pagination import parse_pagination
 from shared.scope import require_household_id
 from shared.serializers import serialize_notification
 
-DEFAULT_PAGE_SIZE = 20
-MAX_PAGE_SIZE = 100
 
+def process(inp: Input):
+    validate.validate(inp)
+    household_id = require_household_id(inp.requesting_user_id)
 
-def process(user_id: str, query_args: dict | None = None):
-    query_args = query_args or {}
-    household_id = require_household_id(user_id)
-
-    query = {"household_id": household_id}
+    mongo_query = {"household_id": household_id}
     # Notifications are household-scoped by default (both partners see the
     # same shared data per CLAUDE.md), but a caller may narrow to just their
     # own via user_id=me — useful for a personal inbox badge count.
-    if query_args.get("user_id") == "me":
-        query["user_id"] = ObjectId(user_id)
-    if query_args.get("is_read") is not None:
-        query["is_read"] = query_args["is_read"].lower() == "true"
+    if inp.user_id == "me":
+        mongo_query["user_id"] = ObjectId(inp.requesting_user_id)
+    if inp.is_read is not None:
+        mongo_query["is_read"] = inp.is_read.lower() == "true"
 
-    try:
-        page = max(1, int(query_args.get("page", 1)))
-        page_size = min(MAX_PAGE_SIZE, max(1, int(query_args.get("page_size", DEFAULT_PAGE_SIZE))))
-    except ValueError:
-        page, page_size = 1, DEFAULT_PAGE_SIZE
+    page, page_size = parse_pagination(inp)
 
     collection = get_notifications_collection()
-    total = collection.count_documents(query)
-    cursor = collection.find(query).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size)
+    total = collection.count_documents(mongo_query)
+    cursor = collection.find(mongo_query).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size)
     notifications = [serialize_notification(n) for n in cursor]
 
     return success(
