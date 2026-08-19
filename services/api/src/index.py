@@ -1,20 +1,18 @@
-import logging
-from datetime import datetime, timezone
-
 import awsgi
+import logging
 from flask import Flask
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 from flask_restful import Api
+from flask_jwt_extended import JWTManager
 
-from jobs.bill_due_reminders import run_bill_due_reminders
 from jobs.budget_threshold_check import run_budget_threshold_check
-from jobs.digest_notifications import run_daily_digest
+from jobs.bill_due_reminders import run_bill_due_reminders
 from jobs.net_worth_snapshot import run_net_worth_snapshot
 from shared.after_request import register_error_handlers
-from shared.configs import CONFIG
+from jobs.digest_notifications import run_daily_digest
 from shared.db import get_revoked_tokens_collection
 from services.controller import register_routes
+from shared.configs import CONFIG
 
 logger = logging.getLogger(__name__)
 
