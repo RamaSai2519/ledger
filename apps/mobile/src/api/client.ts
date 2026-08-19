@@ -310,7 +310,7 @@ export const budgetsApi = {
   progress: (id: string) => request<BudgetProgress>(`/budgets/${id}/progress`),
 };
 
-export type NotificationType = 'budget_threshold' | 'budget_exceeded' | 'sms_suggestion' | 'digest' | 'bill_due';
+export type NotificationType = 'budget_threshold' | 'budget_exceeded' | 'sms_suggestion' | 'digest' | 'bill_due' | 'recurring_reminder';
 
 export type Notification = {
   id: string;
@@ -389,6 +389,93 @@ export const insightsApi = {
 
 export const fcmApi = {
   registerToken: (token: string) => request<{registered: boolean}>('/users/fcm-token', {method: 'POST', body: {token}}),
+};
+
+// ---- SMS Pipeline (LED-7) ----
+// raw_text is deliberately never returned by the backend serializer (data
+// minimization, plan.md §2.3) — screens only ever see the already-extracted
+// structured fields below, never the original message text.
+
+export type SmsInboxSuggestion = {
+  id: string;
+  household_id: string;
+  user_id: string;
+  sender_id: string;
+  received_at: string;
+  parse_status: 'pending' | 'parsed' | 'ignored' | 'failed';
+  parsed_amount: number | null;
+  parsed_direction: 'debit' | 'credit' | null;
+  parsed_last4: string | null;
+  parsed_merchant: string | null;
+  parsed_ref: string | null;
+  suggested_wallet_id: string | null;
+  suggested_category_id: string | null;
+  confidence_score: number;
+  status: 'suggested' | 'accepted' | 'dismissed';
+  resolved_transaction_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SmsSuggestionAcceptInput = Partial<{
+  wallet_id: string;
+  category_id: string;
+  amount: number;
+  type: 'expense' | 'income';
+  date: string;
+}>;
+
+// ---- Recurring Transactions (LED-8) ----
+
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
+
+export type RecurringRule = {
+  id: string;
+  household_id: string;
+  wallet_id: string;
+  category_id: string;
+  type: 'expense' | 'income';
+  merchant_name: string;
+  amount: number | null;
+  frequency: RecurringFrequency;
+  next_due_date: string;
+  auto_detected: boolean;
+  auto_create: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecurringRuleCreateInput = {
+  wallet_id: string;
+  category_id: string;
+  type: 'expense' | 'income';
+  merchant_name: string;
+  frequency: RecurringFrequency;
+  next_due_date: string;
+  amount?: number;
+  auto_create?: boolean;
+  is_active?: boolean;
+};
+
+export type RecurringRuleUpdateInput = Partial<
+  Omit<RecurringRuleCreateInput, 'wallet_id' | 'category_id'> & {wallet_id: string; category_id: string}
+>;
+
+export const recurringApi = {
+  list: (params?: {is_active?: boolean}) =>
+    request<{recurring_rules: RecurringRule[]}>(withQuery('/recurring', params as Record<string, string>)),
+  create: (input: RecurringRuleCreateInput) => request<RecurringRule>('/recurring', {method: 'POST', body: input}),
+  update: (id: string, input: RecurringRuleUpdateInput) => request<RecurringRule>(`/recurring/${id}`, {method: 'PATCH', body: input}),
+  remove: (id: string) => request<{id: string; deleted: boolean}>(`/recurring/${id}`, {method: 'DELETE'}),
+  skipNext: (id: string) => request<RecurringRule>(`/recurring/${id}/skip-next`, {method: 'POST'}),
+};
+
+export const smsApi = {
+  suggestions: () => request<{suggestions: SmsInboxSuggestion[]}>('/sms/suggestions'),
+  accept: (id: string, input?: SmsSuggestionAcceptInput) =>
+    request<Transaction>(`/sms/suggestions/${id}/accept`, {method: 'POST', body: input ?? {}}),
+  dismiss: (id: string) => request<SmsInboxSuggestion>(`/sms/suggestions/${id}/dismiss`, {method: 'POST'}),
 };
 
 export {ApiError};

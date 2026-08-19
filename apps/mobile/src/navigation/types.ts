@@ -1,10 +1,13 @@
 export type RootStackParamList = {
   Splash: undefined;
+  Onboarding: undefined;
   SignUp: undefined;
   Login: undefined;
-  HouseholdChoice: undefined;
   HouseholdCreate: undefined;
   HouseholdJoin: undefined;
+  SmsPermissionRationale: undefined;
+  PinSetup: undefined;
+  AppLock: undefined;
   Home: undefined;
   WalletsList: undefined;
   WalletDetail: {walletId: string};
@@ -16,4 +19,9 @@ export type RootStackParamList = {
   BudgetForm: {budgetId?: string} | undefined;
   Insights: undefined;
   Notifications: undefined;
+  SmsSuggestionEdit: {suggestion: import('@/api/client').SmsInboxSuggestion};
+  Settings: undefined;
+  TransactionsList: undefined;
+  RecurringRulesList: undefined;
+  RecurringRuleForm: {ruleId?: string} | undefined;
 };

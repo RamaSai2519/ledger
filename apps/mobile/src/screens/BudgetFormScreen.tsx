@@ -6,31 +6,39 @@ import type {RootStackParamList} from '@/navigation/types';
 import type {BudgetScope} from '@/api/client';
 import {budgetsApi, categoriesApi, walletsApi} from '@/api/client';
 import {PickerField} from '@/components/PickerField';
-import {colors, radius, spacing} from '@/theme/tokens';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BudgetForm'>;
 
 const SCOPES: {value: BudgetScope; label: string}[] = [
-  {value: 'overall', label: 'Overall'},
   {value: 'category', label: 'Category'},
   {value: 'wallet', label: 'Wallet'},
+  {value: 'overall', label: 'Overall'},
 ];
 
-// A "two-number stepper" rather than a real slider component — no
-// slider/range-input library is in the dependency tree yet, and the
-// threshold_percents field is just a short sorted list of percents, so a
-// pair of +/- steppers covers the MVP need (default 80/100) without adding
-// a new native dependency for a two-value input.
-function ThresholdStepper({label, value, onChange}: {label: string; value: number; onChange: (v: number) => void}) {
+// A track+dot visual (matching s19 in the design project) driven by +/-
+// steppers rather than a real drag gesture — no slider/range-input library
+// is in the dependency tree, and threshold_percents is just a short sorted
+// list of percents, so this covers the MVP need (default 80/100) without a
+// new native dependency.
+function ThresholdRow({label, value, onChange, color}: {label: string; value: number; onChange: (v: number) => void; color: string}) {
   const clamp = (v: number) => Math.min(200, Math.max(1, v));
+  const trackPercent = Math.min(100, value);
   return (
-    <View style={styles.stepperRow}>
-      <Text style={styles.stepperLabel}>{label}</Text>
+    <View style={{marginTop: spacing.md}}>
+      <View style={styles.thresholdHeader}>
+        <Text style={styles.thresholdLabel}>{label}</Text>
+        <Text style={[styles.thresholdValue, {color}]}>{value}%</Text>
+      </View>
+      <View style={styles.thresholdTrackWrap}>
+        <View style={styles.thresholdTrack} />
+        <View style={[styles.thresholdTrackFill, {width: `${trackPercent}%`, backgroundColor: color}]} />
+        <View style={[styles.thresholdDot, {left: `${trackPercent}%`, borderColor: color}]} />
+      </View>
       <View style={styles.stepperControls}>
         <Pressable style={styles.stepperButton} onPress={() => onChange(clamp(value - 5))}>
           <Text style={styles.stepperButtonText}>−</Text>
         </Pressable>
-        <Text style={styles.stepperValue}>{value}%</Text>
         <Pressable style={styles.stepperButton} onPress={() => onChange(clamp(value + 5))}>
           <Text style={styles.stepperButtonText}>+</Text>
         </Pressable>
@@ -53,11 +61,12 @@ export function BudgetFormScreen({route, navigation}: Props) {
   const categoriesQuery = useQuery({queryKey: ['categories', 'expense'], queryFn: () => categoriesApi.list({type: 'expense'})});
   const walletsQuery = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
 
-  const [scope, setScope] = useState<BudgetScope>('overall');
+  const [scope, setScope] = useState<BudgetScope>('category');
   const [scopeRefId, setScopeRefId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [thresholdLow, setThresholdLow] = useState(80);
   const [thresholdHigh, setThresholdHigh] = useState(100);
+  const [notifyBoth, setNotifyBoth] = useState(true);
 
   const loaded = existingQuery.data;
   React.useEffect(() => {
@@ -87,8 +96,7 @@ export function BudgetFormScreen({route, navigation}: Props) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      budgetsApi.update(budgetId as string, {amount: Number(amount) || 0, threshold_percents: thresholds}),
+    mutationFn: () => budgetsApi.update(budgetId as string, {amount: Number(amount) || 0, threshold_percents: thresholds}),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['budgets']});
       navigation.goBack();
@@ -113,12 +121,12 @@ export function BudgetFormScreen({route, navigation}: Props) {
   const canSubmit = !!amount.trim() && (!scopeRequiresRef || !!scopeRefId);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: spacing.xl}}>
+    <ScrollView style={styles.container} contentContainerStyle={{padding: spacing.lg, paddingBottom: spacing.xl}}>
       <Text style={styles.title}>{isEdit ? 'Edit budget' : 'Add budget'}</Text>
 
       {!isEdit && (
         <>
-          <Text style={styles.label}>Scope</Text>
+          <Text style={styles.sectionLabel}>Applies to</Text>
           <View style={styles.scopeRow}>
             {SCOPES.map((s) => (
               <Pressable
@@ -144,24 +152,33 @@ export function BudgetFormScreen({route, navigation}: Props) {
         </>
       )}
 
-      <Text style={styles.label}>Monthly cap</Text>
-      <TextInput
-        style={styles.input}
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="numeric"
-        placeholder="e.g. 15000"
-        placeholderTextColor={colors.textSecondary}
-      />
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>Monthly limit</Text>
+        <TextInput
+          style={[styles.fieldInput, styles.fieldInputMono]}
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="numeric"
+          placeholder="e.g. 15000"
+          placeholderTextColor={colors.textSecondary}
+        />
+      </View>
 
-      <Text style={styles.label}>Alert thresholds</Text>
-      <ThresholdStepper label="First alert" value={thresholdLow} onChange={setThresholdLow} />
-      <ThresholdStepper label="Second alert" value={thresholdHigh} onChange={setThresholdHigh} />
+      <View style={styles.thresholdCard}>
+        <ThresholdRow label="Warn me at" value={thresholdLow} onChange={setThresholdLow} color={colors.accentOnDark} />
+        <ThresholdRow label="Alert again at" value={thresholdHigh} onChange={setThresholdHigh} color="#FF9B9B" />
+        <Pressable style={styles.notifyRow} onPress={() => setNotifyBoth((v) => !v)}>
+          <Text style={styles.notifyLabel}>Notify both of us</Text>
+          <View style={[styles.toggleTrack, notifyBoth && styles.toggleTrackOn]}>
+            <View style={styles.toggleThumb} />
+          </View>
+        </Pressable>
+      </View>
 
       {mutation.isError && <Text style={styles.error}>{(mutation.error as Error).message}</Text>}
 
       <Pressable style={styles.button} onPress={() => mutation.mutate()} disabled={mutation.isPending || !canSubmit}>
-        <Text style={styles.buttonText}>{mutation.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Create budget'}</Text>
+        <Text style={styles.buttonText}>{mutation.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Save budget'}</Text>
       </Pressable>
 
       {isEdit && (
@@ -174,55 +191,34 @@ export function BudgetFormScreen({route, navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg},
-  title: {color: colors.textPrimary, fontSize: 22, fontWeight: '600', marginBottom: spacing.lg},
-  label: {color: colors.textSecondary, fontSize: 13, marginBottom: spacing.xs, marginTop: spacing.sm},
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.textPrimary,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  scopeRow: {flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm},
-  scopeChip: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.xs,
-  },
-  scopeChipSelected: {backgroundColor: colors.accent, borderColor: colors.accent},
-  scopeChipText: {color: colors.textSecondary, fontSize: 13},
-  scopeChipTextSelected: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
-  stepperRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  stepperLabel: {color: colors.textPrimary, fontSize: 14},
-  stepperControls: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
-  stepperButton: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperButtonText: {color: colors.textPrimary, fontSize: 16, fontWeight: '600'},
-  stepperValue: {color: colors.textPrimary, fontSize: 14, fontWeight: '600', minWidth: 40, textAlign: 'center'},
+  container: {flex: 1, backgroundColor: colors.background},
+  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 22, fontWeight: '600', marginBottom: spacing.lg},
+  sectionLabel: {fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: '#5A5A66', marginBottom: spacing.xs},
+  scopeRow: {flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md},
+  scopeChip: {flex: 1, alignItems: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, paddingVertical: 11},
+  scopeChipSelected: {backgroundColor: 'rgba(91,84,249,.12)', borderColor: colors.accent},
+  scopeChipText: {color: colors.textSecondary, fontSize: 12},
+  scopeChipTextSelected: {color: colors.textPrimary, fontSize: 12, fontWeight: '600'},
+  field: {marginTop: spacing.md},
+  fieldLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textSecondary, marginBottom: spacing.xs},
+  fieldInput: {height: 60, borderRadius: radius.input, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary, paddingHorizontal: 14, fontSize: 20},
+  fieldInputMono: {fontFamily: fontFamilies.monetary},
+  thresholdCard: {marginTop: spacing.lg, padding: 16, borderRadius: radius.card - 2, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  thresholdHeader: {flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between'},
+  thresholdLabel: {fontSize: 12.5, fontWeight: '600', color: colors.textPrimary},
+  thresholdValue: {fontFamily: fontFamilies.monetary, fontSize: 13},
+  thresholdTrackWrap: {height: 22, justifyContent: 'center', marginTop: spacing.xs},
+  thresholdTrack: {position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 2, backgroundColor: colors.border},
+  thresholdTrackFill: {position: 'absolute', left: 0, height: 4, borderRadius: 2},
+  thresholdDot: {position: 'absolute', width: 18, height: 18, borderRadius: 9, backgroundColor: colors.textPrimary, borderWidth: 3, marginLeft: -9},
+  stepperControls: {flexDirection: 'row', gap: spacing.xs, marginTop: spacing.xs, alignSelf: 'flex-end'},
+  stepperButton: {width: 26, height: 26, borderRadius: 13, backgroundColor: colors.backgroundRaised, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center'},
+  stepperButtonText: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
+  notifyRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.lg},
+  notifyLabel: {fontSize: 12.5, color: colors.textPrimary},
+  toggleTrack: {width: 44, height: 26, borderRadius: radius.pill, backgroundColor: colors.border, padding: 3, justifyContent: 'center'},
+  toggleTrackOn: {backgroundColor: colors.accent, alignItems: 'flex-end'},
+  toggleThumb: {width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff'},
   button: {backgroundColor: colors.accent, borderRadius: radius.pill, padding: spacing.md, alignItems: 'center', marginTop: spacing.lg},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
   deleteButton: {alignItems: 'center', padding: spacing.md, marginTop: spacing.sm},

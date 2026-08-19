@@ -1,12 +1,12 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Wallet} from '@/api/client';
 import {walletsApi} from '@/api/client';
-import {MoneyText} from '@/components/MoneyText';
-import {colors, radius, spacing} from '@/theme/tokens';
+import {BottomNavBar} from '@/components/BottomNavBar';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletsList'>;
 
@@ -20,66 +20,160 @@ const WALLET_TYPE_LABELS: Record<Wallet['type'], string> = {
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
 
+type FilterKey = 'all' | 'bank' | 'cards' | 'cash' | 'loans';
+const FILTERS: Array<{key: FilterKey; label: string; types: Wallet['type'][] | null}> = [
+  {key: 'all', label: 'All', types: null},
+  {key: 'bank', label: 'Bank', types: ['bank_account']},
+  {key: 'cards', label: 'Cards', types: ['credit_card', 'pay_later']},
+  {key: 'cash', label: 'Cash', types: ['cash']},
+  {key: 'loans', label: 'Loans', types: ['loan']},
+];
+
+function WalletRow({wallet, navigation}: {wallet: Wallet; navigation: Props['navigation']}) {
+  const isLiability = LIABILITY_TYPES.has(wallet.type);
+  return (
+    <Pressable
+      style={[styles.row, isLiability && styles.rowLiability]}
+      onPress={() => navigation.navigate('WalletDetail', {walletId: wallet.id})}>
+      <View style={styles.rowIcon}>
+        <Text style={[styles.rowIconGlyph, isLiability && {color: '#FF9B9B'}]}>{wallet.name.charAt(0).toUpperCase()}</Text>
+      </View>
+      <View style={{flex: 1}}>
+        <Text style={styles.rowName}>{wallet.name}</Text>
+        <Text style={styles.rowMeta}>
+          {wallet.account_last4 ? `•••• ${wallet.account_last4}` : WALLET_TYPE_LABELS[wallet.type]}
+        </Text>
+      </View>
+      <Text style={[styles.rowAmount, isLiability && {color: colors.negative}]}>
+        ₹{Math.abs(wallet.current_balance).toLocaleString('en-IN')}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function WalletsListScreen({navigation}: Props) {
+  const [filter, setFilter] = useState<FilterKey>('all');
   const query = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
+
+  const wallets = (query.data?.wallets ?? []).filter((w) => !w.is_archived);
+  const activeFilter = FILTERS.find((f) => f.key === filter)!;
+  const filtered = activeFilter.types ? wallets.filter((w) => activeFilter.types!.includes(w.type)) : wallets;
+
+  const haveWallets = filtered.filter((w) => !LIABILITY_TYPES.has(w.type));
+  const oweWallets = filtered.filter((w) => LIABILITY_TYPES.has(w.type));
+  const totalHave = wallets.filter((w) => !LIABILITY_TYPES.has(w.type)).reduce((s, w) => s + w.current_balance, 0);
+  const totalOwe = wallets.filter((w) => LIABILITY_TYPES.has(w.type)).reduce((s, w) => s + w.current_balance, 0);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Wallets</Text>
-        <Pressable style={styles.addButton} onPress={() => navigation.navigate('WalletForm', undefined)}>
-          <Text style={styles.addButtonText}>+ Add</Text>
+        <Pressable onPress={() => navigation.navigate('WalletForm', undefined)} hitSlop={8}>
+          <Text style={styles.addGlyph}>+</Text>
         </Pressable>
       </View>
 
+      <View style={styles.chipRow}>
+        {FILTERS.map((f) => (
+          <Pressable key={f.key} style={[styles.chip, filter === f.key && styles.chipActive]} onPress={() => setFilter(f.key)}>
+            <Text style={filter === f.key ? styles.chipTextActive : styles.chipText}>
+              {f.key === 'all' ? `All ${wallets.length}` : f.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.splitRow}>
+        <View style={[styles.splitCard]}>
+          <Text style={styles.splitLabel}>You have</Text>
+          <Text style={styles.splitAmount}>₹{totalHave.toLocaleString('en-IN')}</Text>
+        </View>
+        <View style={[styles.splitCard, styles.splitCardOwe]}>
+          <Text style={styles.splitLabel}>You owe</Text>
+          <Text style={[styles.splitAmount, {color: colors.negative}]}>₹{totalOwe.toLocaleString('en-IN')}</Text>
+        </View>
+      </View>
+
       {query.isLoading && <Text style={styles.stateText}>Loading wallets…</Text>}
-      {query.isError && <Text style={styles.errorText}>{(query.error as Error).message}</Text>}
-      {query.isSuccess && query.data.wallets.length === 0 && (
-        <Text style={styles.stateText}>No wallets yet — add your first bank account, card, or cash wallet.</Text>
+      {query.isError && (
+        <View style={styles.errorBlock}>
+          <Text style={styles.errorTitle}>Wallets didn't load</Text>
+          <Pressable onPress={() => query.refetch()}>
+            <Text style={styles.errorRetry}>Try again</Text>
+          </Pressable>
+        </View>
+      )}
+      {query.isSuccess && wallets.length === 0 && (
+        <View style={styles.emptyBlock}>
+          <Text style={styles.emptyTitle}>No wallets yet</Text>
+          <Pressable style={styles.emptyOption} onPress={() => navigation.navigate('WalletForm', undefined)}>
+            <Text style={styles.emptyOptionText}>Add a bank account</Text>
+            <Text style={styles.emptyOptionChevron}>›</Text>
+          </Pressable>
+          <Pressable style={styles.emptyOption} onPress={() => navigation.navigate('WalletForm', undefined)}>
+            <Text style={styles.emptyOptionText}>Add a credit card</Text>
+            <Text style={styles.emptyOptionChevron}>›</Text>
+          </Pressable>
+          <Pressable style={styles.emptyOption} onPress={() => navigation.navigate('WalletForm', undefined)}>
+            <Text style={styles.emptyOptionText}>Track cash only</Text>
+            <Text style={styles.emptyOptionChevron}>›</Text>
+          </Pressable>
+        </View>
       )}
 
       <FlatList
-        data={query.data?.wallets ?? []}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{gap: spacing.sm}}
-        renderItem={({item}) => (
-          <Pressable
-            style={styles.card}
-            onPress={() => navigation.navigate('WalletDetail', {walletId: item.id})}>
-            <View style={{flex: 1}}>
-              <Text style={styles.walletName}>{item.name}</Text>
-              <Text style={styles.walletType}>{WALLET_TYPE_LABELS[item.type]}</Text>
-            </View>
-            <MoneyText
-              amount={item.current_balance}
-              negative={LIABILITY_TYPES.has(item.type) && item.current_balance > 0}
-              positive={!LIABILITY_TYPES.has(item.type)}
-            />
-          </Pressable>
-        )}
+        style={{flex: 1}}
+        data={[
+          ...(haveWallets.length ? [{type: 'header' as const, key: 'have-header', label: 'Money you have'}] : []),
+          ...haveWallets.map((w) => ({type: 'wallet' as const, key: w.id, wallet: w})),
+          ...(oweWallets.length ? [{type: 'header' as const, key: 'owe-header', label: 'Money you owe'}] : []),
+          ...oweWallets.map((w) => ({type: 'wallet' as const, key: w.id, wallet: w})),
+        ]}
+        keyExtractor={(item) => item.key}
+        contentContainerStyle={{paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.xs}}
+        renderItem={({item}) =>
+          item.type === 'header' ? (
+            <Text style={styles.sectionLabel}>{item.label}</Text>
+          ) : (
+            <WalletRow wallet={item.wallet} navigation={navigation} />
+          )
+        }
       />
+      <BottomNavBar active="wallets" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg},
-  header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg},
-  title: {color: colors.textPrimary, fontSize: 22, fontWeight: '600'},
-  addButton: {backgroundColor: colors.accent, borderRadius: radius.pill, paddingVertical: spacing.xs, paddingHorizontal: spacing.md},
-  addButtonText: {color: colors.textPrimary, fontWeight: '600'},
-  stateText: {color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl},
-  errorText: {color: colors.negative, textAlign: 'center', marginTop: spacing.xl},
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  walletName: {color: colors.textPrimary, fontSize: 16, fontWeight: '600'},
-  walletType: {color: colors.textSecondary, fontSize: 13, marginTop: 2},
+  container: {flex: 1, backgroundColor: colors.background},
+  header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 20, fontWeight: '600'},
+  addGlyph: {color: colors.accentOnDark, fontSize: 24},
+  chipRow: {flexDirection: 'row', gap: 7, paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  chip: {paddingHorizontal: 13, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border},
+  chipActive: {backgroundColor: colors.textPrimary, borderColor: colors.textPrimary},
+  chipText: {fontSize: 11.5, color: colors.textSecondary},
+  chipTextActive: {fontSize: 11.5, fontWeight: '600', color: colors.background},
+  splitRow: {flexDirection: 'row', gap: 10, paddingHorizontal: spacing.lg, paddingTop: spacing.md, marginBottom: spacing.md},
+  splitCard: {flex: 1, padding: 13, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  splitCardOwe: {borderColor: 'rgba(255,107,107,.3)'},
+  splitLabel: {fontSize: 10.5, color: colors.textSecondary},
+  splitAmount: {fontFamily: fontFamilies.monetary, fontSize: 16, marginTop: 5, color: colors.textPrimary},
+  sectionLabel: {fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: '#5A5A66', paddingTop: spacing.md, paddingBottom: 4},
+  stateText: {color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg},
+  errorBlock: {alignItems: 'center', marginTop: spacing.xl, gap: spacing.sm},
+  errorTitle: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
+  errorRetry: {color: colors.accentOnDark, fontSize: 12.5, fontWeight: '600'},
+  emptyBlock: {marginHorizontal: spacing.lg, marginTop: spacing.lg, gap: spacing.sm},
+  emptyTitle: {color: colors.textPrimary, fontSize: 15, fontWeight: '600', marginBottom: spacing.xs},
+  emptyOption: {flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  emptyOptionText: {flex: 1, color: colors.textPrimary, fontSize: 13},
+  emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
+  row: {flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  rowLiability: {borderWidth: 0, borderLeftWidth: 2, borderLeftColor: colors.negative},
+  rowIcon: {width: 38, height: 38, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center'},
+  rowIconGlyph: {color: colors.accentOnDark, fontWeight: '700'},
+  rowName: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  rowMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11, marginTop: 2},
+  rowAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 14},
 });

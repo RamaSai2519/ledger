@@ -5,9 +5,10 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {InsightPeriod} from '@/api/client';
 import {insightsApi} from '@/api/client';
+import {BottomNavBar} from '@/components/BottomNavBar';
 import {MoneyText} from '@/components/MoneyText';
 import {GroupedSparkline, HorizontalBarList, Sparkline} from '@/components/InsightBars';
-import {colors, radius, spacing} from '@/theme/tokens';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Insights'>;
 
@@ -48,10 +49,12 @@ function PeriodToggle({period, onChange}: {period: InsightPeriod; onChange: (p: 
 
 function TrendSection({period}: {period: InsightPeriod}) {
   const query = useQuery({queryKey: ['insights', 'trends', period], queryFn: () => insightsApi.trends({period})});
+  const total = query.data?.points.reduce((s, p) => s + p.expense, 0) ?? 0;
 
   return (
     <View style={styles.card}>
-      <SectionHeader title="Expense trend" />
+      <Text style={styles.totalLabel}>Total spent{period === 'monthly' ? `, ${new Date().toLocaleDateString('en-IN', {month: 'long'})}` : ''}</Text>
+      {query.isSuccess && <Text style={styles.totalAmount}>₹{total.toLocaleString('en-IN')}</Text>}
       {query.isLoading && <Text style={styles.stateText}>Loading…</Text>}
       {query.isError && <Text style={styles.errorText}>{(query.error as Error).message}</Text>}
       {query.isSuccess && (
@@ -174,21 +177,33 @@ function NetWorthSection() {
 }
 
 export function InsightsScreen(_props: Props) {
-  const [period, setPeriod] = React.useState<InsightPeriod>('daily');
+  const [period, setPeriod] = React.useState<InsightPeriod>('monthly');
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <PeriodToggle period={period} onChange={setPeriod} />
-      <TrendSection period={period} />
-      <IncomeVsExpenseSection period={period} />
-      <CategoryBreakdownSection period={period} />
-      <NetWorthSection />
-    </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Insights</Text>
+        <Text style={styles.calendarGlyph}>🗓</Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <PeriodToggle period={period} onChange={setPeriod} />
+        <TrendSection period={period} />
+        <IncomeVsExpenseSection period={period} />
+        <CategoryBreakdownSection period={period} />
+        <NetWorthSection />
+      </ScrollView>
+      <BottomNavBar active="insights" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.background},
+  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 20, fontWeight: '600'},
+  calendarGlyph: {fontSize: 18},
+  totalLabel: {fontSize: 11, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.textSecondary},
+  totalAmount: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 32, letterSpacing: -1, fontWeight: '600', marginTop: 4},
   content: {padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl},
   toggleRow: {
     flexDirection: 'row',

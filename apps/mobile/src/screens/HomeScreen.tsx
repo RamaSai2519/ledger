@@ -1,19 +1,19 @@
 import React from 'react';
-import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
-import {useQueries, useQuery} from '@tanstack/react-query';
+import {FlatList, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {useMutation, useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
-import type {Wallet} from '@/api/client';
+import type {Category, Wallet} from '@/api/client';
 import type {Budget} from '@/api/client';
-import {budgetsApi, transactionsApi, walletsApi} from '@/api/client';
-import {MoneyText} from '@/components/MoneyText';
-import {usePartnerAccent} from '@/hooks/usePartnerAccent';
+import {budgetsApi, categoriesApi, insightsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
+import {BottomNavBar} from '@/components/BottomNavBar';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 import {useAuthStore} from '@/state/authStore';
-import {colors, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
+const BUDGET_BAR_COLORS = [colors.accent, colors.positive, '#8FB4FF', '#D4A5FF'];
 
 function computeNetWorth(wallets: Wallet[]): number {
   return wallets.reduce((sum, w) => {
@@ -22,33 +22,74 @@ function computeNetWorth(wallets: Wallet[]): number {
   }, 0);
 }
 
-function TransactionRow({txn}: {txn: import('@/api/client').Transaction}) {
-  const accent = usePartnerAccent(txn.user_id);
-  const isExpense = txn.type === 'expense';
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+// Featured wallet card — a single stacked-card hero (s11/2a in the design
+// project uses 3 angled cards as a decorative stack; RN has no cheap way to
+// clip/rotate a true card-stack shadow, so this keeps the two decorative
+// backdrop layers and the real front card, which reads the same at this
+// scale).
+function WalletHeroCard({wallet}: {wallet: Wallet}) {
+  const isLiability = LIABILITY_TYPES.has(wallet.type);
   return (
-    <View style={[styles.txnRow, {borderLeftColor: accent}]}>
-      <View style={{flex: 1}}>
-        <Text style={styles.txnMerchant}>{txn.merchant_name || txn.note || txn.type}</Text>
-        <Text style={styles.txnDate}>{new Date(txn.date).toLocaleDateString()}</Text>
+    <View style={styles.walletStack}>
+      <View style={[styles.walletBackdrop, styles.walletBackdropFar]} />
+      <View style={[styles.walletBackdrop, styles.walletBackdropNear]} />
+      <View style={styles.walletCard}>
+        <View style={styles.walletCardHeader}>
+          <Text style={styles.walletCardName}>{wallet.name}</Text>
+          <View style={styles.walletBadge}>
+            <Text style={styles.walletBadgeText}>{isLiability ? 'Owe' : 'Have'}</Text>
+          </View>
+        </View>
+        {!!wallet.account_last4 && <Text style={styles.walletCardDigits}>•••• •••• {wallet.account_last4}</Text>}
+        <View style={styles.walletCardFooter}>
+          <View>
+            <Text style={styles.walletCardLabel}>{isLiability ? 'Outstanding' : 'Balance'}</Text>
+            <Text style={styles.walletCardAmount}>₹{Math.abs(wallet.current_balance).toLocaleString('en-IN')}</Text>
+          </View>
+          {isLiability && wallet.credit_card_details?.credit_limit != null && (
+            <View style={{alignItems: 'flex-end'}}>
+              <Text style={styles.walletCardLabel}>Limit left</Text>
+              <Text style={[styles.walletCardAmount, {fontSize: 12, color: '#DFFCEB'}]}>
+                ₹{Math.max(0, wallet.credit_card_details.credit_limit - wallet.current_balance).toLocaleString('en-IN')}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
-      <MoneyText
-        amount={txn.amount}
-        positive={txn.type === 'income'}
-        negative={isExpense}
-        style={styles.txnAmount}
-      />
     </View>
   );
 }
 
-// Compact budget-status widget (LED-5): top 1-3 budgets by percent-used,
-// tap-through to the full Budgets screen. Fetches every budget's progress
-// in parallel via useQueries rather than one useQuery per rendered row,
-// since the widget needs all of them loaded together to rank by percent
-// before deciding which 1-3 to show.
-function BudgetStatusWidget({navigation}: {navigation: Props['navigation']}) {
+function NetWorthSparkline({points}: {points: number[]}) {
+  const max = Math.max(1, ...points);
+  return (
+    <View style={styles.sparkline}>
+      {points.map((v, i) => (
+        <View
+          key={i}
+          style={[
+            styles.sparklineBar,
+            {height: `${Math.max(8, (v / max) * 100)}%`},
+            i === points.length - 1 && {backgroundColor: colors.accent},
+            i === points.length - 2 && {backgroundColor: '#3B3670'},
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+function BudgetStrip({navigation}: {navigation: Props['navigation']}) {
   const budgetsQuery = useQuery({queryKey: ['budgets'], queryFn: () => budgetsApi.list()});
   const budgets = budgetsQuery.data?.budgets ?? [];
+  const categoriesQuery = useQuery({queryKey: ['categories', 'all'], queryFn: () => categoriesApi.list()});
 
   const progressQueries = useQueries({
     queries: budgets.map((b) => ({
@@ -60,31 +101,103 @@ function BudgetStatusWidget({navigation}: {navigation: Props['navigation']}) {
 
   if (budgetsQuery.isLoading || budgets.length === 0) return null;
 
-  const ranked = budgets
-    .map((budget, i) => ({budget, progress: progressQueries[i]?.data}))
-    .filter((entry): entry is {budget: Budget; progress: NonNullable<typeof entry.progress>} => !!entry.progress)
-    .sort((a, b) => b.progress.percent - a.progress.percent)
-    .slice(0, 3);
-
-  if (ranked.length === 0) return null;
+  const totalSpent = progressQueries.reduce((s, q) => s + (q.data?.spent ?? 0), 0);
+  const totalAmount = progressQueries.reduce((s, q) => s + (q.data?.amount ?? 0), 0);
+  const labelFor = (b: Budget) => {
+    if (b.scope === 'overall') return 'Overall';
+    const cat = categoriesQuery.data?.categories.find((c) => c.id === b.scope_ref_id);
+    return cat?.name ?? b.scope;
+  };
 
   return (
-    <Pressable style={styles.budgetWidget} onPress={() => navigation.navigate('BudgetsList')}>
-      <Text style={styles.sectionTitle}>Budgets</Text>
-      {ranked.map(({budget, progress}) => {
-        const percent = Math.min(100, Math.max(0, progress.percent));
-        const color = progress.percent >= 100 ? colors.negative : progress.percent >= (budget.threshold_percents[0] ?? 80) ? colors.accent : colors.positive;
-        return (
-          <View key={budget.id} style={styles.budgetRow}>
-            <Text style={styles.budgetLabel}>{budget.scope === 'overall' ? 'Overall' : budget.scope}</Text>
-            <View style={styles.budgetBarTrack}>
-              <View style={[styles.budgetBarFill, {width: `${percent}%`, backgroundColor: color}]} />
+    <Pressable style={styles.card} onPress={() => navigation.navigate('BudgetsList')}>
+      <View style={styles.budgetHeader}>
+        <Text style={styles.cardTitle}>{new Date().toLocaleDateString('en-IN', {month: 'long'})} budget</Text>
+        <Text style={styles.budgetTotal}>
+          ₹{totalSpent.toLocaleString('en-IN')} <Text style={styles.budgetTotalMuted}>/ {totalAmount.toLocaleString('en-IN')}</Text>
+        </Text>
+      </View>
+      <View style={styles.budgetBars}>
+        {budgets.slice(0, 3).map((b, i) => {
+          const progress = progressQueries[i]?.data;
+          const percent = Math.min(100, progress?.percent ?? 0);
+          const over = (progress?.percent ?? 0) >= 100;
+          return (
+            <View key={b.id} style={{flex: 1, gap: 5}}>
+              <View style={styles.budgetTrack}>
+                <View style={[styles.budgetFill, {width: `${percent}%`, backgroundColor: over ? colors.negative : BUDGET_BAR_COLORS[i]}]} />
+              </View>
+              <Text style={[styles.budgetLabel, over && {color: colors.negative}]} numberOfLines={1}>
+                {labelFor(b)} {over ? 'over' : `${percent.toFixed(0)}%`}
+              </Text>
             </View>
-            <Text style={[styles.budgetPercent, {color}]}>{progress.percent.toFixed(0)}%</Text>
-          </View>
-        );
-      })}
+          );
+        })}
+      </View>
     </Pressable>
+  );
+}
+
+function SmsSuggestionInlineCard({navigation}: {navigation: Props['navigation']}) {
+  const queryClient = useQueryClient();
+  const suggestionsQuery = useQuery({queryKey: ['sms', 'suggestions'], queryFn: () => smsApi.suggestions()});
+  const suggestion = suggestionsQuery.data?.suggestions[0];
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
+    queryClient.invalidateQueries({queryKey: ['transactions']});
+    queryClient.invalidateQueries({queryKey: ['wallets']});
+  };
+  const confirmMutation = useMutation({mutationFn: () => smsApi.accept(suggestion!.id), onSuccess: invalidate});
+  const dismissMutation = useMutation({mutationFn: () => smsApi.dismiss(suggestion!.id), onSuccess: invalidate});
+
+  if (!suggestion) return null;
+  const canConfirm = !!(suggestion.suggested_wallet_id && suggestion.suggested_category_id);
+
+  return (
+    <View style={styles.smsCard}>
+      <View style={styles.smsHeader}>
+        <Text style={styles.smsGlyph}>●</Text>
+        <Text style={styles.smsLabel}>Detected from SMS</Text>
+      </View>
+      <Text style={styles.smsBody}>
+        ₹{(suggestion.parsed_amount ?? 0).toFixed(0)} at {suggestion.parsed_merchant ?? 'a merchant'} — add as{' '}
+        {suggestion.parsed_direction === 'credit' ? 'income' : 'an expense'}?
+      </Text>
+      <View style={styles.smsActions}>
+        <Pressable
+          style={[styles.smsConfirm, (!canConfirm || confirmMutation.isPending) && {opacity: 0.5}]}
+          disabled={!canConfirm || confirmMutation.isPending}
+          onPress={() => confirmMutation.mutate()}>
+          <Text style={styles.smsConfirmText}>{confirmMutation.isPending ? 'Confirming…' : 'Confirm'}</Text>
+        </Pressable>
+        <Pressable style={styles.smsEdit} onPress={() => navigation.navigate('SmsSuggestionEdit', {suggestion})}>
+          <Text style={styles.smsEditText}>Edit</Text>
+        </Pressable>
+        <Pressable style={styles.smsDismiss} onPress={() => dismissMutation.mutate()}>
+          <Text style={styles.smsDismissText}>Dismiss</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function TransactionRow({txn, category}: {txn: import('@/api/client').Transaction; category?: Category}) {
+  const isExpense = txn.type === 'expense';
+  return (
+    <View style={styles.txnRow}>
+      <View style={styles.txnIconTile}>
+        <Text style={styles.txnIconGlyph}>{(category?.name ?? txn.type).charAt(0).toUpperCase()}</Text>
+        <View style={[styles.txnDot, {backgroundColor: category?.color ?? colors.accent}]} />
+      </View>
+      <View style={{flex: 1}}>
+        <Text style={styles.txnMerchant}>{txn.merchant_name || txn.note || txn.type}</Text>
+        <Text style={styles.txnMeta}>{category?.name ?? txn.type}</Text>
+      </View>
+      <Text style={[styles.txnAmount, txn.type === 'income' && {color: colors.positive}]}>
+        {isExpense ? '−' : txn.type === 'income' ? '+' : ''}₹{txn.amount.toLocaleString('en-IN')}
+      </Text>
+    </View>
   );
 }
 
@@ -96,116 +209,181 @@ export function HomeScreen({navigation}: Props) {
     queryKey: ['transactions', 'recent'],
     queryFn: () => transactionsApi.list({page: 1, page_size: 10}),
   });
+  const categoriesQuery = useQuery({queryKey: ['categories', 'all'], queryFn: () => categoriesApi.list()});
+  const netWorthHistoryQuery = useQuery({
+    queryKey: ['insights', 'net-worth-history', 'home'],
+    queryFn: () => insightsApi.netWorthHistory(),
+  });
 
-  const netWorth = walletsQuery.data ? computeNetWorth(walletsQuery.data.wallets) : 0;
+  const wallets = walletsQuery.data?.wallets.filter((w) => !w.is_archived) ?? [];
+  const netWorth = computeNetWorth(wallets);
+  const featuredWallet = wallets.find((w) => LIABILITY_TYPES.has(w.type)) ?? wallets[0];
+  const sparklinePoints = (netWorthHistoryQuery.data?.snapshots.slice(-6).map((s) => s.net_worth) ?? [1, 1, 1, 1, 1, 1]).map((v) =>
+    Math.max(0, v),
+  );
+
+  const categoryById = new Map((categoriesQuery.data?.categories ?? []).map((c) => [c.id, c]));
+  const todaysTransactions = (transactionsQuery.data?.transactions ?? []).filter((t) => {
+    const d = new Date(t.date);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  });
+  const todaysExpense = todaysTransactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.greeting}>Welcome, {name}</Text>
-
-      <View style={styles.heroCard}>
-        <Text style={styles.heroLabel}>Net worth</Text>
-        {walletsQuery.isLoading ? (
-          <Text style={styles.stateText}>Loading…</Text>
-        ) : (
-          <MoneyText amount={netWorth} style={styles.heroAmount} positive={netWorth >= 0} negative={netWorth < 0} />
-        )}
-      </View>
-
-      <View style={styles.quickActions}>
-        <Pressable style={styles.quickAction} onPress={() => navigation.navigate('TransactionForm', undefined)}>
-          <Text style={styles.quickActionText}>+ Add transaction</Text>
-        </Pressable>
-        <Pressable style={styles.quickAction} onPress={() => navigation.navigate('WalletForm', undefined)}>
-          <Text style={styles.quickActionText}>+ Add wallet</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.linksRow}>
-        <Pressable onPress={() => navigation.navigate('WalletsList')}>
-          <Text style={styles.link}>Wallets</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate('Categories')}>
-          <Text style={styles.link}>Categories</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate('Insights')}>
-          <Text style={styles.link}>Insights</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate('Notifications')}>
-          <Text style={styles.link}>Notifications</Text>
-        </Pressable>
-      </View>
-
-      <BudgetStatusWidget navigation={navigation} />
-
-      <Text style={styles.sectionTitle}>Recent transactions</Text>
-      {transactionsQuery.isLoading && <Text style={styles.stateText}>Loading…</Text>}
-      {transactionsQuery.isSuccess && transactionsQuery.data.transactions.length === 0 && (
-        <Text style={styles.stateText}>No transactions yet — add your first one above.</Text>
-      )}
-      <FlatList
-        data={transactionsQuery.data?.transactions ?? []}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{gap: spacing.xs}}
-        renderItem={({item}) => (
-          <Pressable onPress={() => navigation.navigate('TransactionForm', {transactionId: item.id})}>
-            <TransactionRow txn={item} />
+      <ScrollView contentContainerStyle={{paddingBottom: 8}}>
+        <View style={styles.topBar}>
+          <View style={styles.topBarLeft}>
+            <View style={styles.mark}>
+              <Text style={styles.markText}>L</Text>
+            </View>
+            <Text style={styles.greeting}>
+              {greeting()}, {name}
+            </Text>
+          </View>
+          <Pressable onPress={() => navigation.navigate('Notifications')}>
+            <Text style={styles.bellGlyph}>🔔</Text>
           </Pressable>
+        </View>
+
+        <View style={styles.netWorthBlock}>
+          <Text style={styles.netWorthLabel}>Net worth</Text>
+          <View style={styles.netWorthRow}>
+            {walletsQuery.isLoading ? (
+              <Text style={styles.stateText}>Loading…</Text>
+            ) : (
+              <Text style={styles.netWorthAmount}>₹{netWorth.toLocaleString('en-IN')}</Text>
+            )}
+            <NetWorthSparkline points={sparklinePoints} />
+          </View>
+        </View>
+
+        {walletsQuery.isError && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>Can't reach the server</Text>
+            <Text style={styles.errorSubtitle}>New entries save on this phone and sync later.</Text>
+            <Pressable onPress={() => walletsQuery.refetch()}>
+              <Text style={styles.errorRetry}>Try again</Text>
+            </Pressable>
+          </View>
         )}
-      />
+
+        {walletsQuery.isSuccess && wallets.length === 0 && (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>No wallets yet</Text>
+            <Text style={styles.emptySubtitle}>Add your first bank account or card and your balance shows up here.</Text>
+            <Pressable style={styles.emptyCta} onPress={() => navigation.navigate('WalletForm', undefined)}>
+              <Text style={styles.emptyCtaText}>Add a wallet</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {featuredWallet && <WalletHeroCard wallet={featuredWallet} />}
+
+        <BudgetStrip navigation={navigation} />
+        <SmsSuggestionInlineCard navigation={navigation} />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Today</Text>
+          <Text style={styles.sectionMeta}>−₹{todaysExpense.toLocaleString('en-IN')}</Text>
+        </View>
+
+        {transactionsQuery.isLoading && <Text style={styles.stateText}>Loading…</Text>}
+        {transactionsQuery.isSuccess && todaysTransactions.length === 0 && (
+          <Text style={styles.emptyText}>No transactions yet today — tap + to add your first one.</Text>
+        )}
+        <FlatList
+          data={todaysTransactions}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          contentContainerStyle={{paddingHorizontal: spacing.lg, gap: 2}}
+          renderItem={({item}) => (
+            <Pressable onPress={() => navigation.navigate('TransactionForm', {transactionId: item.id})}>
+              <TransactionRow txn={item} category={item.category_id ? categoryById.get(item.category_id) : undefined} />
+            </Pressable>
+          )}
+        />
+      </ScrollView>
+      <BottomNavBar active="home" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg},
-  greeting: {color: colors.textPrimary, fontSize: 18, fontWeight: '600', marginBottom: spacing.md},
-  heroCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+  container: {flex: 1, backgroundColor: colors.background},
+  topBar: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  topBarLeft: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
+  mark: {width: 30, height: 30, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
+  markText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 15, fontWeight: '700'},
+  greeting: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  bellGlyph: {fontSize: 18},
+  netWorthBlock: {paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  netWorthLabel: {fontSize: 11, letterSpacing: 0.9, textTransform: 'uppercase', color: colors.textSecondary},
+  netWorthRow: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 6},
+  netWorthAmount: {
+    color: colors.textPrimary,
+    fontFamily: fontFamilies.display,
+    fontSize: 34,
+    letterSpacing: -1.1,
+    lineHeight: 34,
+    fontWeight: '600',
   },
-  heroLabel: {color: colors.textSecondary, fontSize: 13, marginBottom: spacing.xs},
-  heroAmount: {fontSize: 34, fontWeight: '700'},
-  stateText: {color: colors.textSecondary, fontSize: 13},
-  quickActions: {flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md},
-  quickAction: {
-    flex: 1,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  quickActionText: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
-  linksRow: {flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.lg},
-  link: {color: colors.accent, fontSize: 14, fontWeight: '600'},
-  sectionTitle: {color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginBottom: spacing.sm},
-  txnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderLeftWidth: 3,
-    padding: spacing.sm,
-  },
-  txnMerchant: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
-  txnDate: {color: colors.textSecondary, fontSize: 12, marginTop: 2},
-  txnAmount: {fontSize: 14},
-  budgetWidget: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  budgetRow: {flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm},
-  budgetLabel: {color: colors.textPrimary, fontSize: 13, width: 70},
-  budgetBarTrack: {flex: 1, height: 6, borderRadius: radius.pill, backgroundColor: colors.border, overflow: 'hidden'},
-  budgetBarFill: {height: '100%', borderRadius: radius.pill},
-  budgetPercent: {fontSize: 12, fontWeight: '700', width: 36, textAlign: 'right'},
+  sparkline: {flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 34},
+  sparklineBar: {width: 5, borderRadius: 2, backgroundColor: colors.border, minHeight: 4},
+  walletStack: {height: 180, marginTop: 14, marginHorizontal: 20},
+  walletBackdrop: {position: 'absolute', left: 24, right: 24, borderRadius: 20, backgroundColor: colors.backgroundRaised, borderWidth: 1, borderColor: colors.border},
+  walletBackdropFar: {top: 0, height: 106, transform: [{rotate: '-4deg'}]},
+  walletBackdropNear: {top: 10, height: 108, backgroundColor: colors.surface, borderColor: '#2A2A38', transform: [{rotate: '2.5deg'}]},
+  walletCard: {position: 'absolute', left: 0, right: 0, top: 22, padding: 16, borderRadius: 20, backgroundColor: colors.accent},
+  walletCardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  walletCardName: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
+  walletBadge: {paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,.16)'},
+  walletBadgeText: {color: colors.textPrimary, fontSize: 10},
+  walletCardDigits: {color: 'rgba(255,255,255,.72)', fontFamily: fontFamilies.monetary, fontSize: 13, letterSpacing: 2.5, marginTop: 14},
+  walletCardFooter: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 9},
+  walletCardLabel: {color: 'rgba(255,255,255,.62)', fontSize: 10},
+  walletCardAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 18, fontWeight: '500'},
+  card: {marginHorizontal: 16, marginTop: 4, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  cardTitle: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
+  budgetHeader: {flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between'},
+  budgetTotal: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11.5},
+  budgetTotalMuted: {color: '#73737F'},
+  budgetBars: {flexDirection: 'row', gap: 6, marginTop: 10},
+  budgetTrack: {height: 5, borderRadius: 3, backgroundColor: colors.border, overflow: 'hidden'},
+  budgetFill: {height: '100%', borderRadius: 3},
+  budgetLabel: {fontSize: 10, color: colors.textSecondary},
+  smsCard: {marginHorizontal: 16, marginTop: 10, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: '#3B3670'},
+  smsHeader: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  smsGlyph: {color: colors.accentOnDark, fontSize: 10},
+  smsLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.accentOnDark, fontWeight: '600'},
+  smsBody: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600', marginTop: 8, lineHeight: 18.5},
+  smsActions: {flexDirection: 'row', gap: 8, marginTop: 11},
+  smsConfirm: {flex: 1, height: 38, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
+  smsConfirmText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
+  smsEdit: {height: 38, paddingHorizontal: 16, borderRadius: radius.pill, borderWidth: 1, borderColor: '#2A2A38', alignItems: 'center', justifyContent: 'center'},
+  smsEditText: {color: '#C9C9D2', fontSize: 12.5},
+  smsDismiss: {height: 38, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center'},
+  smsDismissText: {color: colors.textSecondary, fontSize: 12.5},
+  sectionHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 4},
+  sectionTitle: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 14, fontWeight: '600'},
+  sectionMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11.5},
+  stateText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg},
+  emptyText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg, lineHeight: 19},
+  errorCard: {marginHorizontal: 16, marginTop: spacing.sm, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(255,107,107,.3)'},
+  errorTitle: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  errorSubtitle: {color: colors.textSecondary, fontSize: 11.5, marginTop: 4, lineHeight: 16},
+  errorRetry: {color: colors.accentOnDark, fontSize: 12, fontWeight: '600', marginTop: spacing.sm},
+  emptyCard: {marginHorizontal: 16, marginTop: spacing.sm, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  emptyTitle: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  emptySubtitle: {color: colors.textSecondary, fontSize: 11.5, marginTop: 4, lineHeight: 16},
+  emptyCta: {alignSelf: 'flex-start', marginTop: spacing.sm, height: 38, paddingHorizontal: 16, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
+  emptyCtaText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
+  txnRow: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8},
+  txnIconTile: {width: 36, height: 36, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center'},
+  txnIconGlyph: {color: '#C9C9D2', fontSize: 14, fontWeight: '700'},
+  txnDot: {position: 'absolute', bottom: -2, right: -2, width: 11, height: 11, borderRadius: 6, borderWidth: 2, borderColor: colors.background},
+  txnMerchant: {color: colors.textPrimary, fontSize: 13, fontWeight: '500'},
+  txnMeta: {color: colors.textSecondary, fontSize: 11, marginTop: 1},
+  txnAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 13.5},
 });

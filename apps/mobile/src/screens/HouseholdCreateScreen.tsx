@@ -5,30 +5,70 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
 import {useAuthStore} from '@/state/authStore';
-import {colors, radius, spacing} from '@/theme/tokens';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {HouseholdTabs} from '@/components/HouseholdTabs';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HouseholdCreate'>;
 
+// s06 in the design project. The mockup shows the invite code already
+// generated with Share/Continue actions — here the household is created as
+// soon as a name is entered and confirmed, then this same screen flips to
+// showing the code, matching that same layout.
 export function HouseholdCreateScreen({navigation}: Props) {
   const [name, setName] = useState('Our Home');
   const setHouseholdId = useAuthStore((s) => s.setHouseholdId);
 
   const mutation = useMutation({
     mutationFn: () => householdApi.create(name),
-    onSuccess: (data) => {
-      setHouseholdId(data.household_id);
-      navigation.replace('Home');
-    },
+    onSuccess: (data) => setHouseholdId(data.household_id, data.name),
   });
+
+  if (mutation.isSuccess) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerBlock}>
+          <Text style={styles.title}>Your household</Text>
+          <Text style={styles.subtitle}>One household, two accounts, one shared book.</Text>
+        </View>
+        <HouseholdTabs active="create" onSelectJoin={() => navigation.replace('HouseholdJoin')} />
+
+        <View style={styles.codeCard}>
+          <Text style={styles.fieldLabel}>Household name</Text>
+          <Text style={styles.householdName}>{mutation.data.name}</Text>
+          <View style={styles.divider} />
+          <Text style={styles.fieldLabel}>Invite code</Text>
+          <Text style={styles.code}>{mutation.data.invite_code}</Text>
+          <Text style={styles.codeHint}>Share this with your partner. It works once, and expires in 24 hours.</Text>
+        </View>
+
+        <View style={styles.waitingBanner}>
+          <Text style={styles.waitingText}>Waiting for your partner to join. You can start adding wallets now.</Text>
+        </View>
+
+        <View style={{flex: 1}} />
+        <Pressable style={styles.button} onPress={() => navigation.replace('SmsPermissionRationale')}>
+          <Text style={styles.buttonText}>Continue</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Name your household</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.textSecondary} />
-      {mutation.isSuccess && (
-        <Text style={styles.inviteCode}>Invite code: {mutation.data.invite_code}</Text>
-      )}
+      <View style={styles.headerBlock}>
+        <Text style={styles.title}>Your household</Text>
+        <Text style={styles.subtitle}>One household, two accounts, one shared book.</Text>
+      </View>
+      <HouseholdTabs active="create" onSelectJoin={() => navigation.replace('HouseholdJoin')} />
+
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>Household name</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.textSecondary} />
+      </View>
+
       {mutation.isError && <Text style={styles.error}>{(mutation.error as Error).message}</Text>}
+
+      <View style={{flex: 1}} />
       <Pressable style={styles.button} onPress={() => mutation.mutate()} disabled={mutation.isPending}>
         <Text style={styles.buttonText}>{mutation.isPending ? 'Creating…' : 'Create household'}</Text>
       </Pressable>
@@ -37,19 +77,47 @@ export function HouseholdCreateScreen({navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg, justifyContent: 'center'},
-  title: {color: colors.textPrimary, fontSize: 22, fontWeight: '600', marginBottom: spacing.lg},
+  container: {flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl},
+  headerBlock: {paddingTop: spacing.sm},
+  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 27, letterSpacing: -0.6, fontWeight: '600'},
+  subtitle: {color: colors.textSecondary, fontSize: 13.5, marginTop: spacing.xs},
+  field: {marginTop: spacing.lg},
+  fieldLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textSecondary},
   input: {
+    marginTop: spacing.xs,
+    height: 50,
+    borderRadius: radius.input,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.textPrimary,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingHorizontal: 14,
+    fontSize: 15,
   },
-  inviteCode: {color: colors.positive, marginBottom: spacing.md, fontSize: 16},
-  button: {backgroundColor: colors.accent, borderRadius: radius.pill, padding: spacing.md, alignItems: 'center'},
+  codeCard: {
+    marginTop: spacing.lg,
+    padding: 20,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  householdName: {color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginTop: spacing.xs},
+  divider: {height: 1, backgroundColor: colors.border, marginVertical: 18},
+  code: {color: colors.accentOnDark, fontFamily: fontFamilies.monetary, fontSize: 30, letterSpacing: 6, marginTop: 10},
+  codeHint: {fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 18},
+  waitingBanner: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    padding: 14,
+    borderRadius: radius.row,
+    backgroundColor: 'rgba(91,84,249,.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(91,84,249,.28)',
+  },
+  waitingText: {flex: 1, fontSize: 12.5, color: '#C9C9D2'},
+  error: {color: colors.negative, marginTop: spacing.sm},
+  button: {height: 52, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
-  error: {color: colors.negative, marginBottom: spacing.sm},
 });

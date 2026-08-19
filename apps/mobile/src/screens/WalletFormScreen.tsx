@@ -5,17 +5,26 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {WalletType} from '@/api/client';
 import {walletsApi} from '@/api/client';
-import {colors, radius, spacing} from '@/theme/tokens';
+import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletForm'>;
 
-const WALLET_TYPES: {value: WalletType; label: string}[] = [
-  {value: 'bank_account', label: 'Bank account'},
-  {value: 'cash', label: 'Cash'},
-  {value: 'credit_card', label: 'Credit card'},
-  {value: 'pay_later', label: 'Pay later'},
-  {value: 'loan', label: 'Loan'},
+const WALLET_TYPES: {value: WalletType; label: string; glyph: string}[] = [
+  {value: 'bank_account', label: 'Bank', glyph: 'B'},
+  {value: 'credit_card', label: 'Credit card', glyph: 'C'},
+  {value: 'pay_later', label: 'Pay later', glyph: 'P'},
+  {value: 'cash', label: 'Cash', glyph: '₹'},
+  {value: 'loan', label: 'Loan', glyph: 'L'},
 ];
+
+function Field({label, children}: {label: string; children: React.ReactNode}) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
 
 export function WalletFormScreen({route, navigation}: Props) {
   const walletId = route.params?.walletId;
@@ -34,7 +43,6 @@ export function WalletFormScreen({route, navigation}: Props) {
   const [accountLast4, setAccountLast4] = useState('');
   const [openingBalance, setOpeningBalance] = useState('0');
 
-  // credit_card / pay_later / loan detail fields
   const [creditLimit, setCreditLimit] = useState('');
   const [statementDay, setStatementDay] = useState('');
   const [dueDay, setDueDay] = useState('');
@@ -140,121 +148,195 @@ export function WalletFormScreen({route, navigation}: Props) {
   });
 
   const mutation = isEdit ? updateMutation : createMutation;
+  const showLast4Toggle = accountLast4.length === 4;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: spacing.xl}}>
-      <Text style={styles.title}>{isEdit ? 'Edit wallet' : 'Add wallet'}</Text>
-
-      <Text style={styles.label}>Name</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.textSecondary} placeholder="e.g. HDFC Savings" />
-
+    <ScrollView style={styles.container} contentContainerStyle={{padding: spacing.lg, paddingBottom: spacing.xl}}>
       {!isEdit && (
         <>
-          <Text style={styles.label}>Type</Text>
-          <View style={styles.typeRow}>
+          <Text style={styles.sectionLabel}>Type</Text>
+          <View style={styles.typeGrid}>
             {WALLET_TYPES.map((t) => (
-              <Pressable
-                key={t.value}
-                style={[styles.typeChip, type === t.value && styles.typeChipSelected]}
-                onPress={() => setType(t.value)}>
-                <Text style={type === t.value ? styles.typeChipTextSelected : styles.typeChipText}>{t.label}</Text>
+              <Pressable key={t.value} style={[styles.typeTile, type === t.value && styles.typeTileSelected]} onPress={() => setType(t.value)}>
+                <Text style={[styles.typeGlyph, type === t.value && {color: colors.accentOnDark}]}>{t.glyph}</Text>
+                <Text style={type === t.value ? styles.typeLabelSelected : styles.typeLabel}>{t.label}</Text>
               </Pressable>
             ))}
           </View>
         </>
       )}
 
-      <Text style={styles.label}>Provider</Text>
-      <TextInput style={styles.input} value={provider} onChangeText={setProvider} placeholderTextColor={colors.textSecondary} placeholder="e.g. HDFC Bank" />
-
-      <Text style={styles.label}>Last 4 digits</Text>
-      <TextInput
-        style={styles.input}
-        value={accountLast4}
-        onChangeText={setAccountLast4}
-        keyboardType="number-pad"
-        maxLength={4}
-        placeholderTextColor={colors.textSecondary}
-      />
-
-      {!isEdit && (
-        <>
-          <Text style={styles.label}>Opening balance</Text>
+      <View style={{gap: spacing.md, marginTop: spacing.lg}}>
+        <Field label="Name">
+          <TextInput style={styles.fieldInput} value={name} onChangeText={setName} placeholderTextColor={colors.textSecondary} placeholder="e.g. HDFC Savings" />
+        </Field>
+        <Field label="Provider">
+          <TextInput style={styles.fieldInput} value={provider} onChangeText={setProvider} placeholderTextColor={colors.textSecondary} placeholder="e.g. HDFC Bank" />
+        </Field>
+        <Field label="Last 4 digits">
           <TextInput
-            style={styles.input}
-            value={openingBalance}
-            onChangeText={setOpeningBalance}
-            keyboardType="numeric"
+            style={[styles.fieldInput, styles.fieldInputMono]}
+            value={accountLast4}
+            onChangeText={setAccountLast4}
+            keyboardType="number-pad"
+            maxLength={4}
+            placeholder="4821"
             placeholderTextColor={colors.textSecondary}
           />
-        </>
-      )}
+        </Field>
 
-      {type === 'credit_card' && (
-        <>
-          <Text style={styles.sectionLabel}>Credit card details</Text>
-          <TextInput style={styles.input} placeholder="Credit limit" value={creditLimit} onChangeText={setCreditLimit} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Statement day (1-28)" value={statementDay} onChangeText={setStatementDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Due day (1-28)" value={dueDay} onChangeText={setDueDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Min due %" value={minDuePercent} onChangeText={setMinDuePercent} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-        </>
-      )}
+        {!isEdit && (
+          <Field label="Opening balance">
+            <TextInput
+              style={[styles.fieldInput, styles.fieldInputMono]}
+              value={openingBalance}
+              onChangeText={setOpeningBalance}
+              keyboardType="numeric"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </Field>
+        )}
 
-      {type === 'pay_later' && (
-        <>
-          <Text style={styles.sectionLabel}>Pay later details</Text>
-          <TextInput style={styles.input} placeholder="Credit limit" value={creditLimit} onChangeText={setCreditLimit} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Billing cycle day" value={billingCycleDay} onChangeText={setBillingCycleDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Due day" value={dueDay} onChangeText={setDueDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-        </>
-      )}
+        {type === 'credit_card' && (
+          <>
+            <View style={styles.fieldRow}>
+              <View style={{flex: 1}}>
+                <Field label="Credit limit">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={creditLimit} onChangeText={setCreditLimit} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+              <View style={{flex: 1}}>
+                <Field label="Min due %">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={minDuePercent} onChangeText={setMinDuePercent} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+            </View>
+            <View style={styles.fieldRow}>
+              <View style={{flex: 1}}>
+                <Field label="Statement day">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={statementDay} onChangeText={setStatementDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+              <View style={{flex: 1}}>
+                <Field label="Due day">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={dueDay} onChangeText={setDueDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+            </View>
+          </>
+        )}
 
-      {type === 'loan' && (
-        <>
-          <Text style={styles.sectionLabel}>Loan details</Text>
-          <TextInput style={styles.input} placeholder="Principal" value={principal} onChangeText={setPrincipal} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Interest rate %" value={interestRate} onChangeText={setInterestRate} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="Tenure (months)" value={tenureMonths} onChangeText={setTenureMonths} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-          <TextInput style={styles.input} placeholder="EMI amount" value={emiAmount} onChangeText={setEmiAmount} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-        </>
-      )}
+        {type === 'pay_later' && (
+          <View style={styles.fieldRow}>
+            <View style={{flex: 1}}>
+              <Field label="Credit limit">
+                <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={creditLimit} onChangeText={setCreditLimit} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+              </Field>
+            </View>
+            <View style={{flex: 1}}>
+              <Field label="Due day">
+                <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={dueDay} onChangeText={setDueDay} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
+              </Field>
+            </View>
+          </View>
+        )}
+
+        {type === 'loan' && (
+          <>
+            <View style={styles.fieldRow}>
+              <View style={{flex: 1}}>
+                <Field label="Principal">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={principal} onChangeText={setPrincipal} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+              <View style={{flex: 1}}>
+                <Field label="Interest %">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={interestRate} onChangeText={setInterestRate} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+            </View>
+            <View style={styles.fieldRow}>
+              <View style={{flex: 1}}>
+                <Field label="Tenure (months)">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={tenureMonths} onChangeText={setTenureMonths} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+              <View style={{flex: 1}}>
+                <Field label="EMI amount">
+                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={emiAmount} onChangeText={setEmiAmount} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
+                </Field>
+              </View>
+            </View>
+          </>
+        )}
+
+        {showLast4Toggle && (
+          <View style={styles.toggleRow}>
+            <View style={{flex: 1}}>
+              <Text style={styles.toggleTitle}>Match bank SMS to this card</Text>
+              <Text style={styles.toggleSubtitle}>Uses the last 4 digits.</Text>
+            </View>
+            <View style={[styles.toggleTrack, styles.toggleTrackOn]}>
+              <View style={styles.toggleThumb} />
+            </View>
+          </View>
+        )}
+      </View>
 
       {mutation.isError && <Text style={styles.error}>{(mutation.error as Error).message}</Text>}
 
       <Pressable style={styles.button} onPress={() => mutation.mutate()} disabled={mutation.isPending || !name.trim()}>
-        <Text style={styles.buttonText}>
-          {mutation.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Create wallet'}
-        </Text>
+        <Text style={styles.buttonText}>{mutation.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Save wallet'}</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg},
-  title: {color: colors.textPrimary, fontSize: 22, fontWeight: '600', marginBottom: spacing.lg},
-  label: {color: colors.textSecondary, fontSize: 13, marginBottom: spacing.xs, marginTop: spacing.sm},
-  sectionLabel: {color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginTop: spacing.md, marginBottom: spacing.xs},
-  input: {
+  container: {flex: 1, backgroundColor: colors.background},
+  sectionLabel: {fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: '#5A5A66', marginBottom: spacing.sm},
+  typeGrid: {flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs},
+  typeTile: {
+    width: '31%',
+    padding: 12,
+    borderRadius: 14,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 7,
+  },
+  typeTileSelected: {backgroundColor: 'rgba(91,84,249,.12)', borderColor: colors.accent},
+  typeGlyph: {fontSize: 17, color: colors.textSecondary, fontFamily: fontFamilies.monetary},
+  typeLabel: {fontSize: 11.5, color: '#C9C9D2'},
+  typeLabelSelected: {fontSize: 11.5, fontWeight: '600', color: colors.textPrimary},
+  field: {gap: spacing.xs},
+  fieldLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textSecondary},
+  fieldInput: {
+    height: 50,
+    borderRadius: radius.input,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.textPrimary,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    paddingHorizontal: 14,
+    fontSize: 14,
   },
-  typeRow: {flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm},
-  typeChip: {
-    borderRadius: radius.pill,
+  fieldInputMono: {fontFamily: fontFamilies.monetary},
+  fieldRow: {flexDirection: 'row', gap: spacing.sm},
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 13,
+    borderRadius: radius.row,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
   },
-  typeChipSelected: {backgroundColor: colors.accent, borderColor: colors.accent},
-  typeChipText: {color: colors.textSecondary, fontSize: 13},
-  typeChipTextSelected: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  toggleTitle: {fontSize: 12.5, fontWeight: '600', color: colors.textPrimary},
+  toggleSubtitle: {fontSize: 11, color: colors.textSecondary, marginTop: 2},
+  toggleTrack: {width: 44, height: 26, borderRadius: radius.pill, padding: 3, justifyContent: 'center'},
+  toggleTrackOn: {backgroundColor: colors.accent, alignItems: 'flex-end'},
+  toggleThumb: {width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff'},
   button: {backgroundColor: colors.accent, borderRadius: radius.pill, padding: spacing.md, alignItems: 'center', marginTop: spacing.lg},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
   error: {color: colors.negative, marginTop: spacing.sm},
