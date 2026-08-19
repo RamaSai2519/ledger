@@ -13,6 +13,14 @@ LIABILITY_WALLET_TYPES = {"credit_card", "pay_later", "loan"}
 ASSET_WALLET_TYPES = {"bank_account", "cash"}
 WALLET_TYPES = ASSET_WALLET_TYPES | LIABILITY_WALLET_TYPES
 
+# "loan" is deliberately still in WALLET_TYPES/LIABILITY_WALLET_TYPES above
+# so any pre-existing loan wallet keeps computing its balance/net-worth
+# contribution correctly — it's just no longer offered when creating a new
+# wallet (see wallet_create/validate.py's CREATABLE_WALLET_TYPES). Loan
+# tracking is moving to its own dedicated feature (LED ticket filed
+# alongside this change) rather than living under wallets going forward.
+CREATABLE_WALLET_TYPES = WALLET_TYPES - {"loan"}
+
 TRANSACTION_TYPES = {"expense", "income", "transfer", "adjustment"}
 
 

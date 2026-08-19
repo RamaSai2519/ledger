@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
 import {FlatList, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type {Category} from '@/api/client';
 import {colors, radius, spacing} from '@/theme/tokens';
+import {glyphForCategoryIcon} from '@/theme/categoryIcons';
 
 type Props = {
   label: string;
@@ -9,10 +11,6 @@ type Props = {
   value: string | null;
   onChange: (value: string) => void;
 };
-
-function glyphFor(category: Category): string {
-  return category.icon || category.name.charAt(0).toUpperCase();
-}
 
 // LED-10: dedicated icon-grid category picker (design project's #s16),
 // replacing the generic PickerField list specifically for category
@@ -33,7 +31,11 @@ export function CategoryIconGridField({label, categories, value, onChange}: Prop
                 styles.selectedIconTile,
                 {backgroundColor: `${selected.color ?? colors.accent}24`, borderColor: selected.color ?? colors.accent},
               ]}>
-              <Text style={[styles.selectedIconGlyph, {color: selected.color ?? colors.accent}]}>{glyphFor(selected)}</Text>
+              <MaterialCommunityIcons
+                name={glyphForCategoryIcon(selected.icon)}
+                size={17}
+                color={selected.color ?? colors.accent}
+              />
             </View>
             <Text style={styles.fieldText}>{selected.name}</Text>
           </View>
@@ -68,7 +70,7 @@ export function CategoryIconGridField({label, categories, value, onChange}: Prop
                         {backgroundColor: `${color}1F`, borderColor: isSelected ? color : colors.border},
                         isSelected && styles.gridIconTileSelected,
                       ]}>
-                      <Text style={[styles.gridIconGlyph, {color}]}>{glyphFor(item)}</Text>
+                      <MaterialCommunityIcons name={glyphForCategoryIcon(item.icon)} size={22} color={color} />
                       {isSelected && <View style={[styles.checkBadge, {backgroundColor: color}]}><Text style={styles.checkBadgeText}>✓</Text></View>}
                     </View>
                     <Text style={styles.gridItemLabel} numberOfLines={1}>
@@ -98,7 +100,6 @@ const styles = StyleSheet.create({
   },
   selectedRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
   selectedIconTile: {width: 34, height: 34, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
-  selectedIconGlyph: {fontSize: 15, fontWeight: '700'},
   fieldText: {color: colors.textPrimary, fontSize: 15},
   placeholderText: {color: colors.textSecondary, fontSize: 15, paddingVertical: spacing.xs},
   backdrop: {flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'},
@@ -122,7 +123,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   gridIconTileSelected: {borderWidth: 2},
-  gridIconGlyph: {fontSize: 20, fontWeight: '700'},
   checkBadge: {position: 'absolute', bottom: -3, right: -3, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: colors.surface},
   checkBadgeText: {color: colors.textPrimary, fontSize: 9, fontWeight: '700'},
   gridItemLabel: {color: colors.textSecondary, fontSize: 10.5, textAlign: 'center'},

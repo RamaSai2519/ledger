@@ -1,11 +1,13 @@
 import React, {useState} from 'react';
 import {FlatList, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {CategoryType} from '@/api/client';
 import {categoriesApi} from '@/api/client';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {glyphForCategoryIcon} from '@/theme/categoryIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Categories'>;
 
@@ -154,9 +156,11 @@ export function CategoriesScreen({}: Props) {
                   : setEditing({id: item.id, name: item.name, color: item.color ?? SWATCHES[0]})
               }>
               <View style={[styles.rowIcon, !item.archived && {backgroundColor: `${item.color ?? colors.accent}1F`, borderColor: item.color ?? colors.accent}]}>
-                <Text style={[styles.rowIconGlyph, {color: item.archived ? colors.textSecondary : item.color ?? colors.accent}]}>
-                  {item.name.charAt(0).toUpperCase()}
-                </Text>
+                <MaterialCommunityIcons
+                  name={glyphForCategoryIcon(item.icon)}
+                  size={17}
+                  color={item.archived ? colors.textSecondary : item.color ?? colors.accent}
+                />
               </View>
               <View style={{flex: 1}}>
                 <Text style={styles.rowName}>{item.name}</Text>
@@ -196,7 +200,6 @@ const styles = StyleSheet.create({
   emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
   row: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#17171F'},
   rowIcon: {width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center'},
-  rowIconGlyph: {fontWeight: '700', fontSize: 14},
   rowName: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600'},
   rowMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11, marginTop: 2},
   rowChevron: {color: '#5A5A66', fontSize: 18},

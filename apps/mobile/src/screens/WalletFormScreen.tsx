@@ -9,12 +9,15 @@ import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletForm'>;
 
+// "loan" is deliberately absent — no longer a creatable wallet type (loan
+// tracking is moving to its own dedicated feature, see the LED ticket filed
+// alongside this change). The `type === 'loan'` branches further down stay
+// in place so a pre-existing loan wallet can still be viewed/edited.
 const WALLET_TYPES: {value: WalletType; label: string; glyph: string}[] = [
   {value: 'bank_account', label: 'Bank', glyph: 'B'},
   {value: 'credit_card', label: 'Credit card', glyph: 'C'},
   {value: 'pay_later', label: 'Pay later', glyph: 'P'},
   {value: 'cash', label: 'Cash', glyph: '₹'},
-  {value: 'loan', label: 'Loan', glyph: 'L'},
 ];
 
 function Field({label, children}: {label: string; children: React.ReactNode}) {

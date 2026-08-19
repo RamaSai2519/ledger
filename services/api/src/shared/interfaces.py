@@ -84,7 +84,9 @@ class WalletCreateInput:
     color: str | None = None
     credit_card_details: dict | None = None
     pay_later_details: dict | None = None
-    loan_details: dict | None = None
+    # No loan_details field here — "loan" isn't a creatable wallet type any
+    # more (see shared/balance.py's CREATABLE_WALLET_TYPES); loan_details
+    # only exists on pre-existing loan wallets, editable via WalletUpdateInput.
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 

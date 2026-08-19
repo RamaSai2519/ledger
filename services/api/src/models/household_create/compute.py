@@ -19,11 +19,11 @@ def _unique_invite_code(households) -> str:
 def _seed_default_categories(household_id: ObjectId) -> None:
     categories = get_categories_collection()
     docs = [
-        {"household_id": household_id, "name": name, "type": "expense", "is_default": True, "is_archived": False}
-        for name in DEFAULT_EXPENSE_CATEGORIES
+        {"household_id": household_id, "name": name, "icon": icon, "type": "expense", "is_default": True, "is_archived": False}
+        for name, icon in DEFAULT_EXPENSE_CATEGORIES
     ] + [
-        {"household_id": household_id, "name": name, "type": "income", "is_default": True, "is_archived": False}
-        for name in DEFAULT_INCOME_CATEGORIES
+        {"household_id": household_id, "name": name, "icon": icon, "type": "income", "is_default": True, "is_archived": False}
+        for name, icon in DEFAULT_INCOME_CATEGORIES
     ]
     categories.insert_many(docs)
 

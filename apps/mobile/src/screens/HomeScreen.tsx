@@ -1,5 +1,6 @@
 import React from 'react';
 import {FlatList, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useMutation, useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
@@ -8,7 +9,9 @@ import type {Budget} from '@/api/client';
 import {budgetsApi, categoriesApi, insightsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {Sparkline} from '@/components/InsightBars';
+import {WalletCardStack} from '@/components/WalletCardStack';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {glyphForCategoryIcon} from '@/theme/categoryIcons';
 import {useAuthStore} from '@/state/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -28,44 +31,6 @@ function greeting(): string {
   if (h < 12) return 'Good morning';
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-// Featured wallet card — a single stacked-card hero (s11/2a in the design
-// project uses 3 angled cards as a decorative stack; RN has no cheap way to
-// clip/rotate a true card-stack shadow, so this keeps the two decorative
-// backdrop layers and the real front card, which reads the same at this
-// scale).
-function WalletHeroCard({wallet}: {wallet: Wallet}) {
-  const isLiability = LIABILITY_TYPES.has(wallet.type);
-  return (
-    <View style={styles.walletStack}>
-      <View style={[styles.walletBackdrop, styles.walletBackdropFar]} />
-      <View style={[styles.walletBackdrop, styles.walletBackdropNear]} />
-      <View style={styles.walletCard}>
-        <View style={styles.walletCardHeader}>
-          <Text style={styles.walletCardName}>{wallet.name}</Text>
-          <View style={styles.walletBadge}>
-            <Text style={styles.walletBadgeText}>{isLiability ? 'Owe' : 'Have'}</Text>
-          </View>
-        </View>
-        {!!wallet.account_last4 && <Text style={styles.walletCardDigits}>•••• •••• {wallet.account_last4}</Text>}
-        <View style={styles.walletCardFooter}>
-          <View>
-            <Text style={styles.walletCardLabel}>{isLiability ? 'Outstanding' : 'Balance'}</Text>
-            <Text style={styles.walletCardAmount}>₹{Math.abs(wallet.current_balance).toLocaleString('en-IN')}</Text>
-          </View>
-          {isLiability && wallet.credit_card_details?.credit_limit != null && (
-            <View style={{alignItems: 'flex-end'}}>
-              <Text style={styles.walletCardLabel}>Limit left</Text>
-              <Text style={[styles.walletCardAmount, {fontSize: 12, color: '#DFFCEB'}]}>
-                ₹{Math.max(0, wallet.credit_card_details.credit_limit - wallet.current_balance).toLocaleString('en-IN')}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </View>
-  );
 }
 
 function BudgetStrip({navigation}: {navigation: Props['navigation']}) {
@@ -169,7 +134,7 @@ function TransactionRow({txn, category}: {txn: import('@/api/client').Transactio
   return (
     <View style={styles.txnRow}>
       <View style={styles.txnIconTile}>
-        <Text style={styles.txnIconGlyph}>{(category?.name ?? txn.type).charAt(0).toUpperCase()}</Text>
+        <MaterialCommunityIcons name={glyphForCategoryIcon(category?.icon)} size={16} color="#C9C9D2" />
         <View style={[styles.txnDot, {backgroundColor: category?.color ?? colors.accent}]} />
       </View>
       <View style={{flex: 1}}>
@@ -199,7 +164,6 @@ export function HomeScreen({navigation}: Props) {
 
   const wallets = walletsQuery.data?.wallets.filter((w) => !w.is_archived) ?? [];
   const netWorth = computeNetWorth(wallets);
-  const featuredWallet = wallets.find((w) => LIABILITY_TYPES.has(w.type)) ?? wallets[0];
   const sparklinePoints = (
     netWorthHistoryQuery.data?.snapshots.slice(-6) ??
     Array.from({length: 6}, (_, i) => ({date: null as string | null, net_worth: 0}))
@@ -267,7 +231,7 @@ export function HomeScreen({navigation}: Props) {
           </View>
         )}
 
-        {featuredWallet && <WalletHeroCard wallet={featuredWallet} />}
+        <WalletCardStack wallets={wallets} />
 
         <BudgetStrip navigation={navigation} />
         <SmsSuggestionInlineCard navigation={navigation} />
@@ -318,19 +282,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   netWorthChart: {marginTop: spacing.sm},
-  walletStack: {height: 180, marginTop: 14, marginHorizontal: 20},
-  walletBackdrop: {position: 'absolute', left: 24, right: 24, borderRadius: 20, backgroundColor: colors.backgroundRaised, borderWidth: 1, borderColor: colors.border},
-  walletBackdropFar: {top: 0, height: 106, transform: [{rotate: '-4deg'}]},
-  walletBackdropNear: {top: 10, height: 108, backgroundColor: colors.surface, borderColor: '#2A2A38', transform: [{rotate: '2.5deg'}]},
-  walletCard: {position: 'absolute', left: 0, right: 0, top: 22, padding: 16, borderRadius: 20, backgroundColor: colors.accent},
-  walletCardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
-  walletCardName: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
-  walletBadge: {paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,.16)'},
-  walletBadgeText: {color: colors.textPrimary, fontSize: 10},
-  walletCardDigits: {color: 'rgba(255,255,255,.72)', fontFamily: fontFamilies.monetary, fontSize: 13, letterSpacing: 2.5, marginTop: 14},
-  walletCardFooter: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 9},
-  walletCardLabel: {color: 'rgba(255,255,255,.62)', fontSize: 10},
-  walletCardAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 18, fontWeight: '500'},
   card: {marginHorizontal: 16, marginTop: 4, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   cardTitle: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
   budgetHeader: {flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between'},
