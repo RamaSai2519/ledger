@@ -1,17 +1,17 @@
 import React from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RootStackParamList} from '@/navigation/types';
-import {colors} from '@/theme/tokens';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/types';
+import { colors } from '@/theme/tokens';
 
 type Tab = 'home' | 'wallets' | 'insights' | 'settings';
 
-const TABS: Array<{key: Tab; label: string; glyph: string; route: keyof RootStackParamList}> = [
-  {key: 'home', label: 'Home', glyph: '⌂', route: 'Home'},
-  {key: 'wallets', label: 'Wallets', glyph: '◧', route: 'WalletsList'},
-  {key: 'insights', label: 'Insights', glyph: '◔', route: 'Insights'},
-  {key: 'settings', label: 'Settings', glyph: '⚙', route: 'Settings'},
+const TABS: Array<{ key: Tab; label: string; glyph: string; route: keyof RootStackParamList }> = [
+  { key: 'home', label: 'Home', glyph: '⌂', route: 'Home' },
+  { key: 'wallets', label: 'Wallets', glyph: '◧', route: 'WalletsList' },
+  { key: 'insights', label: 'Insights', glyph: '◔', route: 'Insights' },
+  { key: 'settings', label: 'Settings', glyph: '⚙', route: 'Settings' },
 ];
 
 // KhaataNav.dc.html in the design project — a persistent bottom tab bar
@@ -22,7 +22,7 @@ const TABS: Array<{key: Tab; label: string; glyph: string; route: keyof RootStac
 // on a native-stack still pops back to an existing route instance instead
 // of stacking a duplicate, so switching tabs behaves close enough to real
 // tabs without adding a new native dependency.
-export function BottomNavBar({active}: {active: Tab}) {
+export function BottomNavBar({ active }: { active: Tab }) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
@@ -40,9 +40,11 @@ export function BottomNavBar({active}: {active: Tab}) {
           <Text style={[styles.label, active === tab.key && styles.labelActive]}>{tab.label}</Text>
         </Pressable>
       ))}
-      <Pressable style={styles.fab} onPress={() => navigation.navigate('TransactionForm', undefined)}>
-        <Text style={styles.fabGlyph}>+</Text>
-      </Pressable>
+      <View style={styles.fabWrap} pointerEvents="box-none">
+        <Pressable style={styles.fab} onPress={() => navigation.navigate('TransactionForm', undefined)}>
+          <Text style={styles.fabGlyph}>+</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -60,17 +62,20 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  tab: {alignItems: 'center', gap: 3, width: 52},
-  fabSpacer: {width: 56},
-  glyph: {fontSize: 20, color: '#5A5A66'},
-  glyphActive: {color: colors.textPrimary},
-  label: {fontSize: 9.5, color: '#5A5A66'},
-  labelActive: {color: colors.textPrimary},
-  fab: {
+  tab: { alignItems: 'center', gap: 3, width: 52 },
+  fabSpacer: { width: 56 },
+  glyph: { fontSize: 20, color: '#5A5A66' },
+  glyphActive: { color: colors.textPrimary },
+  label: { fontSize: 9.5, color: '#5A5A66' },
+  labelActive: { color: colors.textPrimary },
+  fabWrap: {
     position: 'absolute',
-    left: '50%',
+    left: 0,
+    right: 0,
     top: -22,
-    marginLeft: -28,
+    alignItems: 'center',
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -80,5 +85,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabGlyph: {fontSize: 26, color: '#fff', lineHeight: 28},
+  fabGlyph: { fontSize: 26, color: '#fff', lineHeight: 28 },
 });
