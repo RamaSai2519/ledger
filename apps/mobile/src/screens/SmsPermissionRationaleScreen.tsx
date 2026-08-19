@@ -7,11 +7,12 @@ import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 type Props = NativeStackScreenProps<RootStackParamList, 'SmsPermissionRationale'>;
 
 // Plain-language rationale shown before the actual Android permission
-// prompt (plan.md §7 step 1, LED-7 mobile scope) — no native BroadcastReceiver
-// module exists yet to act on a granted permission, so this screen only
-// requests RECEIVE_SMS (a core React Native API, no native linking needed)
-// and returns to Home either way; the listener itself is separate native
-// work tracked outside this screen.
+// prompt (plan.md §7 step 1, LED-7 mobile scope). The RECEIVE_SMS request
+// itself is a core React Native API call; the manifest-registered
+// android/.../sms/SmsReceiver.kt BroadcastReceiver is what actually acts on
+// the grant (and keeps working even if the app is later backgrounded or
+// killed). Returns to Home either way — manual entry always remains
+// available (plan.md §7 step 12).
 const POINTS: Array<{tone: 'positive' | 'negative'; title: string; body: string}> = [
   {
     tone: 'positive',

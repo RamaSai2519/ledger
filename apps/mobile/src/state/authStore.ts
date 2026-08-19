@@ -1,5 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {NativeModules, Platform} from 'react-native';
 import {create} from 'zustand';
+
+// LED-7: hands the refresh token to the native SmsIngestWorker (Android
+// only), which runs via WorkManager and may execute after the JS runtime
+// has been killed — it can't read zustand state or AsyncStorage directly.
+// See android/app/.../sms/AuthTokenModule.kt.
+const AuthTokenModule = Platform.OS === 'android' ? NativeModules.AuthTokenModule : null;
 
 // Not a real cryptographic hash — just enough to avoid keeping the PIN as
 // plaintext in memory/AsyncStorage while there's no native secure-storage
@@ -56,6 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       refreshToken: session.refreshToken,
     });
     AsyncStorage.setItem('refresh_token', session.refreshToken).catch(() => {});
+    AuthTokenModule?.setRefreshToken(session.refreshToken);
   },
   setHouseholdId: (householdId, householdName) => set({householdId, householdName: householdName ?? get().householdName}),
   setPin: (pin) => set({pinHash: hashPin(pin)}),
@@ -63,5 +71,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearSession: () => {
     set({userId: null, name: null, householdId: null, householdName: null, accessToken: null, refreshToken: null, pinHash: null});
     AsyncStorage.removeItem('refresh_token').catch(() => {});
+    AuthTokenModule?.clearRefreshToken();
   },
 }));

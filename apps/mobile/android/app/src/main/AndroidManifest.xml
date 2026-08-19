@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- LED-7 SMS pipeline (plan.md §2.1, §7, §13): sideload/Internal-Testing
+         distribution only, never a public Play Store listing while this is
+         declared, per the non-negotiable constraint in CLAUDE.md. -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
     <application
       android:name=".MainApplication"
@@ -10,6 +14,19 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
+      <!-- Manifest-registered (not JS/dynamically registered) so it keeps
+           receiving broadcasts even when the app is backgrounded or killed
+           (plan.md §13). android:exported must be true for a system
+           broadcast; android:permission restricts delivery to senders
+           holding BROADCAST_SMS (the platform/telephony stack only). -->
+      <receiver
+        android:name=".sms.SmsReceiver"
+        android:exported="true"
+        android:permission="android.permission.BROADCAST_SMS">
+        <intent-filter>
+          <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+        </intent-filter>
+      </receiver>
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
