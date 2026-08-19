@@ -8,6 +8,8 @@ from flask_jwt_extended import JWTManager
 from jobs.budget_threshold_check import run_budget_threshold_check
 from jobs.bill_due_reminders import run_bill_due_reminders
 from jobs.net_worth_snapshot import run_net_worth_snapshot
+from jobs.recurring_transactions_check import run_recurring_transactions_check
+from jobs.sms_purge import run_sms_purge
 from shared.after_request import register_error_handlers
 from jobs.digest_notifications import run_daily_digest
 from shared.db import get_revoked_tokens_collection
@@ -48,6 +50,8 @@ SCHEDULED_JOBS = {
     "digest_notifications": run_daily_digest,
     "bill_due_reminders": run_bill_due_reminders,
     "net_worth_snapshot": run_net_worth_snapshot,
+    "sms_purge": run_sms_purge,
+    "recurring_transactions_check": run_recurring_transactions_check,
 }
 
 

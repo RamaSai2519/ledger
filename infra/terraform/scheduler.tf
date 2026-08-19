@@ -121,3 +121,45 @@ resource "aws_scheduler_schedule" "net_worth_snapshot" {
     input    = jsonencode({ job = "net_worth_snapshot" })
   }
 }
+
+# Raw SMS text purge (plan.md §2.3/§14, LED-7) — data minimization: nulls
+# raw_text on sms_inbox docs once resolved or past the 30-day retention
+# window (see jobs/sms_purge.py). Not time-sensitive, so a daily cadence is
+# plenty — reuses the same ledger-scheduler role / Lambda target as the
+# other schedules above.
+resource "aws_scheduler_schedule" "sms_purge" {
+  name                = "ledger-sms-purge"
+  schedule_expression = "rate(1 day)"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.api.arn
+    role_arn = aws_iam_role.ledger_scheduler.arn
+    input    = jsonencode({ job = "sms_purge" })
+  }
+}
+
+# Recurring transaction due-date check (plan.md §10, LED-8) — scans
+# recurring_rules for anything due (next_due_date <= today) and either
+# auto-creates the transaction or sends a reminder, then advances
+# next_due_date. Due-dates are date-only, not time-of-day, so a daily
+# cadence is sufficient and doesn't need to line up with any specific IST
+# time. Reuses the same ledger-scheduler role / Lambda target as the other
+# schedules above.
+resource "aws_scheduler_schedule" "recurring_transactions_check" {
+  name                = "ledger-recurring-transactions-check"
+  schedule_expression = "rate(1 day)"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.api.arn
+    role_arn = aws_iam_role.ledger_scheduler.arn
+    input    = jsonencode({ job = "recurring_transactions_check" })
+  }
+}

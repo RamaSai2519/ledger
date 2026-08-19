@@ -20,8 +20,16 @@ from services.resources import (
     NotificationRead,
     Notifications,
     PinSet,
+    RecurringRuleDetail,
+    RecurringRuleSkipNext,
+    RecurringRules,
     Refresh,
     Signup,
+    SmsIngest,
+    SmsParserRules,
+    SmsSuggestionAccept,
+    SmsSuggestionDismiss,
+    SmsSuggestions,
     TransactionDetail,
     Transactions,
     TransactionTransfer,
@@ -57,6 +65,10 @@ def register_routes(api: Api) -> None:
 
     api.add_resource(FcmTokenRegister, "/users/fcm-token")
 
+    api.add_resource(RecurringRules, "/recurring")
+    api.add_resource(RecurringRuleDetail, "/recurring/<string:rule_id>")
+    api.add_resource(RecurringRuleSkipNext, "/recurring/<string:rule_id>/skip-next")
+
     api.add_resource(Budgets, "/budgets")
     api.add_resource(BudgetDetail, "/budgets/<string:budget_id>")
     api.add_resource(BudgetProgress, "/budgets/<string:budget_id>/progress")
@@ -68,3 +80,9 @@ def register_routes(api: Api) -> None:
 
     api.add_resource(Notifications, "/notifications")
     api.add_resource(NotificationRead, "/notifications/<string:notification_id>/read")
+
+    api.add_resource(SmsIngest, "/sms/ingest")
+    api.add_resource(SmsSuggestions, "/sms/suggestions")
+    api.add_resource(SmsSuggestionAccept, "/sms/suggestions/<string:sms_id>/accept")
+    api.add_resource(SmsSuggestionDismiss, "/sms/suggestions/<string:sms_id>/dismiss")
+    api.add_resource(SmsParserRules, "/sms/parser-rules")

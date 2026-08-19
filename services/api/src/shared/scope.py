@@ -3,6 +3,7 @@ from bson import ObjectId
 from shared.db import (
     get_budgets_collection,
     get_categories_collection,
+    get_recurring_rules_collection,
     get_sms_inbox_collection,
     get_transactions_collection,
     get_users_collection,
@@ -64,3 +65,14 @@ def get_household_sms_suggestion(household_id: ObjectId, sms_id: str) -> dict:
     if not sms:
         raise NotFoundError("sms_suggestion_not_found")
     return sms
+
+
+def get_household_recurring_rule(household_id: ObjectId, rule_id: str) -> dict:
+    try:
+        oid = ObjectId(rule_id)
+    except Exception as exc:
+        raise ValidationError("invalid_recurring_rule_id") from exc
+    rule = get_recurring_rules_collection().find_one({"_id": oid, "household_id": household_id})
+    if not rule:
+        raise NotFoundError("recurring_rule_not_found")
+    return rule

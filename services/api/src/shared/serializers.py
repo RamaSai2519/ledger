@@ -129,6 +129,25 @@ def serialize_sms_parser_rule(rule: dict) -> dict:
     }
 
 
+def serialize_recurring_rule(rule: dict) -> dict:
+    return {
+        "id": _str_id(rule["_id"]),
+        "household_id": _str_id(rule.get("household_id")),
+        "wallet_id": _str_id(rule.get("wallet_id")),
+        "category_id": _str_id(rule.get("category_id")),
+        "type": rule.get("type"),
+        "merchant_name": rule.get("merchant_name"),
+        "amount": rule.get("amount"),
+        "frequency": rule.get("frequency"),
+        "next_due_date": _iso(rule.get("next_due_date")),
+        "auto_detected": rule.get("auto_detected", False),
+        "auto_create": rule.get("auto_create", False),
+        "is_active": rule.get("is_active", True),
+        "created_at": _iso(rule.get("created_at")),
+        "updated_at": _iso(rule.get("updated_at")),
+    }
+
+
 def serialize_notification(notification: dict) -> dict:
     return {
         "id": _str_id(notification["_id"]),

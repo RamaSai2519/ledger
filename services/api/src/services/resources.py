@@ -26,8 +26,19 @@ from models.logout import main as logout
 from models.notification_list import main as notification_list
 from models.notification_read import main as notification_read
 from models.pin_set import main as pin_set
+from models.recurring_rule_create import main as recurring_rule_create
+from models.recurring_rule_delete import main as recurring_rule_delete
+from models.recurring_rule_list import main as recurring_rule_list
+from models.recurring_rule_skip_next import main as recurring_rule_skip_next
+from models.recurring_rule_update import main as recurring_rule_update
 from models.refresh import main as refresh
 from models.signup import main as signup
+from models.sms_ingest import main as sms_ingest
+from models.sms_parser_rules_create import main as sms_parser_rules_create
+from models.sms_parser_rules_list import main as sms_parser_rules_list
+from models.sms_suggestion_accept import main as sms_suggestion_accept
+from models.sms_suggestion_dismiss import main as sms_suggestion_dismiss
+from models.sms_suggestions_list import main as sms_suggestions_list
 from models.transaction_create import main as transaction_create
 from models.transaction_delete import main as transaction_delete
 from models.transaction_get import main as transaction_get
@@ -214,6 +225,32 @@ class BudgetProgress(Resource):
         return budget_progress.process(budget_id, get_jwt_identity())
 
 
+class RecurringRules(Resource):
+    @jwt_required()
+    def get(self):
+        return recurring_rule_list.process(get_jwt_identity(), request.args.to_dict())
+
+    @jwt_required()
+    def post(self):
+        return recurring_rule_create.process(request.get_json(force=True) or {}, get_jwt_identity())
+
+
+class RecurringRuleDetail(Resource):
+    @jwt_required()
+    def patch(self, rule_id):
+        return recurring_rule_update.process(rule_id, request.get_json(force=True) or {}, get_jwt_identity())
+
+    @jwt_required()
+    def delete(self, rule_id):
+        return recurring_rule_delete.process(rule_id, get_jwt_identity())
+
+
+class RecurringRuleSkipNext(Resource):
+    @jwt_required()
+    def post(self, rule_id):
+        return recurring_rule_skip_next.process(rule_id, get_jwt_identity())
+
+
 class InsightTrends(Resource):
     @jwt_required()
     def get(self):
@@ -248,3 +285,37 @@ class NotificationRead(Resource):
     @jwt_required()
     def post(self, notification_id):
         return notification_read.process(notification_id, get_jwt_identity())
+
+
+class SmsIngest(Resource):
+    @jwt_required()
+    def post(self):
+        return sms_ingest.process(request.get_json(force=True) or {}, get_jwt_identity())
+
+
+class SmsSuggestions(Resource):
+    @jwt_required()
+    def get(self):
+        return sms_suggestions_list.process(get_jwt_identity())
+
+
+class SmsSuggestionAccept(Resource):
+    @jwt_required()
+    def post(self, sms_id):
+        return sms_suggestion_accept.process(sms_id, request.get_json(silent=True) or {}, get_jwt_identity())
+
+
+class SmsSuggestionDismiss(Resource):
+    @jwt_required()
+    def post(self, sms_id):
+        return sms_suggestion_dismiss.process(sms_id, get_jwt_identity())
+
+
+class SmsParserRules(Resource):
+    @jwt_required()
+    def get(self):
+        return sms_parser_rules_list.process(get_jwt_identity())
+
+    @jwt_required()
+    def post(self):
+        return sms_parser_rules_create.process(request.get_json(force=True) or {}, get_jwt_identity())
