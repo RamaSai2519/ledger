@@ -74,12 +74,11 @@ export const householdApi = {
 
 function withQuery(path: string, params?: Record<string, string | number | boolean | undefined>): string {
   if (!params) return path;
-  const usp = new URLSearchParams();
+  const pairs: string[] = [];
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') usp.set(key, String(value));
+    if (value !== undefined && value !== null && value !== '') pairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
   });
-  const qs = usp.toString();
-  return qs ? `${path}?${qs}` : path;
+  return pairs.length ? `${path}?${pairs.join('&')}` : path;
 }
 
 // ---- Core Ledger (LED-4): wallets, categories, transactions ----
