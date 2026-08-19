@@ -2,16 +2,17 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type { RootStackParamList } from '@/navigation/types';
 import { colors } from '@/theme/tokens';
 
 type Tab = 'home' | 'wallets' | 'insights' | 'settings';
 
 const TABS: Array<{ key: Tab; label: string; glyph: string; route: keyof RootStackParamList }> = [
-  { key: 'home', label: 'Home', glyph: '⌂', route: 'Home' },
-  { key: 'wallets', label: 'Wallets', glyph: '◧', route: 'WalletsList' },
-  { key: 'insights', label: 'Insights', glyph: '◔', route: 'Insights' },
-  { key: 'settings', label: 'Settings', glyph: '⚙', route: 'Settings' },
+  { key: 'home', label: 'Home', glyph: 'home', route: 'Home' },
+  { key: 'wallets', label: 'Wallets', glyph: 'account-balance-wallet', route: 'WalletsList' },
+  { key: 'insights', label: 'Insights', glyph: 'insights', route: 'Insights' },
+  { key: 'settings', label: 'Settings', glyph: 'settings', route: 'Settings' },
 ];
 
 // KhaataNav.dc.html in the design project — a persistent bottom tab bar
@@ -29,20 +30,20 @@ export function BottomNavBar({ active }: { active: Tab }) {
     <View style={styles.bar}>
       {TABS.slice(0, 2).map((tab) => (
         <Pressable key={tab.key} style={styles.tab} onPress={() => navigation.navigate(tab.route as never)}>
-          <Text style={[styles.glyph, active === tab.key && styles.glyphActive]}>{tab.glyph}</Text>
+          <MaterialIcons name={tab.glyph} style={[styles.glyph, active === tab.key && styles.glyphActive]} />
           <Text style={[styles.label, active === tab.key && styles.labelActive]}>{tab.label}</Text>
         </Pressable>
       ))}
       <View style={styles.fabSpacer} />
       {TABS.slice(2).map((tab) => (
         <Pressable key={tab.key} style={styles.tab} onPress={() => navigation.navigate(tab.route as never)}>
-          <Text style={[styles.glyph, active === tab.key && styles.glyphActive]}>{tab.glyph}</Text>
+          <MaterialIcons name={tab.glyph} style={[styles.glyph, active === tab.key && styles.glyphActive]} />
           <Text style={[styles.label, active === tab.key && styles.labelActive]}>{tab.label}</Text>
         </Pressable>
       ))}
       <View style={styles.fabWrap} pointerEvents="box-none">
         <Pressable style={styles.fab} onPress={() => navigation.navigate('TransactionForm', undefined)}>
-          <Text style={styles.fabGlyph}>+</Text>
+          <MaterialIcons name="add" style={styles.fabGlyph} />
         </Pressable>
       </View>
     </View>

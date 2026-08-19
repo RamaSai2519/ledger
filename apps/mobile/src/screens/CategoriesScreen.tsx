@@ -7,7 +7,7 @@ import type {RootStackParamList} from '@/navigation/types';
 import type {CategoryType} from '@/api/client';
 import {categoriesApi} from '@/api/client';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
-import {glyphForCategoryIcon} from '@/theme/categoryIcons';
+import {CATEGORY_ICON_FALLBACK, glyphForCategoryIcon} from '@/theme/categoryIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Categories'>;
 
@@ -101,7 +101,7 @@ export function CategoriesScreen({}: Props) {
               <Text style={styles.editPanelLabel}>{editing.id ? 'Editing a category' : 'New category'}</Text>
               <View style={styles.editPanelRow}>
                 <View style={[styles.editIconTile, {backgroundColor: `${editing.color}24`, borderColor: editing.color}]}>
-                  <Text style={[styles.editIconGlyph, {color: editing.color}]}>{(editing.name || '?').charAt(0).toUpperCase()}</Text>
+                  <MaterialCommunityIcons name={CATEGORY_ICON_FALLBACK} style={[styles.editIconGlyph, {color: editing.color}]} />
                 </View>
                 <TextInput
                   style={styles.editNameInput}

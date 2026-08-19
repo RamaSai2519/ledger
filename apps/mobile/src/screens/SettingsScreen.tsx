@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {Linking, PermissionsAndroid, Platform, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Linking, PermissionsAndroid, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
@@ -23,13 +25,13 @@ function Row({glyph, title, subtitle, onPress, right}: {glyph: string; title: st
   return (
     <Pressable style={styles.row} onPress={onPress} disabled={!onPress}>
       <View style={styles.rowIcon}>
-        <Text style={styles.rowIconGlyph}>{glyph}</Text>
+        <MaterialIcons name={glyph} style={styles.rowIconGlyph} />
       </View>
       <View style={{flex: 1}}>
         <Text style={styles.rowTitle}>{title}</Text>
         {!!subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
       </View>
-      {right ?? <Text style={styles.chevron}>›</Text>}
+      {right ?? <MaterialIcons name="chevron-right" style={styles.chevron} />}
     </Pressable>
   );
 }
@@ -103,16 +105,32 @@ export function SettingsScreen({navigation}: Props) {
               <Text style={styles.inviteLabel}>Invite code</Text>
               <Text style={styles.inviteCode}>{inviteCodeQuery.data?.invite_code ?? '······'}</Text>
             </View>
+            {!!inviteCodeQuery.data?.invite_code && (
+              <View style={styles.inviteActions}>
+                <Pressable
+                  style={styles.inviteActionButton}
+                  onPress={() => Clipboard.setString(inviteCodeQuery.data!.invite_code)}
+                  hitSlop={8}>
+                  <MaterialIcons name="content-copy" style={styles.inviteActionIcon} />
+                </Pressable>
+                <Pressable
+                  style={styles.inviteActionButton}
+                  onPress={() => Share.share({message: `Join our Ledger household with code ${inviteCodeQuery.data!.invite_code}`})}
+                  hitSlop={8}>
+                  <MaterialIcons name="share" style={styles.inviteActionIcon} />
+                </Pressable>
+              </View>
+            )}
           </View>
         </View>
 
         <Text style={styles.sectionLabel}>Book</Text>
         <View style={styles.section}>
-          <Row glyph="⊞" title="Manage categories" onPress={() => navigation.navigate('Categories')} />
-          <Row glyph="◧" title="Manage wallets" onPress={() => navigation.navigate('WalletsList')} />
-          <Row glyph="↻" title="Recurring transactions" onPress={() => navigation.navigate('RecurringRulesList')} />
+          <Row glyph="category" title="Manage categories" onPress={() => navigation.navigate('Categories')} />
+          <Row glyph="account-balance-wallet" title="Manage wallets" onPress={() => navigation.navigate('WalletsList')} />
+          <Row glyph="autorenew" title="Recurring transactions" onPress={() => navigation.navigate('RecurringRulesList')} />
           <Row
-            glyph="✉"
+            glyph="sms"
             title="SMS detection"
             subtitle={smsDetectionOn ? 'On' : 'Off — tap to allow'}
             onPress={onToggleSms}
@@ -122,9 +140,9 @@ export function SettingsScreen({navigation}: Props) {
 
         <Text style={styles.sectionLabel}>Security</Text>
         <View style={styles.section}>
-          <Row glyph="•" title="Change PIN" onPress={() => navigation.navigate('PinSetup')} />
+          <Row glyph="lock" title="Change PIN" onPress={() => navigation.navigate('PinSetup')} />
           <Row
-            glyph="⚷"
+            glyph="fingerprint"
             title="Unlock with fingerprint"
             subtitle={biometricAvailable ? undefined : 'No fingerprint sensor on this device'}
             onPress={biometricAvailable ? onToggleBiometric : undefined}
@@ -174,9 +192,21 @@ const styles = StyleSheet.create({
   stackAvatarText: {fontSize: 10.5, fontWeight: '600'},
   householdNameText: {flex: 1, fontSize: 12.5, color: colors.textPrimary},
   divider: {height: 1, backgroundColor: colors.border, marginVertical: 11},
-  inviteRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
+  inviteRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   inviteLabel: {fontSize: 11, color: colors.textSecondary},
   inviteCode: {fontFamily: fontFamilies.monetary, fontSize: 17, letterSpacing: 4, color: colors.accentOnDark, marginTop: 3},
+  inviteActions: {flexDirection: 'row', gap: spacing.sm},
+  inviteActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.iconTile,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inviteActionIcon: {color: colors.accentOnDark, fontSize: 17},
   section: {marginHorizontal: spacing.lg},
   row: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#17171F'},
   rowIcon: {width: 36, height: 36, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center'},

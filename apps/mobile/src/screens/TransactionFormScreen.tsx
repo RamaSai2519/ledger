@@ -1,11 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, recurringApi, transactionsApi, walletsApi} from '@/api/client';
 import {CategoryIconGridField} from '@/components/CategoryIconGridField';
 import {PickerField} from '@/components/PickerField';
+import {Skeleton} from '@/components/Skeleton';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TransactionForm'>;
@@ -29,9 +31,9 @@ export function TransactionFormScreen({route, navigation}: Props) {
   const isEdit = !!transactionId;
   const queryClient = useQueryClient();
 
-  const [mode, setMode] = useState<TxnMode>('expense');
+  const [mode, setMode] = useState<TxnMode>(route.params?.mode ?? 'expense');
   const [walletId, setWalletId] = useState<string | null>(route.params?.walletId ?? null);
-  const [toWalletId, setToWalletId] = useState<string | null>(null);
+  const [toWalletId, setToWalletId] = useState<string | null>(route.params?.toWalletId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [amount, setAmount] = useState('0');
   const [note, setNote] = useState('');
@@ -162,12 +164,17 @@ export function TransactionFormScreen({route, navigation}: Props) {
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={styles.closeGlyph}>✕</Text>
+            <MaterialIcons name="close" style={styles.closeGlyph} />
           </Pressable>
           <Text style={styles.editTitle}>{isEdit ? 'Edit transaction' : 'Add expense'}</Text>
           <View style={{width: 22}} />
         </View>
-        <Text style={styles.stateText}>Loading…</Text>
+        <View style={{paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: spacing.md}}>
+          <Skeleton style={{height: 46, width: '60%', alignSelf: 'center'}} />
+          <Skeleton style={{height: 50}} radius={radius.input} />
+          <Skeleton style={{height: 50}} radius={radius.input} />
+          <Skeleton style={{height: 50}} radius={radius.input} />
+        </View>
       </View>
     );
   }
@@ -177,13 +184,15 @@ export function TransactionFormScreen({route, navigation}: Props) {
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={styles.closeGlyph}>✕</Text>
+            <MaterialIcons name="close" style={styles.closeGlyph} />
           </Pressable>
           <Text style={styles.editTitle}>Add expense</Text>
           <View style={{width: 22}} />
         </View>
         <View style={styles.emptyWalletBlock}>
+          <MaterialIcons name="error" style={styles.emptyWalletIcon} />
           <Text style={styles.emptyWalletTitle}>Couldn't load this form</Text>
+          <Text style={styles.emptyWalletSubtitle}>Nothing was saved. Check your connection and try again.</Text>
           <Pressable style={styles.emptyWalletCta} onPress={() => (isEdit ? existingQuery.refetch() : walletsQuery.refetch())}>
             <Text style={styles.emptyWalletCtaText}>Try again</Text>
           </Pressable>
@@ -197,12 +206,13 @@ export function TransactionFormScreen({route, navigation}: Props) {
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={styles.closeGlyph}>✕</Text>
+            <MaterialIcons name="close" style={styles.closeGlyph} />
           </Pressable>
           <Text style={styles.editTitle}>Add expense</Text>
           <View style={{width: 22}} />
         </View>
         <View style={styles.emptyWalletBlock}>
+          <MaterialIcons name="add-card" style={[styles.emptyWalletIcon, {color: colors.accentOnDark}]} />
           <Text style={styles.emptyWalletTitle}>Add a wallet first</Text>
           <Text style={styles.emptyWalletSubtitle}>Every expense sits in a wallet, so we need one before your first entry.</Text>
           <Pressable style={styles.emptyWalletCta} onPress={() => navigation.navigate('WalletForm', undefined)}>
@@ -217,7 +227,7 @@ export function TransactionFormScreen({route, navigation}: Props) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Text style={styles.closeGlyph}>✕</Text>
+          <MaterialIcons name="close" style={styles.closeGlyph} />
         </Pressable>
         {!isEdit ? (
           <View style={styles.segments}>
@@ -248,7 +258,16 @@ export function TransactionFormScreen({route, navigation}: Props) {
       </View>
       <Text style={styles.dateText}>Today · {new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short'})}</Text>
 
-      <View style={styles.fields}>
+      {mutation.isPending && (
+        <View style={styles.savingPill}>
+          <ActivityIndicator size="small" color={colors.textPrimary} />
+          <Text style={styles.savingPillText}>Saving…</Text>
+        </View>
+      )}
+
+      <View
+        style={[styles.fields, mutation.isPending && {opacity: 0.4}]}
+        pointerEvents={mutation.isPending ? 'none' : 'auto'}>
         {mode === 'transfer' ? (
           <>
             <PickerField label="From wallet" options={walletOptions} value={walletId} onChange={setWalletId} />
@@ -274,7 +293,7 @@ export function TransactionFormScreen({route, navigation}: Props) {
         {mode !== 'transfer' && !isEdit && (
           <Pressable style={styles.toggleRow} onPress={() => setMarkRecurring((v) => !v)}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: spacing.sm}}>
-              <Text style={styles.toggleGlyph}>↻</Text>
+              <MaterialIcons name="autorenew" style={styles.toggleGlyph} />
               <Text style={styles.toggleLabel}>Mark as recurring</Text>
             </View>
             <View style={[styles.toggleTrack, markRecurring && styles.toggleTrackOn]}>
@@ -284,7 +303,15 @@ export function TransactionFormScreen({route, navigation}: Props) {
         )}
       </View>
 
-      {mutation.isError && <Text style={styles.error}>{(mutation.error as Error).message}</Text>}
+      {mutation.isError && (
+        <View style={styles.errorBanner}>
+          <MaterialIcons name="error" style={styles.errorBannerIcon} />
+          <View style={{flex: 1}}>
+            <Text style={styles.error}>{(mutation.error as Error).message}</Text>
+            <Text style={styles.errorBannerHint}>Nothing was saved — kept on this phone, try again when ready.</Text>
+          </View>
+        </View>
+      )}
 
       {isEdit && (
         <Pressable style={styles.deleteButton} onPress={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
@@ -357,7 +384,34 @@ const styles = StyleSheet.create({
   toggleTrack: {width: 44, height: 26, borderRadius: radius.pill, backgroundColor: colors.border, padding: 3, justifyContent: 'center'},
   toggleTrackOn: {backgroundColor: colors.accent, alignItems: 'flex-end'},
   toggleThumb: {width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff'},
-  error: {color: colors.negative, textAlign: 'center', marginTop: spacing.sm},
+  error: {color: colors.negative, fontSize: 13, fontWeight: '600'},
+  errorBanner: {
+    flexDirection: 'row',
+    gap: 10,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+    padding: 14,
+    borderRadius: radius.row,
+    backgroundColor: 'rgba(255,107,107,.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,.3)',
+  },
+  errorBannerIcon: {color: colors.negative, fontSize: 20, marginTop: 1},
+  errorBannerHint: {color: colors.textSecondary, fontSize: 11.5, marginTop: 3, lineHeight: 16},
+  savingPill: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: spacing.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  savingPillText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
   deleteButton: {alignItems: 'center', padding: spacing.md},
   deleteButtonText: {color: colors.negative, fontSize: 14},
   keypad: {backgroundColor: colors.backgroundRaised, borderTopWidth: 1, borderTopColor: colors.border, padding: 10, paddingBottom: 14, gap: 8},
@@ -368,6 +422,7 @@ const styles = StyleSheet.create({
   submitKeyText: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600'},
   stateText: {color: colors.textSecondary, fontSize: 13, textAlign: 'center', marginTop: spacing.xl},
   emptyWalletBlock: {margin: spacing.lg, padding: 16, borderRadius: radius.card - 2, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  emptyWalletIcon: {color: colors.negative, fontSize: 26, marginBottom: spacing.sm},
   emptyWalletTitle: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
   emptyWalletSubtitle: {color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17},
   emptyWalletCta: {alignSelf: 'flex-start', marginTop: spacing.md, height: 42, paddingHorizontal: 18, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},

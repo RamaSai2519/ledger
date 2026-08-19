@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useMutation} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {authApi} from '@/api/client';
 import {useAuthStore} from '@/state/authStore';
@@ -76,7 +77,7 @@ export function SignUpScreen({navigation}: Props) {
               placeholderTextColor={colors.textSecondary}
             />
             <Pressable onPress={() => setPasswordVisible((v) => !v)} hitSlop={8}>
-              <Text style={styles.eyeGlyph}>{passwordVisible ? '🙈' : '👁'}</Text>
+              <MaterialIcons name={passwordVisible ? 'visibility-off' : 'visibility'} style={styles.eyeGlyph} />
             </Pressable>
           </View>
           <Text style={styles.fieldHint}>At least 8 characters.</Text>

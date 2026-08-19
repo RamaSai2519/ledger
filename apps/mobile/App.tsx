@@ -3,6 +3,9 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {RootNavigator} from '@/navigation/RootNavigator';
+import {applyFontDefaults} from '@/theme/applyFontDefaults';
+
+applyFontDefaults();
 
 const queryClient = new QueryClient();
 

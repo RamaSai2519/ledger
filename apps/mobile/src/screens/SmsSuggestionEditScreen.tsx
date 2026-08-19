@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, smsApi, walletsApi} from '@/api/client';
 import {PickerField} from '@/components/PickerField';
@@ -24,6 +25,7 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
   const [amount, setAmount] = useState(String(suggestion.parsed_amount ?? ''));
   const [walletId, setWalletId] = useState<string | null>(suggestion.suggested_wallet_id);
   const [categoryId, setCategoryId] = useState<string | null>(suggestion.suggested_category_id);
+  const [justAdded, setJustAdded] = useState(false);
 
   const walletsQuery = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
   const categoriesQuery = useQuery({
@@ -42,7 +44,8 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
       queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
       queryClient.invalidateQueries({queryKey: ['transactions']});
       queryClient.invalidateQueries({queryKey: ['wallets']});
-      navigation.navigate('Home');
+      setJustAdded(true);
+      setTimeout(() => navigation.navigate('Home'), 700);
     },
   });
 
@@ -83,9 +86,16 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
 
       {acceptMutation.isError && <Text style={styles.error}>{(acceptMutation.error as Error).message}</Text>}
 
-      <Pressable style={styles.button} onPress={() => acceptMutation.mutate()} disabled={!canSubmit || acceptMutation.isPending}>
-        <Text style={styles.buttonText}>{acceptMutation.isPending ? 'Adding…' : txnType === 'income' ? 'Add income' : 'Add expense'}</Text>
-      </Pressable>
+      {justAdded ? (
+        <View style={styles.toast}>
+          <MaterialIcons name="check-circle" style={styles.toastIcon} />
+          <Text style={styles.toastText}>Added</Text>
+        </View>
+      ) : (
+        <Pressable style={styles.button} onPress={() => acceptMutation.mutate()} disabled={!canSubmit || acceptMutation.isPending}>
+          <Text style={styles.buttonText}>{acceptMutation.isPending ? 'Adding…' : txnType === 'income' ? 'Add income' : 'Add expense'}</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -117,4 +127,18 @@ const styles = StyleSheet.create({
   error: {color: colors.negative, marginBottom: spacing.sm},
   button: {backgroundColor: colors.accent, borderRadius: radius.pill, padding: spacing.md, alignItems: 'center', marginTop: spacing.sm},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: radius.pill,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(47,217,136,.35)',
+  },
+  toastIcon: {color: colors.positive, fontSize: 18},
+  toastText: {color: colors.textPrimary, fontWeight: '600'},
 });

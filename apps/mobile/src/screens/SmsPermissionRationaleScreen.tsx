@@ -1,6 +1,7 @@
 import React from 'react';
 import {PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -47,7 +48,7 @@ export function SmsPermissionRationaleScreen({navigation}: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.iconTile}>
-        <Text style={styles.iconTileText}>SMS</Text>
+        <MaterialIcons name="sms" style={styles.iconTileText} />
       </View>
       <Text style={styles.title}>Let Ledger read{'\n'}bank alerts</Text>
       <Text style={styles.subtitle}>
@@ -57,9 +58,10 @@ export function SmsPermissionRationaleScreen({navigation}: Props) {
       <View style={styles.points}>
         {POINTS.map((point) => (
           <View key={point.title} style={styles.pointRow}>
-            <Text style={[styles.pointGlyph, point.tone === 'positive' ? styles.pointGlyphPositive : styles.pointGlyphNegative]}>
-              {point.tone === 'positive' ? '✓' : '✕'}
-            </Text>
+            <MaterialIcons
+              name={point.tone === 'positive' ? 'check-circle' : 'block'}
+              style={[styles.pointGlyph, point.tone === 'positive' ? styles.pointGlyphPositive : styles.pointGlyphNegative]}
+            />
             <View style={{flex: 1}}>
               <Text style={styles.pointTitle}>{point.title}</Text>
               <Text style={styles.pointBody}>{point.body}</Text>
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.sm,
   },
-  iconTileText: {color: colors.accentOnDark, fontSize: 12, fontWeight: '700', letterSpacing: 0.5},
+  iconTileText: {color: colors.accentOnDark, fontSize: 24},
   title: {
     color: colors.textPrimary,
     fontFamily: fontFamilies.display,

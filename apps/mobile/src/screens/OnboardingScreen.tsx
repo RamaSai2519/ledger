@@ -2,7 +2,9 @@ import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {colors, fontFamilies, partnerAccents, radius, spacing} from '@/theme/tokens';
+import {GradientCard} from '@/components/GradientCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -36,7 +38,7 @@ export function OnboardingScreen({navigation}: Props) {
               <Text style={styles.cardAmount}>−₹2,100</Text>
             </View>
           </View>
-          <View style={[styles.card, styles.cardRight]}>
+          <GradientCard style={[styles.card, styles.cardRight]} radius={radius.card - 2}>
             <View style={styles.cardHeader}>
               <View style={[styles.avatar, {borderColor: partnerAccents[1]}]}>
                 <Text style={[styles.avatarText, {color: partnerAccents[1]}]}>M</Text>
@@ -47,7 +49,7 @@ export function OnboardingScreen({navigation}: Props) {
               <Text style={[styles.cardMerchant, {color: '#fff'}]}>Swiggy</Text>
               <Text style={[styles.cardAmount, {color: '#fff'}]}>−₹450</Text>
             </View>
-          </View>
+          </GradientCard>
         </View>
       ) : (
         <View style={styles.visual}>
@@ -55,7 +57,7 @@ export function OnboardingScreen({navigation}: Props) {
             <Text style={styles.smsMeta}>HDFCBK · now</Text>
             <Text style={styles.smsBody}>Rs.450.00 spent on HDFC Card x4821 at SWIGGY on 18-08-26.</Text>
           </View>
-          <Text style={styles.arrow}>↓</Text>
+          <MaterialIcons name="south" style={styles.arrow} />
           <View style={styles.suggestionBubble}>
             <Text style={styles.suggestionLabel}>Add this expense?</Text>
             <Text style={styles.suggestionTitle}>₹450 at Swiggy · Food</Text>

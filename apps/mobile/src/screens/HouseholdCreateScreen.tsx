@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
-import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {Pressable, Share, StyleSheet, Text, TextInput, View} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {useMutation} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
 import {useAuthStore} from '@/state/authStore';
@@ -36,8 +38,23 @@ export function HouseholdCreateScreen({navigation}: Props) {
           <Text style={styles.fieldLabel}>Household name</Text>
           <Text style={styles.householdName}>{mutation.data.name}</Text>
           <View style={styles.divider} />
-          <Text style={styles.fieldLabel}>Invite code</Text>
-          <Text style={styles.code}>{mutation.data.invite_code}</Text>
+          <View style={styles.codeRow}>
+            <View>
+              <Text style={styles.fieldLabel}>Invite code</Text>
+              <Text style={styles.code}>{mutation.data.invite_code}</Text>
+            </View>
+            <View style={styles.codeActions}>
+              <Pressable style={styles.codeActionButton} onPress={() => Clipboard.setString(mutation.data.invite_code)} hitSlop={8}>
+                <MaterialIcons name="content-copy" style={styles.codeActionIcon} />
+              </Pressable>
+              <Pressable
+                style={styles.codeActionButton}
+                onPress={() => Share.share({message: `Join our Ledger household with code ${mutation.data.invite_code}`})}
+                hitSlop={8}>
+                <MaterialIcons name="share" style={styles.codeActionIcon} />
+              </Pressable>
+            </View>
+          </View>
           <Text style={styles.codeHint}>Share this with your partner. It works once, and expires in 24 hours.</Text>
         </View>
 
@@ -105,6 +122,19 @@ const styles = StyleSheet.create({
   householdName: {color: colors.textPrimary, fontSize: 16, fontWeight: '600', marginTop: spacing.xs},
   divider: {height: 1, backgroundColor: colors.border, marginVertical: 18},
   code: {color: colors.accentOnDark, fontFamily: fontFamilies.monetary, fontSize: 30, letterSpacing: 6, marginTop: 10},
+  codeRow: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between'},
+  codeActions: {flexDirection: 'row', gap: spacing.sm},
+  codeActionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.iconTile,
+    backgroundColor: colors.backgroundRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeActionIcon: {color: colors.accentOnDark, fontSize: 18},
   codeHint: {fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 18},
   waitingBanner: {
     flexDirection: 'row',

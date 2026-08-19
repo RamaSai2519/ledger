@@ -2,10 +2,12 @@ import React, {useState} from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import type {WalletType} from '@/api/client';
 import {walletsApi} from '@/api/client';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {WALLET_TYPE_ICON} from '@/theme/walletIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletForm'>;
 
@@ -13,11 +15,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WalletForm'>;
 // tracking is moving to its own dedicated feature, see the LED ticket filed
 // alongside this change). The `type === 'loan'` branches further down stay
 // in place so a pre-existing loan wallet can still be viewed/edited.
-const WALLET_TYPES: {value: WalletType; label: string; glyph: string}[] = [
-  {value: 'bank_account', label: 'Bank', glyph: 'B'},
-  {value: 'credit_card', label: 'Credit card', glyph: 'C'},
-  {value: 'pay_later', label: 'Pay later', glyph: 'P'},
-  {value: 'cash', label: 'Cash', glyph: '₹'},
+const WALLET_TYPES: {value: WalletType; label: string}[] = [
+  {value: 'bank_account', label: 'Bank'},
+  {value: 'credit_card', label: 'Credit card'},
+  {value: 'pay_later', label: 'Pay later'},
+  {value: 'cash', label: 'Cash'},
 ];
 
 function Field({label, children}: {label: string; children: React.ReactNode}) {
@@ -161,7 +163,7 @@ export function WalletFormScreen({route, navigation}: Props) {
           <View style={styles.typeGrid}>
             {WALLET_TYPES.map((t) => (
               <Pressable key={t.value} style={[styles.typeTile, type === t.value && styles.typeTileSelected]} onPress={() => setType(t.value)}>
-                <Text style={[styles.typeGlyph, type === t.value && {color: colors.accentOnDark}]}>{t.glyph}</Text>
+                <MaterialIcons name={WALLET_TYPE_ICON[t.value]} style={[styles.typeGlyph, type === t.value && {color: colors.accentOnDark}]} />
                 <Text style={type === t.value ? styles.typeLabelSelected : styles.typeLabel}>{t.label}</Text>
               </Pressable>
             ))}
@@ -309,7 +311,7 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   typeTileSelected: {backgroundColor: 'rgba(91,84,249,.12)', borderColor: colors.accent},
-  typeGlyph: {fontSize: 17, color: colors.textSecondary, fontFamily: fontFamilies.monetary},
+  typeGlyph: {fontSize: 20, color: colors.textSecondary},
   typeLabel: {fontSize: 11.5, color: '#C9C9D2'},
   typeLabelSelected: {fontSize: 11.5, fontWeight: '600', color: colors.textPrimary},
   field: {gap: spacing.xs},

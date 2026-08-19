@@ -13,7 +13,9 @@ export type RootStackParamList = {
   WalletDetail: {walletId: string};
   WalletForm: {walletId?: string} | undefined;
   WalletReconcile: {walletId: string};
-  TransactionForm: {transactionId?: string; walletId?: string} | undefined;
+  TransactionForm:
+    | {transactionId?: string; walletId?: string; mode?: 'expense' | 'income' | 'transfer'; toWalletId?: string}
+    | undefined;
   Categories: undefined;
   BudgetsList: undefined;
   BudgetForm: {budgetId?: string} | undefined;

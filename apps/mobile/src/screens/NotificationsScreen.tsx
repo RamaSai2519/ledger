@@ -2,6 +2,7 @@ import React from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Notification} from '@/api/client';
 import {notificationsApi} from '@/api/client';
@@ -12,12 +13,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
 const NEEDS_YOU_TYPES = new Set<Notification['type']>(['sms_suggestion', 'budget_threshold', 'budget_exceeded']);
 
 const TYPE_GLYPH: Record<Notification['type'], string> = {
-  sms_suggestion: '✉',
-  budget_threshold: '◔',
-  budget_exceeded: '◔',
-  digest: '≡',
-  bill_due: '◷',
-  recurring_reminder: '↻',
+  sms_suggestion: 'sms',
+  budget_threshold: 'donut-large',
+  budget_exceeded: 'donut-large',
+  digest: 'menu',
+  bill_due: 'schedule',
+  recurring_reminder: 'autorenew',
 };
 
 function summarize(notification: Notification): {title: string; meta: string} {
@@ -54,7 +55,7 @@ function NotificationRow({notification, onPress, dim}: {notification: Notificati
           {meta} · {new Date(notification.created_at).toLocaleDateString()}
         </Text>
       </View>
-      <Text style={styles.glyph}>{TYPE_GLYPH[notification.type] ?? '•'}</Text>
+      <MaterialIcons name={TYPE_GLYPH[notification.type] ?? 'circle'} style={styles.glyph} />
     </Pressable>
   );
 }

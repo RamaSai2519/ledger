@@ -2,12 +2,14 @@ import React from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import type {InsightPeriod} from '@/api/client';
 import {insightsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {MoneyText} from '@/components/MoneyText';
 import {GroupedSparkline, HorizontalBarList, Sparkline} from '@/components/InsightBars';
+import {Skeleton} from '@/components/Skeleton';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Insights'>;
@@ -176,22 +178,82 @@ function NetWorthSection() {
   );
 }
 
-export function InsightsScreen(_props: Props) {
+// These duplicate the queryKeys used inside TrendSection/IncomeVsExpenseSection/
+// CategoryBreakdownSection/NetWorthSection — TanStack Query dedupes identical
+// keys onto one shared cache entry/network request, so this doesn't double-fetch.
+// It exists so the screen can render one unified loading/error/empty state
+// (mock's intent) instead of each section falling back independently.
+function useOverallInsightsState(period: InsightPeriod) {
+  const trends = useQuery({queryKey: ['insights', 'trends', period], queryFn: () => insightsApi.trends({period})});
+  const incomeVsExpense = useQuery({
+    queryKey: ['insights', 'income-vs-expense', period],
+    queryFn: () => insightsApi.incomeVsExpense({period}),
+  });
+  const categoryBreakdown = useQuery({
+    queryKey: ['insights', 'category-breakdown', period],
+    queryFn: () => insightsApi.categoryBreakdown({period}),
+  });
+  const netWorth = useQuery({queryKey: ['insights', 'net-worth-history'], queryFn: () => insightsApi.netWorthHistory()});
+
+  const queries = [trends, incomeVsExpense, categoryBreakdown, netWorth];
+  const allLoading = queries.every((q) => q.isLoading);
+  const allError = queries.every((q) => q.isError);
+  const allEmpty =
+    queries.every((q) => q.isSuccess) &&
+    (trends.data?.points.reduce((s, p) => s + p.expense, 0) ?? 0) === 0 &&
+    (categoryBreakdown.data?.items.length ?? 0) === 0 &&
+    (netWorth.data?.snapshots.length ?? 0) === 0;
+
+  return {allLoading, allError, allEmpty, refetchAll: () => queries.forEach((q) => q.refetch())};
+}
+
+export function InsightsScreen({navigation}: Props) {
   const [period, setPeriod] = React.useState<InsightPeriod>('monthly');
+  const {allLoading, allError, allEmpty, refetchAll} = useOverallInsightsState(period);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Insights</Text>
-        <Text style={styles.calendarGlyph}>🗓</Text>
+        <MaterialIcons name="event" style={styles.calendarGlyph} />
       </View>
-      <ScrollView contentContainerStyle={styles.content}>
-        <PeriodToggle period={period} onChange={setPeriod} />
-        <TrendSection period={period} />
-        <IncomeVsExpenseSection period={period} />
-        <CategoryBreakdownSection period={period} />
-        <NetWorthSection />
-      </ScrollView>
+      {allLoading ? (
+        <View style={styles.content}>
+          <PeriodToggle period={period} onChange={setPeriod} />
+          <Skeleton style={{height: 140}} radius={radius.lg} />
+          <Skeleton style={{height: 120}} radius={radius.lg} />
+          <Skeleton style={{height: 120}} radius={radius.lg} />
+        </View>
+      ) : allError ? (
+        <View style={styles.fullState}>
+          <MaterialIcons name="show-chart" style={styles.fullStateIcon} />
+          <Text style={styles.fullStateTitle}>Insights didn't load</Text>
+          <Text style={styles.fullStateBody}>Check your connection and try again.</Text>
+          <Pressable style={styles.fullStateCta} onPress={refetchAll}>
+            <Text style={styles.fullStateCtaText}>Try again</Text>
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('TransactionsList', undefined)}>
+            <Text style={styles.fullStateLink}>See the transaction list instead</Text>
+          </Pressable>
+        </View>
+      ) : allEmpty ? (
+        <View style={styles.fullState}>
+          <MaterialIcons name="show-chart" style={[styles.fullStateIcon, {color: colors.accentOnDark}]} />
+          <Text style={styles.fullStateTitle}>Nothing to show yet</Text>
+          <Text style={styles.fullStateBody}>Add a few expenses first and your trends will show up here.</Text>
+          <Pressable style={styles.fullStateCta} onPress={() => navigation.navigate('TransactionForm', undefined)}>
+            <Text style={styles.fullStateCtaText}>Add an expense</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content}>
+          <PeriodToggle period={period} onChange={setPeriod} />
+          <TrendSection period={period} />
+          <IncomeVsExpenseSection period={period} />
+          <CategoryBreakdownSection period={period} />
+          <NetWorthSection />
+        </ScrollView>
+      )}
       <BottomNavBar active="insights" />
     </View>
   );
@@ -234,4 +296,19 @@ const styles = StyleSheet.create({
   legendLabel: {color: colors.textSecondary, fontSize: 12},
   legendAmount: {fontSize: 12},
   netWorthAmount: {fontSize: 28, fontWeight: '700'},
+  fullState: {flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.sm},
+  fullStateIcon: {fontSize: 40, color: colors.negative, marginBottom: spacing.xs},
+  fullStateTitle: {color: colors.textPrimary, fontSize: 16, fontWeight: '600'},
+  fullStateBody: {color: colors.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 19},
+  fullStateCta: {
+    marginTop: spacing.sm,
+    height: 46,
+    paddingHorizontal: 22,
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullStateCtaText: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  fullStateLink: {color: colors.accentOnDark, fontSize: 12.5, marginTop: spacing.sm},
 });

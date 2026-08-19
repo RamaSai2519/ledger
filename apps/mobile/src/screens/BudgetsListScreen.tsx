@@ -2,10 +2,13 @@ import React from 'react';
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
-import type {Budget} from '@/api/client';
+import type {Budget, Category} from '@/api/client';
 import {budgetsApi, categoriesApi} from '@/api/client';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {glyphForCategoryIcon} from '@/theme/categoryIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BudgetsList'>;
 
@@ -52,17 +55,22 @@ function OverallHeroCard({budget}: {budget: Budget}) {
   );
 }
 
-function BudgetCard({budget, categoryName, onPress}: {budget: Budget; categoryName?: string; onPress: () => void}) {
+function BudgetCard({budget, category, onPress}: {budget: Budget; category?: Category; onPress: () => void}) {
   const progressQuery = useQuery({queryKey: ['budgets', budget.id, 'progress'], queryFn: () => budgetsApi.progress(budget.id)});
   const percent = progressQuery.data?.percent ?? 0;
   const clampedPercent = Math.min(100, Math.max(0, percent));
   const color = progressColor(percent, budget.threshold_percents);
   const over = percent >= 100;
-  const label = budget.scope === 'overall' ? 'Overall' : categoryName ?? budget.scope;
+  const label = budget.scope === 'overall' ? 'Overall' : category?.name ?? budget.scope;
 
   return (
     <Pressable style={[styles.card, over && styles.cardOver]} onPress={onPress}>
       <View style={styles.cardHeader}>
+        {budget.scope !== 'overall' && (
+          <View style={[styles.cardIconTile, {backgroundColor: `${category?.color ?? colors.accent}24`}]}>
+            <MaterialCommunityIcons name={glyphForCategoryIcon(category?.icon)} size={15} color={category?.color ?? colors.accent} />
+          </View>
+        )}
         <Text style={styles.cardLabel}>{label}</Text>
         <Text style={[styles.cardAmount, over && {color: colors.negative}]}>
           ₹{(progressQuery.data?.spent ?? 0).toLocaleString('en-IN')} <Text style={styles.cardAmountMuted}>/ {budget.amount.toLocaleString('en-IN')}</Text>
@@ -96,14 +104,14 @@ export function BudgetsListScreen({navigation}: Props) {
   const budgets = query.data?.budgets ?? [];
   const overall = budgets.find((b) => b.scope === 'overall');
   const rest = budgets.filter((b) => b.scope !== 'overall');
-  const categoryName = new Map((categoriesQuery.data?.categories ?? []).map((c) => [c.id, c.name]));
+  const categoryById = new Map((categoriesQuery.data?.categories ?? []).map((c) => [c.id, c]));
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Budgets</Text>
         <Pressable onPress={() => navigation.navigate('BudgetForm', undefined)} hitSlop={8}>
-          <Text style={styles.addGlyph}>+</Text>
+          <MaterialIcons name="add" style={styles.addGlyph} />
         </Pressable>
       </View>
 
@@ -123,7 +131,7 @@ export function BudgetsListScreen({navigation}: Props) {
         renderItem={({item}) => (
           <BudgetCard
             budget={item}
-            categoryName={item.scope_ref_id ? categoryName.get(item.scope_ref_id) : undefined}
+            category={item.scope_ref_id ? categoryById.get(item.scope_ref_id) : undefined}
             onPress={() => navigation.navigate('BudgetForm', {budgetId: item.id})}
           />
         )}
@@ -154,6 +162,7 @@ const styles = StyleSheet.create({
   card: {padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   cardOver: {borderColor: 'rgba(255,107,107,.32)'},
   cardHeader: {flexDirection: 'row', alignItems: 'center', gap: 10},
+  cardIconTile: {width: 26, height: 26, borderRadius: radius.iconTile - 4, alignItems: 'center', justifyContent: 'center'},
   cardLabel: {flex: 1, color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
   cardAmount: {fontFamily: fontFamilies.monetary, fontSize: 12.5, color: colors.textPrimary},
   cardAmountMuted: {color: '#73737F'},

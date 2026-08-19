@@ -3,11 +3,14 @@ import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
 import {Swipeable} from 'react-native-gesture-handler';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Wallet} from '@/api/client';
 import {walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
+import {SkeletonRow} from '@/components/Skeleton';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {WALLET_TYPE_ICON} from '@/theme/walletIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletsList'>;
 
@@ -30,17 +33,26 @@ const FILTERS: Array<{key: FilterKey; label: string; types: Wallet['type'][] | n
   {key: 'loans', label: 'Loans', types: ['loan']},
 ];
 
-// s40 in the design project — swipe-left reveal held at a fixed −88px,
-// exposing a single archive action (react-native-gesture-handler's legacy
-// `Swipeable`, not Reanimated — no reveal animation library is otherwise in
-// the dependency tree, so this keeps the added surface area small).
+// s40 in the design project — swipe-left reveal at −176px (two 88px
+// actions), snapping open past −132px (react-native-gesture-handler's
+// legacy `Swipeable`, not Reanimated — no reveal animation library is
+// otherwise in the dependency tree, so this keeps the added surface area
+// small). Reveals both Archive and Reconcile, matching the mock.
 const SWIPE_ACTION_WIDTH = 88;
+const SWIPE_SNAP_THRESHOLD = 132;
 
-function ArchiveAction({onPress}: {onPress: () => void}) {
+function WalletSwipeActions({onArchive, onReconcile}: {onArchive: () => void; onReconcile: () => void}) {
   return (
-    <Pressable style={styles.swipeAction} onPress={onPress}>
-      <Text style={styles.swipeActionText}>Archive</Text>
-    </Pressable>
+    <View style={styles.swipeActions}>
+      <Pressable style={[styles.swipeAction, styles.swipeActionReconcile]} onPress={onReconcile}>
+        <MaterialIcons name="rule" style={styles.swipeActionGlyph} />
+        <Text style={styles.swipeActionText}>Reconcile</Text>
+      </Pressable>
+      <Pressable style={[styles.swipeAction, styles.swipeActionArchive]} onPress={onArchive}>
+        <MaterialIcons name="archive" style={[styles.swipeActionGlyph, styles.swipeActionGlyphArchive]} />
+        <Text style={[styles.swipeActionText, styles.swipeActionTextArchive]}>Archive</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -51,11 +63,15 @@ function WalletRow({wallet, navigation, onArchive}: {wallet: Wallet; navigation:
     <Swipeable
       ref={swipeableRef}
       friction={2}
-      rightThreshold={SWIPE_ACTION_WIDTH / 2}
+      rightThreshold={SWIPE_SNAP_THRESHOLD}
       overshootRight={false}
       renderRightActions={() => (
-        <ArchiveAction
-          onPress={() => {
+        <WalletSwipeActions
+          onReconcile={() => {
+            swipeableRef.current?.close();
+            navigation.navigate('WalletReconcile', {walletId: wallet.id});
+          }}
+          onArchive={() => {
             swipeableRef.current?.close();
             onArchive(wallet.id);
           }}
@@ -65,7 +81,7 @@ function WalletRow({wallet, navigation, onArchive}: {wallet: Wallet; navigation:
         style={[styles.row, isLiability && styles.rowLiability]}
         onPress={() => navigation.navigate('WalletDetail', {walletId: wallet.id})}>
         <View style={styles.rowIcon}>
-          <Text style={[styles.rowIconGlyph, isLiability && {color: '#FF9B9B'}]}>{wallet.name.charAt(0).toUpperCase()}</Text>
+          <MaterialIcons name={WALLET_TYPE_ICON[wallet.type]} style={[styles.rowIconGlyph, isLiability && {color: '#FF9B9B'}]} />
         </View>
         <View style={{flex: 1}}>
           <Text style={styles.rowName}>{wallet.name}</Text>
@@ -104,7 +120,7 @@ export function WalletsListScreen({navigation}: Props) {
       <View style={styles.header}>
         <Text style={styles.title}>Wallets</Text>
         <Pressable onPress={() => navigation.navigate('WalletForm', undefined)} hitSlop={8}>
-          <Text style={styles.addGlyph}>+</Text>
+          <MaterialIcons name="add" style={styles.addGlyph} />
         </Pressable>
       </View>
 
@@ -129,10 +145,18 @@ export function WalletsListScreen({navigation}: Props) {
         </View>
       </View>
 
-      {query.isLoading && <Text style={styles.stateText}>Loading wallets…</Text>}
+      {query.isLoading && (
+        <View style={{paddingHorizontal: spacing.lg, marginTop: spacing.md}}>
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </View>
+      )}
       {query.isError && (
         <View style={styles.errorBlock}>
+          <MaterialIcons name="cloud-off" style={styles.errorIcon} />
           <Text style={styles.errorTitle}>Wallets didn't load</Text>
+          <Text style={styles.errorSubtitle}>Check your connection and try again.</Text>
           <Pressable onPress={() => query.refetch()}>
             <Text style={styles.errorRetry}>Try again</Text>
           </Pressable>
@@ -196,25 +220,24 @@ const styles = StyleSheet.create({
   splitAmount: {fontFamily: fontFamilies.monetary, fontSize: 16, marginTop: 5, color: colors.textPrimary},
   sectionLabel: {fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: '#5A5A66', paddingTop: spacing.md, paddingBottom: 4},
   stateText: {color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg},
-  errorBlock: {alignItems: 'center', marginTop: spacing.xl, gap: spacing.sm},
+  errorBlock: {alignItems: 'center', marginTop: spacing.xl, gap: spacing.sm, paddingHorizontal: spacing.lg},
+  errorIcon: {color: colors.negative, fontSize: 28},
   errorTitle: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
+  errorSubtitle: {color: colors.textSecondary, fontSize: 12.5, textAlign: 'center'},
   errorRetry: {color: colors.accentOnDark, fontSize: 12.5, fontWeight: '600'},
   emptyBlock: {marginHorizontal: spacing.lg, marginTop: spacing.lg, gap: spacing.sm},
   emptyTitle: {color: colors.textPrimary, fontSize: 15, fontWeight: '600', marginBottom: spacing.xs},
   emptyOption: {flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   emptyOptionText: {flex: 1, color: colors.textPrimary, fontSize: 13},
   emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
-  swipeAction: {
-    width: SWIPE_ACTION_WIDTH,
-    marginLeft: 8,
-    borderRadius: radius.row,
-    backgroundColor: 'rgba(255,107,107,.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,107,.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  swipeActionText: {color: colors.negative, fontSize: 12.5, fontWeight: '600'},
+  swipeActions: {flexDirection: 'row', marginLeft: 8, borderRadius: radius.row, overflow: 'hidden'},
+  swipeAction: {width: SWIPE_ACTION_WIDTH, alignItems: 'center', justifyContent: 'center', gap: 4},
+  swipeActionReconcile: {backgroundColor: colors.border},
+  swipeActionArchive: {backgroundColor: 'rgba(255,107,107,.16)'},
+  swipeActionGlyph: {fontSize: 19, color: colors.accentOnDark},
+  swipeActionGlyphArchive: {color: '#FF9B9B'},
+  swipeActionText: {color: colors.textPrimary, fontSize: 10, fontWeight: '600'},
+  swipeActionTextArchive: {color: '#FF9B9B'},
   row: {flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   rowLiability: {borderWidth: 0, borderLeftWidth: 2, borderLeftColor: colors.negative},
   rowIcon: {width: 38, height: 38, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center'},

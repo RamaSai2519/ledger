@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {PinKeypad} from '@/components/PinKeypad';
 import {promptBiometricUnlock} from '@/native/biometrics';
@@ -76,7 +77,7 @@ export function AppLockScreen({navigation}: Props) {
           rightSlot={
             biometricEnabled ? (
               <Pressable onPress={tryBiometricUnlock} hitSlop={12}>
-                <Text style={styles.fingerprintGlyph}>⚷</Text>
+                <MaterialIcons name="fingerprint" style={styles.fingerprintGlyph} />
               </Pressable>
             ) : undefined
           }

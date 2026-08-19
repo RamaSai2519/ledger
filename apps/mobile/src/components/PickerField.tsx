@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {FlatList, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {colors, radius, spacing} from '@/theme/tokens';
 
 export type PickerOption = {label: string; value: string; sublabel?: string; tint?: string};
@@ -48,7 +49,7 @@ export function PickerField({label, placeholder = 'Select…', options, value, o
                     <Text style={styles.optionText}>{item.label}</Text>
                     {item.sublabel && <Text style={styles.optionSublabel}>{item.sublabel}</Text>}
                   </View>
-                  {item.value === value && <Text style={styles.checkmark}>✓</Text>}
+                  {item.value === value && <MaterialIcons name="check" style={styles.checkmark} />}
                 </Pressable>
               )}
               ListEmptyComponent={<Text style={styles.emptyText}>Nothing to pick from yet.</Text>}

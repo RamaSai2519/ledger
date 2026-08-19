@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e7e2;font-family:'Instrument Sans',system-ui,sans-serif}
+a{color:#2a78d6}a:hover{color:#1b5aa8}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;width:390px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;border-radius:8px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block}
+.sc{height:100%;display:flex;flex-direction:column;background:#0B0B12;color:#F5F5F8;font-family:'Instrument Sans',sans-serif;overflow:hidden}
+.tt{font-family:'Space Grotesk',sans-serif;font-weight:600}
+.mn{font-family:'IBM Plex Mono',monospace}
+.fld{display:flex;flex-direction:column;gap:7px}
+.fldl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#8A8A94}
+.fldi{height:50px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;gap:10px;padding:0 14px;font-size:14px}
+.pcta{height:52px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+.scta{height:52px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C9C9D2}
+.row{display:flex;align-items:center;gap:12px;padding:11px 0}
+.ic{width:38px;height:38px;border-radius:12px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;flex:none}
+.hdr{display:flex;align-items:center;gap:12px;padding:14px 20px 10px}
+.sect{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5A5A66}
+</style></helmet>
+
+<section class="dv-turn" id="tF">
+<div class="dv-thd"><a class="dv-tid" href="#tF">F</a><span class="dv-tname">Transaction flows &amp; gesture states — 3 screens</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="s38">
+<div class="dv-olabel"><a class="dv-oid" href="#s38">s38</a>Transactions — list with active filters</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div class="tt" style="font-size:20px">Transactions</div></div><div style="display:flex;gap:15px"><span class="ms" style="font-size:21px;color:#C9C9D2">search</span><span class="ms" style="font-size:21px;color:#B9B6FF">tune</span></div></div>
+  <div style="display:flex;align-items:center;gap:7px;padding:14px 20px 0;overflow:hidden;flex:none">
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px 6px 12px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:11.5px;font-weight:600">Aug 2026<span class="ms" style="font-size:14px">close</span></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px 6px 12px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:11.5px;font-weight:600">Food<span class="ms" style="font-size:14px">close</span></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px 6px 12px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:11.5px;font-weight:600">Priya<span class="ms" style="font-size:14px">close</span></div>
+    <div style="padding:6px 12px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Clear</div>
+  </div>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 20px 0"><div style="font-size:11.5px;color:#8A8A94">18 matches</div><div class="mn" style="font-size:14px">−₹7,240</div></div>
+  <div style="padding:16px 20px 6px" class="sect">Today</div>
+  <div style="padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Swiggy</div><div style="font-size:11px;color:#8A8A94">Priya · HDFC Credit Card</div></div><div class="mn" style="font-size:13.5px">−₹450</div></div>
+    <div class="row"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">local_cafe</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Blue Tokai</div><div style="font-size:11px;color:#8A8A94">Priya · Cash</div></div><div class="mn" style="font-size:13.5px">−₹620</div></div>
+  </div>
+  <div style="padding:16px 20px 6px" class="sect">16 August</div>
+  <div style="padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">shopping_basket</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">BigBasket</div><div style="font-size:11px;color:#8A8A94">Priya · ICICI Savings</div></div><div class="mn" style="font-size:13.5px">−₹2,180</div></div>
+    <div class="row"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Toit Brewpub</div><div style="font-size:11px;color:#8A8A94">Priya · HDFC Credit Card</div></div><div class="mn" style="font-size:13.5px">−₹1,840</div></div>
+  </div>
+  <div style="padding:16px 20px 6px" class="sect">12 August</div>
+  <div style="padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">local_cafe</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Third Wave</div><div style="font-size:11px;color:#8A8A94">Priya · Cash</div></div><div class="mn" style="font-size:13.5px">−₹380</div></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Meghana Foods</div><div style="font-size:11px;color:#8A8A94">Priya · HDFC Credit Card</div></div><div class="mn" style="font-size:13.5px">−₹1,770</div></div>
+    <div class="row"><div style="width:3px;height:32px;border-radius:2px;background:#E8A33D"></div><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">shopping_basket</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Licious</div><div style="font-size:11px;color:#8A8A94">Priya · ICICI Savings</div></div><div class="mn" style="font-size:13.5px">−₹1,340</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s39">
+<div class="dv-olabel"><a class="dv-oid" href="#s39">s39</a>Filter sheet — over the list</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc" style="position:relative">
+  <div style="opacity:.32;display:flex;flex-direction:column;flex:1">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 20px 0"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div class="tt" style="font-size:20px">Transactions</div></div>
+    <div style="padding:20px 20px 6px" class="sect">Today</div>
+    <div style="padding:0 20px">
+      <div class="row" style="border-bottom:1px solid #17171F"><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Swiggy</div></div><div class="mn" style="font-size:13.5px">−₹450</div></div>
+      <div class="row"><div class="ic" style="background:#16161F"><span class="ms" style="font-size:18px;color:#E8A33D">local_cafe</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Blue Tokai</div></div><div class="mn" style="font-size:13.5px">−₹620</div></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:150px;border-radius:26px 26px 0 0;background:#101019;border-top:1px solid #232330;display:flex;flex-direction:column;padding:0 20px 22px;box-shadow:0 -24px 60px rgba(0,0,0,.55)">
+    <div style="display:flex;justify-content:center;padding:10px 0 14px"><div style="width:36px;height:4px;border-radius:2px;background:#2A2A38"></div></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="tt" style="font-size:17px">Filters</div><div style="font-size:12px;color:#8F89FF;font-weight:600">Reset</div></div>
+    <div class="sect" style="padding:20px 0 9px">Period</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <div style="padding:7px 13px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:12px;font-weight:600">Aug 2026</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Last 3 months</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Custom</div>
+    </div>
+    <div class="sect" style="padding:20px 0 9px">Category</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <div style="padding:7px 13px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:12px;font-weight:600">Food</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Rent</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Shopping</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Travel</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Fun</div>
+    </div>
+    <div class="sect" style="padding:20px 0 9px">Paid by</div>
+    <div style="display:flex;gap:7px">
+      <div style="padding:7px 13px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:12px;font-weight:600">Priya</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Arjun</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Both</div>
+    </div>
+    <div class="sect" style="padding:20px 0 9px">Amount</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1;height:3px;border-radius:2px;background:#232330;position:relative"><div style="position:absolute;left:8%;right:38%;top:0;bottom:0;background:#5B54F9;border-radius:2px"></div><div style="position:absolute;left:8%;top:-5px;width:13px;height:13px;border-radius:50%;background:#F5F5F8"></div><div style="position:absolute;left:62%;top:-5px;width:13px;height:13px;border-radius:50%;background:#F5F5F8"></div></div>
+      <div class="mn" style="font-size:11.5px;color:#C9C9D2">₹200–5k</div>
+    </div>
+    <div class="sect" style="padding:20px 0 9px">Wallet</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">ICICI Savings</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">HDFC Salary</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">HDFC Credit Card</div>
+      <div style="padding:7px 13px;border-radius:100px;border:1px solid #232330;font-size:12px;color:#8A8A94">Cash</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="pcta" style="margin-top:18px">Show 18 transactions</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s40">
+<div class="dv-olabel"><a class="dv-oid" href="#s40">s40</a>Wallets — mid-swipe on a card (drag held at −88px)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Wallets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="display:flex;gap:10px;padding:16px 20px 0">
+    <div style="flex:1;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div style="font-size:10.5px;color:#8A8A94">You have</div><div class="mn" style="font-size:16px;margin-top:5px">₹6,10,400</div></div>
+    <div style="flex:1;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid rgba(255,107,107,.3)"><div style="font-size:10.5px;color:#8A8A94">You owe</div><div class="mn" style="font-size:16px;margin-top:5px;color:#FF6B6B">₹1,27,750</div></div>
+  </div>
+  <div style="padding:20px 20px 6px" class="sect">Money you have</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="position:relative;border-radius:16px;overflow:hidden">
+      <div style="position:absolute;inset:0;display:flex;justify-content:flex-end">
+        <div style="width:88px;background:#3A1E22;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span class="ms" style="font-size:19px;color:#FF9B9B">archive</span><span style="font-size:10px;color:#FF9B9B">Archive</span></div>
+        <div style="width:88px;background:#232330;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span class="ms" style="font-size:19px;color:#B9B6FF">rule</span><span style="font-size:10px;color:#C9C9D2">Reconcile</span></div>
+      </div>
+      <div style="position:relative;transform:translateX(-88px);display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #2A2A38;box-shadow:-14px 0 28px rgba(0,0,0,.5)"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">account_balance</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">ICICI Savings</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 7734</div></div><div class="mn" style="font-size:14px">₹4,21,900</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">account_balance</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">HDFC Salary</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 1180</div></div><div class="mn" style="font-size:14px">₹1,79,500</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#2FD988">payments</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Cash</div><div style="font-size:11px;color:#8A8A94">Reconciled 3 days ago</div></div><div class="mn" style="font-size:14px">₹9,000</div></div>
+  </div>
+  <div style="padding:20px 20px 6px" class="sect">Money you owe</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border-left:2px solid #FF6B6B"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#FF9B9B">credit_card</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">HDFC Credit Card</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 4821 · due 22 Aug</div></div><div class="mn" style="font-size:14px;color:#FF6B6B">₹18,430</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border-left:2px solid #FF6B6B"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#FF9B9B">home_work</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Car loan</div><div style="font-size:11px;color:#8A8A94">EMI ₹14,200 · 38 left</div></div><div class="mn" style="font-size:14px;color:#FF6B6B">₹1,07,000</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+</div>
+<p class="dv-next">Swipe: reveal tracks the finger 1:1 up to −176px; past −132px the card snaps open, below it springs back (220ms, ease-out). Only one row open at a time — opening another closes the first.</p>
+</section>
+
+<section class="dv-turn" id="tA">
+<div class="dv-thd"><a class="dv-tid" href="#tA">A</a><span class="dv-tname">Onboarding, accounts &amp; security — 9 screens</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="s01">
+<div class="dv-olabel"><a class="dv-oid" href="#s01">s01</a>Splash</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc" style="position:relative;align-items:center;justify-content:center;gap:18px">
+  <div style="width:76px;height:76px;border-radius:24px;background:linear-gradient(145deg,#6A62FF,#3F38D4);display:flex;align-items:center;justify-content:center;box-shadow:0 18px 44px rgba(91,84,249,.4)"><span class="tt" style="font-size:38px">K</span></div>
+  <div class="tt" style="font-size:26px;letter-spacing:-.4px">Khaata</div>
+  <div style="font-size:12.5px;color:#8A8A94">One book, two people</div>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;padding-bottom:34px"><div style="width:44px;height:3px;border-radius:2px;background:#232330;overflow:hidden"><div style="width:60%;height:100%;background:#5B54F9"></div></div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s02">
+<div class="dv-olabel"><a class="dv-oid" href="#s02">s02</a>Onboarding 1 — shared ledger</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;justify-content:flex-end;padding:14px 20px 0;font-size:12.5px;color:#8A8A94">Skip</div>
+  <div style="position:relative;height:300px;margin-top:20px">
+    <div style="position:absolute;left:50%;top:20px;transform:translate(-50%,0);width:210px;height:210px;border-radius:60px;background:#15142B"></div>
+    <div style="position:absolute;left:36px;top:52px;width:200px;padding:14px;border-radius:18px;background:#1B1B26;border:1px solid #2A2A38;transform:rotate(-7deg)">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #5B54F9;display:flex;align-items:center;justify-content:center;font-size:9px;color:#B9B6FF">I</div><span style="font-size:11px;color:#8A8A94">Ishaan added</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px"><span style="font-size:12.5px;font-weight:600">HP Petrol</span><span class="mn" style="font-size:13px">−₹2,100</span></div>
+    </div>
+    <div style="position:absolute;right:28px;top:150px;width:200px;padding:14px;border-radius:18px;background:linear-gradient(145deg,#6A62FF,#3F38D4);transform:rotate(5deg);box-shadow:0 16px 36px rgba(0,0,0,.5)">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #E8A33D;display:flex;align-items:center;justify-content:center;font-size:9px;color:#F1CB8E">M</div><span style="font-size:11px;color:rgba(255,255,255,.72)">Meera added</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px"><span style="font-size:12.5px;font-weight:600">Swiggy</span><span class="mn" style="font-size:13px">−₹450</span></div>
+    </div>
+  </div>
+  <div style="padding:0 24px">
+    <div class="tt" style="font-size:29px;line-height:1.15;letter-spacing:-.8px;text-wrap:pretty">Both of you write in<br>the same book</div>
+    <div style="font-size:14px;line-height:1.55;color:#8A8A94;margin-top:12px;text-wrap:pretty">Every wallet, expense and budget is shared. No splitting, no settling up — just one household ledger, seen from two accounts.</div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px 28px">
+    <div style="display:flex;gap:6px"><div style="width:18px;height:5px;border-radius:3px;background:#5B54F9"></div><div style="width:5px;height:5px;border-radius:3px;background:#2A2A38"></div></div>
+    <div class="pcta" style="padding:0 26px">Next</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s03">
+<div class="dv-olabel"><a class="dv-oid" href="#s03">s03</a>Onboarding 2 — auto-detect from SMS</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;justify-content:flex-end;padding:14px 20px 0;font-size:12.5px;color:#8A8A94">Skip</div>
+  <div style="position:relative;height:300px;margin-top:20px;padding:0 24px">
+    <div style="padding:14px 16px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <div style="font-size:10.5px;color:#8A8A94">HDFCBK · now</div>
+      <div style="font-size:12.5px;line-height:1.5;margin-top:6px;color:#C9C9D2">Rs.450.00 spent on HDFC Card x4821 at SWIGGY on 18-08-26.</div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:14px 0"><span class="ms" style="font-size:22px;color:#5B54F9">south</span></div>
+    <div style="padding:16px;border-radius:18px;background:linear-gradient(145deg,#6A62FF,#3F38D4);box-shadow:0 16px 36px rgba(0,0,0,.5)">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.75)">Add this expense?</div>
+      <div style="font-size:15px;font-weight:600;margin-top:8px">₹450 at Swiggy · Food</div>
+      <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;height:36px;border-radius:100px;background:#fff;color:#0B0B12;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Confirm</div><div style="height:36px;padding:0 16px;border-radius:100px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:12.5px">Edit</div></div>
+    </div>
+  </div>
+  <div style="padding:0 24px">
+    <div class="tt" style="font-size:29px;line-height:1.15;letter-spacing:-.8px">Your bank SMS<br>does the typing</div>
+    <div style="font-size:14px;line-height:1.55;color:#8A8A94;margin-top:12px;text-wrap:pretty">Khaata reads bank alerts on this phone and offers the transaction, already filled in. You confirm, edit or dismiss.</div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px 28px">
+    <div style="display:flex;gap:6px"><div style="width:5px;height:5px;border-radius:3px;background:#2A2A38"></div><div style="width:18px;height:5px;border-radius:3px;background:#5B54F9"></div></div>
+    <div class="pcta" style="padding:0 26px">Get started</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s04">
+<div class="dv-olabel"><a class="dv-oid" href="#s04">s04</a>Sign up</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span></div>
+  <div style="padding:14px 24px 0">
+    <div class="tt" style="font-size:27px;letter-spacing:-.6px">Create your account</div>
+    <div style="font-size:13.5px;color:#8A8A94;margin-top:8px">You'll join or start a household next.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;padding:26px 24px 0">
+    <div class="fld"><div class="fldl">Your name</div><div class="fldi"><span style="color:#F5F5F8">Ishaan Rao</span></div></div>
+    <div class="fld"><div class="fldl">Mobile number</div><div class="fldi" style="border-color:#5B54F9"><span class="mn" style="color:#8A8A94">+91</span><span class="mn" style="color:#F5F5F8">98765 43210</span></div></div>
+    <div class="fld"><div class="fldl">Password</div><div class="fldi"><span class="mn" style="flex:1;letter-spacing:3px;color:#F5F5F8">••••••••</span><span class="ms" style="font-size:19px;color:#8A8A94">visibility_off</span></div><div style="font-size:11px;color:#8A8A94">At least 8 characters.</div></div>
+  </div>
+  <div style="padding:26px 24px 0"><div class="pcta">Create account</div></div>
+  <div style="text-align:center;font-size:13px;color:#8A8A94;padding-top:18px">Already have an account? <span style="color:#B9B6FF;font-weight:600">Log in</span></div>
+  <div style="flex:1"></div>
+  <div style="padding:0 24px 26px;font-size:11px;line-height:1.5;color:#5A5A66;text-align:center">By continuing you agree to the terms and privacy policy.</div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s05">
+<div class="dv-olabel"><a class="dv-oid" href="#s05">s05</a>Log in</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="padding:56px 24px 0;display:flex;flex-direction:column;align-items:center;gap:14px">
+    <div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(145deg,#6A62FF,#3F38D4);display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:28px">K</span></div>
+    <div class="tt" style="font-size:24px;letter-spacing:-.4px">Welcome back</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;padding:38px 24px 0">
+    <div class="fld"><div class="fldl">Mobile number</div><div class="fldi"><span class="mn" style="color:#8A8A94">+91</span><span class="mn">98765 43210</span></div></div>
+    <div class="fld"><div class="fldl">Password</div><div class="fldi" style="border-color:#5B54F9"><span class="mn" style="flex:1;letter-spacing:3px">••••••</span><span class="ms" style="font-size:19px;color:#8A8A94">visibility</span></div></div>
+    <div style="text-align:right;font-size:12.5px;color:#B9B6FF">Forgot password?</div>
+  </div>
+  <div style="padding:22px 24px 0"><div class="pcta">Log in</div></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:26px 24px 0"><div style="flex:1;height:1px;background:#232330"></div><span style="font-size:11px;color:#5A5A66">OR</span><div style="flex:1;height:1px;background:#232330"></div></div>
+  <div style="padding:22px 24px 0"><div class="scta"><span class="ms" style="font-size:20px;margin-right:8px;color:#B9B6FF">fingerprint</span>Use fingerprint</div></div>
+  <div style="flex:1"></div>
+  <div style="text-align:center;font-size:13px;color:#8A8A94;padding-bottom:30px">New here? <span style="color:#B9B6FF;font-weight:600">Create an account</span></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s06">
+<div class="dv-olabel"><a class="dv-oid" href="#s06">s06</a>Household setup — create (invite code)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span></div>
+  <div style="padding:10px 24px 0">
+    <div class="tt" style="font-size:27px;letter-spacing:-.6px">Your household</div>
+    <div style="font-size:13.5px;color:#8A8A94;margin-top:8px">One household, two accounts, one shared book.</div>
+  </div>
+  <div style="display:flex;gap:8px;padding:22px 24px 0">
+    <div style="flex:1;height:42px;border-radius:100px;background:#16161F;border:1px solid #5B54F9;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Create</div>
+    <div style="flex:1;height:42px;border-radius:100px;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#8A8A94">Join</div>
+  </div>
+  <div style="margin:22px 24px 0;padding:20px;border-radius:20px;background:#16161F;border:1px solid #232330">
+    <div class="fldl">Household name</div>
+    <div style="font-size:16px;font-weight:600;margin-top:8px">Rao household</div>
+    <div style="height:1px;background:#232330;margin:18px 0"></div>
+    <div class="fldl">Invite code</div>
+    <div class="mn" style="font-size:30px;letter-spacing:6px;margin-top:10px;color:#B9B6FF">7K4P2M</div>
+    <div style="font-size:12px;color:#8A8A94;margin-top:8px;line-height:1.5">Share this with your partner. It works once, and expires in 24 hours.</div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <div style="flex:1;height:42px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;font-weight:600"><span class="ms" style="font-size:17px">share</span>Share code</div>
+      <div style="width:46px;height:42px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:18px;color:#C9C9D2">content_copy</span></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;margin:16px 24px 0;padding:14px;border-radius:16px;background:rgba(91,84,249,.08);border:1px solid rgba(91,84,249,.28)">
+    <span class="ms" style="font-size:19px;color:#B9B6FF">hourglass_top</span>
+    <div style="font-size:12.5px;color:#C9C9D2">Waiting for your partner to join. You can start adding wallets now.</div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 24px 28px;display:flex;flex-direction:column;gap:10px"><div class="pcta">Continue</div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s07">
+<div class="dv-olabel"><a class="dv-oid" href="#s07">s07</a>Household setup — join (enter code)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span></div>
+  <div style="padding:10px 24px 0">
+    <div class="tt" style="font-size:27px;letter-spacing:-.6px">Your household</div>
+    <div style="font-size:13.5px;color:#8A8A94;margin-top:8px">One household, two accounts, one shared book.</div>
+  </div>
+  <div style="display:flex;gap:8px;padding:22px 24px 0">
+    <div style="flex:1;height:42px;border-radius:100px;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#8A8A94">Create</div>
+    <div style="flex:1;height:42px;border-radius:100px;background:#16161F;border:1px solid #5B54F9;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Join</div>
+  </div>
+  <div style="padding:26px 24px 0">
+    <div class="fldl">Enter your partner's code</div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <div class="mn" style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:22px">7</div>
+      <div class="mn" style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:22px">K</div>
+      <div class="mn" style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:22px">4</div>
+      <div class="mn" style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #5B54F9;display:flex;align-items:center;justify-content:center;font-size:22px;color:#B9B6FF">P</div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #232330"></div>
+      <div style="flex:1;height:58px;border-radius:14px;background:#16161F;border:1px solid #232330"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:#8A8A94"><span class="ms" style="font-size:16px">info</span>Ask your partner to send it from Settings → Household.</div>
+  </div>
+  <div style="margin:26px 24px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;gap:12px">
+    <div style="width:38px;height:38px;border-radius:50%;background:#0B0B12;border:1.5px solid #E8A33D;display:flex;align-items:center;justify-content:center;font-size:13px;color:#F1CB8E">M</div>
+    <div><div style="font-size:13px;font-weight:600">Rao household</div><div style="font-size:11.5px;color:#8A8A94">Created by Meera · 3 wallets</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 24px 28px"><div class="pcta">Join household</div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s08">
+<div class="dv-olabel"><a class="dv-oid" href="#s08">s08</a>SMS permission rationale</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span></div>
+  <div style="padding:16px 24px 0">
+    <div style="width:52px;height:52px;border-radius:16px;background:rgba(91,84,249,.14);border:1px solid rgba(91,84,249,.32);display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:26px;color:#B9B6FF">sms</span></div>
+    <div class="tt" style="font-size:27px;letter-spacing:-.6px;margin-top:20px;line-height:1.2">Let Khaata read<br>bank alerts</div>
+    <div style="font-size:14px;line-height:1.55;color:#8A8A94;margin-top:12px;text-wrap:pretty">On the next screen Android will ask for SMS access. Here is exactly what happens with it.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;padding:24px 24px 0">
+    <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <span class="ms" style="font-size:20px;color:#2FD988">check_circle</span>
+      <div><div style="font-size:13px;font-weight:600">We read messages from bank senders</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px;line-height:1.5">Amount, merchant and card digits only, matched on the phone.</div></div>
+    </div>
+    <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <span class="ms" style="font-size:20px;color:#2FD988">check_circle</span>
+      <div><div style="font-size:13px;font-weight:600">Nothing is saved until you confirm</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px;line-height:1.5">A dismissed suggestion leaves no record in your book.</div></div>
+    </div>
+    <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <span class="ms" style="font-size:20px;color:#FF6B6B">block</span>
+      <div><div style="font-size:13px;font-weight:600">We never read personal messages</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px;line-height:1.5">Non-bank senders are skipped and never leave the device.</div></div>
+    </div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 24px 28px;display:flex;flex-direction:column;gap:10px">
+    <div class="pcta">Allow SMS access</div>
+    <div class="scta" style="border:none;color:#8A8A94">Not now — I'll add manually</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s09">
+<div class="dv-olabel"><a class="dv-oid" href="#s09">s09</a>PIN setup + biometrics</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span></div>
+  <div style="padding:10px 24px 0;text-align:center">
+    <div class="tt" style="font-size:24px;letter-spacing:-.4px">Set a 4-digit PIN</div>
+    <div style="font-size:13px;color:#8A8A94;margin-top:8px">Khaata asks for it every time you open the app.</div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:14px;padding:28px 0 0">
+    <div style="width:14px;height:14px;border-radius:50%;background:#5B54F9"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#5B54F9"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#232330"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#232330"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 24px 0;padding:14px 16px;border-radius:16px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:21px;color:#B9B6FF">fingerprint</span><div><div style="font-size:13px;font-weight:600">Use fingerprint too</div><div style="font-size:11.5px;color:#8A8A94">Faster unlock, same PIN as backup.</div></div></div>
+    <div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 40px 30px">
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">1</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">2</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">3</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">4</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">5</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">6</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">7</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">8</div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">9</div>
+    <div style="height:62px"></div>
+    <div class="mn" style="height:62px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:23px">0</div>
+    <div style="height:62px;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:22px;color:#8A8A94">backspace</span></div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s10">
+<div class="dv-olabel"><a class="dv-oid" href="#s10">s10</a>App lock</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="padding:40px 24px 0;display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div style="width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#6A62FF,#3F38D4);display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:23px">K</span></div>
+    <div class="tt" style="font-size:19px">Enter your PIN</div>
+    <div style="font-size:12.5px;color:#8A8A94">Rao household</div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:14px;padding:26px 0 0">
+    <div style="width:14px;height:14px;border-radius:50%;background:#5B54F9"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#5B54F9"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#5B54F9"></div>
+    <div style="width:14px;height:14px;border-radius:50%;background:#232330"></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 40px 22px">
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">1</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">2</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">3</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">4</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">5</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">6</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">7</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">8</div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">9</div>
+    <div style="height:64px;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:26px;color:#B9B6FF">fingerprint</span></div>
+    <div class="mn" style="height:64px;border-radius:50%;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;font-size:24px">0</div>
+    <div style="height:64px;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:22px;color:#8A8A94">backspace</span></div>
+  </div>
+  <div style="text-align:center;font-size:12.5px;color:#8A8A94;padding-bottom:26px">Forgot PIN? Log in again</div>
+</div>
+</x-import></div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="tB">
+<div class="dv-thd"><a class="dv-tid" href="#tB">B</a><span class="dv-tname">Core app — home, wallets, transactions, categories, budgets, insights</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="s11">
+<div class="dv-olabel"><a class="dv-oid" href="#s11">s11</a>Home — final (<a class="dv-oid" href="Khaata Home.dc.html">2a</a>)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0">
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:15px">K</span></div><div style="font-size:13px;font-weight:600">Good evening, Ishaan</div></div>
+    <span class="ms" style="font-size:21px;color:#8A8A94">notifications</span>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:#8A8A94">Net worth</div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px">
+      <div class="tt" style="font-variant-numeric:tabular-nums;font-size:34px;letter-spacing:-1.1px;line-height:1">₹4,82,650</div>
+      <div style="display:flex;align-items:end;gap:3px;height:34px">
+        <div style="width:5px;height:38%;border-radius:2px;background:#232330"></div><div style="width:5px;height:56%;border-radius:2px;background:#232330"></div><div style="width:5px;height:46%;border-radius:2px;background:#232330"></div><div style="width:5px;height:72%;border-radius:2px;background:#3B3670"></div><div style="width:5px;height:64%;border-radius:2px;background:#3B3670"></div><div style="width:5px;height:100%;border-radius:2px;background:#5B54F9"></div>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;height:180px;margin-top:14px">
+    <div style="position:absolute;left:44px;right:44px;top:0;height:106px;border-radius:20px;background:#14141C;border:1px solid #232330;transform:rotate(-4deg)"></div>
+    <div style="position:absolute;left:34px;right:34px;top:10px;height:108px;border-radius:20px;background:#1B1B26;border:1px solid #2A2A38;transform:rotate(2.5deg)"></div>
+    <div style="position:absolute;left:20px;right:20px;top:22px;padding:15px 18px;border-radius:20px;background:linear-gradient(145deg,#6A62FF,#3F38D4);box-shadow:0 18px 40px rgba(0,0,0,.55)">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="ms" style="font-size:19px;color:#fff">credit_card</span><span style="font-size:12.5px;font-weight:600">HDFC Credit Card</span></div><div style="padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.16);font-size:10px">Owe</div></div>
+      <div class="mn" style="font-size:13px;letter-spacing:2.5px;color:rgba(255,255,255,.72);margin-top:14px">•••• •••• 4821</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:9px">
+        <div><div style="font-size:10px;color:rgba(255,255,255,.62)">Outstanding</div><div class="mn" style="font-size:18px;font-weight:500">₹18,430</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,.62)">Limit left</div><div class="mn" style="font-size:12px;color:#DFFCEB">₹1,31,570</div></div>
+      </div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:5px"><div style="width:16px;height:4px;border-radius:2px;background:#5B54F9"></div><div style="width:4px;height:4px;border-radius:2px;background:#2A2A38"></div><div style="width:4px;height:4px;border-radius:2px;background:#2A2A38"></div><div style="width:4px;height:4px;border-radius:2px;background:#2A2A38"></div></div>
+  </div>
+  <div style="margin:4px 16px 0;padding:13px 16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:12.5px;font-weight:600">August budget</div><div class="mn" style="font-size:11.5px;color:#8A8A94">₹34,200 <span style="color:#73737F">/ 52,000</span></div></div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px"><div style="height:5px;border-radius:3px;background:#232330;overflow:hidden"><div style="width:78%;height:100%;background:#5B54F9"></div></div><div style="font-size:10px;color:#8A8A94">Food 78%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px"><div style="height:5px;border-radius:3px;background:#232330;overflow:hidden"><div style="width:100%;height:100%;background:#FF6B6B"></div></div><div style="font-size:10px;color:#FF6B6B">Travel over</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px"><div style="height:5px;border-radius:3px;background:#232330;overflow:hidden"><div style="width:41%;height:100%;background:#2FD988"></div></div><div style="font-size:10px;color:#8A8A94">Home 41%</div></div>
+    </div>
+  </div>
+  <div style="margin:10px 16px 0;padding:13px 16px;border-radius:18px;background:#16161F;border:1px dashed #3B3670">
+    <div style="display:flex;align-items:center;gap:8px"><span class="ms" style="font-size:17px;color:#B9B6FF">sms</span><span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#B9B6FF">Detected from SMS</span></div>
+    <div style="font-size:13.5px;font-weight:600;margin-top:8px;line-height:1.35">₹450 at Swiggy, HDFC Card — add as Food expense?</div>
+    <div style="display:flex;gap:8px;margin-top:11px"><div style="flex:1;height:38px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Confirm</div><div style="height:38px;padding:0 16px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#C9C9D2">Edit</div><div style="height:38px;padding:0 14px;border-radius:100px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#8A8A94">Dismiss</div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px"><div class="tt" style="font-size:14px">Today</div><div class="mn" style="font-size:11.5px;color:#8A8A94">−₹2,550</div></div>
+  <div style="padding:0 20px;display:flex;flex-direction:column">
+    <div class="row" style="padding:8px 0"><div class="ic" style="position:relative"><span class="ms" style="font-size:18px;color:#C9C9D2">restaurant</span><div style="position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:#E8A33D;border:2px solid #0B0B12"></div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Swiggy</div><div style="font-size:11px;color:#8A8A94">Food · HDFC Card</div></div><div class="mn" style="font-size:13.5px">−₹450</div></div>
+    <div class="row" style="padding:8px 0"><div class="ic" style="position:relative"><span class="ms" style="font-size:18px;color:#C9C9D2">local_gas_station</span><div style="position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:#5B54F9;border:2px solid #0B0B12"></div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">HP Petrol</div><div style="font-size:11px;color:#8A8A94">Travel · ICICI Bank</div></div><div class="mn" style="font-size:13.5px">−₹2,100</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s12">
+<div class="dv-olabel"><a class="dv-oid" href="#s12">s12</a>Wallets — have / owe split</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Wallets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="display:flex;gap:7px;padding:14px 20px 0;overflow:hidden">
+    <div style="padding:6px 13px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:11.5px;font-weight:600">All 6</div>
+    <div style="padding:6px 13px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Bank</div>
+    <div style="padding:6px 13px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Cards</div>
+    <div style="padding:6px 13px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Cash</div>
+    <div style="padding:6px 13px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Loans</div>
+  </div>
+  <div style="display:flex;gap:10px;padding:16px 20px 0">
+    <div style="flex:1;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div style="font-size:10.5px;color:#8A8A94">You have</div><div class="mn" style="font-size:16px;margin-top:5px">₹6,10,400</div></div>
+    <div style="flex:1;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid rgba(255,107,107,.3)"><div style="font-size:10.5px;color:#8A8A94">You owe</div><div class="mn" style="font-size:16px;margin-top:5px;color:#FF6B6B">₹1,27,750</div></div>
+  </div>
+  <div style="padding:20px 20px 6px" class="sect">Money you have</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">account_balance</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">ICICI Savings</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 7734</div></div><div class="mn" style="font-size:14px">₹4,21,900</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">account_balance</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">HDFC Salary</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 1180</div></div><div class="mn" style="font-size:14px">₹1,79,500</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#2FD988">payments</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Cash</div><div style="font-size:11px;color:#8A8A94">Reconciled 3 days ago</div></div><div class="mn" style="font-size:14px">₹9,000</div></div>
+  </div>
+  <div style="padding:20px 20px 6px" class="sect">Money you owe</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border-left:2px solid #FF6B6B"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#FF9B9B">credit_card</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">HDFC Credit Card</div><div class="mn" style="font-size:11px;color:#8A8A94">•••• 4821 · due 22 Aug</div></div><div class="mn" style="font-size:14px;color:#FF6B6B">₹18,430</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border-left:2px solid #FF6B6B"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#FF9B9B">schedule</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Simpl pay-later</div><div style="font-size:11px;color:#8A8A94">Cycle closes 25 Aug</div></div><div class="mn" style="font-size:14px;color:#FF6B6B">₹2,320</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border-left:2px solid #FF6B6B"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#FF9B9B">home_work</span></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Car loan</div><div style="font-size:11px;color:#8A8A94">EMI ₹14,200 · 38 left</div></div><div class="mn" style="font-size:14px;color:#FF6B6B">₹1,07,000</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s13">
+<div class="dv-olabel"><a class="dv-oid" href="#s13">s13</a>Wallet detail — balance history, reconcile</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div style="display:flex;gap:16px"><span class="ms" style="font-size:21px;color:#C9C9D2">edit</span><span class="ms" style="font-size:21px;color:#C9C9D2">archive</span></div></div>
+  <div style="margin:14px 20px 0;padding:16px 18px;border-radius:20px;background:linear-gradient(145deg,#6A62FF,#3F38D4)">
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="ms" style="font-size:19px">credit_card</span><span style="font-size:13px;font-weight:600">HDFC Credit Card</span></div><div style="padding:3px 8px;border-radius:100px;background:rgba(255,255,255,.16);font-size:10px">Owe</div></div>
+    <div class="mn" style="font-size:13px;letter-spacing:2.5px;color:rgba(255,255,255,.72);margin-top:14px">•••• •••• 4821</div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px"><div><div style="font-size:10px;color:rgba(255,255,255,.62)">Outstanding</div><div class="mn" style="font-size:22px;font-weight:500">₹18,430</div></div><div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,.62)">Due 22 Aug</div><div class="mn" style="font-size:12px;color:#FFE3B0">in 4 days</div></div></div>
+  </div>
+  <div style="display:flex;gap:8px;padding:14px 20px 0">
+    <div style="flex:1;height:42px;border-radius:100px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600"><span class="ms" style="font-size:17px;color:#B9B6FF">rule</span>Reconcile balance</div>
+    <div style="flex:1;height:42px;border-radius:100px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600"><span class="ms" style="font-size:17px;color:#B9B6FF">payments</span>Pay bill</div>
+  </div>
+  <div style="margin:18px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:12px;color:#8A8A94">Outstanding, 6 months</div><div class="mn" style="font-size:11px;color:#8A8A94">Aug</div></div>
+    <div style="position:relative;height:96px;margin-top:12px">
+      <svg viewBox="0 0 300 96" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+        <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B54F9" stop-opacity="0.42"></stop><stop offset="1" stop-color="#5B54F9" stop-opacity="0"></stop></linearGradient></defs>
+        <path d="M0,70 C40,58 60,74 100,52 C140,32 170,60 210,40 C245,24 270,34 300,20 L300,96 L0,96 Z" fill="url(#wg)"></path>
+        <path d="M0,70 C40,58 60,74 100,52 C140,32 170,60 210,40 C245,24 270,34 300,20" fill="none" stroke="#8F89FF" stroke-width="2"></path>
+        <circle cx="210" cy="40" r="4" fill="#0B0B12" stroke="#8F89FF" stroke-width="2"></circle>
+      </svg>
+      <div style="position:absolute;left:52%;top:-2px;padding:5px 9px;border-radius:9px;background:#232330;border:1px solid #3B3670"><span class="mn" style="font-size:10.5px">₹16,900</span></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px"><div class="tt" style="font-size:14px">Transactions</div><span class="ms" style="font-size:19px;color:#8A8A94">filter_list</span></div>
+  <div style="padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:30px;border-radius:2px;background:#E8A33D"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Swiggy</div><div style="font-size:11px;color:#8A8A94">Food · today</div></div><div class="mn" style="font-size:13.5px">−₹450</div></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div style="width:3px;height:30px;border-radius:2px;background:#5B54F9"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Amazon</div><div style="font-size:11px;color:#8A8A94">Shopping · 16 Aug</div></div><div class="mn" style="font-size:13.5px">−₹3,120</div></div>
+    <div class="row"><div style="width:3px;height:30px;border-radius:2px;background:#E8A33D"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">BookMyShow</div><div style="font-size:11px;color:#8A8A94">Fun · 14 Aug</div></div><div class="mn" style="font-size:13.5px">−₹880</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s14">
+<div class="dv-olabel"><a class="dv-oid" href="#s14">s14</a>Add wallet — credit card fields</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div class="tt" style="font-size:17px">Add wallet</div></div></div>
+  <div style="padding:10px 20px 0" class="sect">Type</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 20px 0">
+    <div style="padding:12px 10px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#8A8A94">account_balance</span><span style="font-size:11.5px;color:#C9C9D2">Bank</span></div>
+    <div style="padding:12px 10px;border-radius:14px;background:rgba(91,84,249,.12);border:1px solid #5B54F9;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#B9B6FF">credit_card</span><span style="font-size:11.5px;font-weight:600">Credit card</span></div>
+    <div style="padding:12px 10px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#8A8A94">schedule</span><span style="font-size:11.5px;color:#C9C9D2">Pay later</span></div>
+    <div style="padding:12px 10px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#8A8A94">payments</span><span style="font-size:11.5px;color:#C9C9D2">Cash</span></div>
+    <div style="padding:12px 10px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#8A8A94">home_work</span><span style="font-size:11.5px;color:#C9C9D2">Loan</span></div>
+    <div style="padding:12px 10px;border-radius:14px;background:#16161F;border:1px solid #232330;display:flex;flex-direction:column;gap:7px"><span class="ms" style="font-size:19px;color:#8A8A94">savings</span><span style="font-size:11.5px;color:#C9C9D2">Wallet</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;padding:20px 20px 0">
+    <div class="fld"><div class="fldl">Name</div><div class="fldi">HDFC Credit Card</div></div>
+    <div class="fld"><div class="fldl">Last 4 digits</div><div class="fldi"><span class="mn" style="color:#8A8A94;letter-spacing:2px">•••• •••• </span><span class="mn">4821</span></div></div>
+    <div style="display:flex;gap:10px">
+      <div class="fld" style="flex:1"><div class="fldl">Credit limit</div><div class="fldi mn">₹1,50,000</div></div>
+      <div class="fld" style="flex:1"><div class="fldl">Current outstanding</div><div class="fldi mn">₹18,430</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div class="fld" style="flex:1"><div class="fldl">Statement day</div><div class="fldi" style="justify-content:space-between"><span class="mn">5th</span><span class="ms" style="font-size:18px;color:#8A8A94">expand_more</span></div></div>
+      <div class="fld" style="flex:1"><div class="fldl">Due day</div><div class="fldi" style="justify-content:space-between"><span class="mn">22nd</span><span class="ms" style="font-size:18px;color:#8A8A94">expand_more</span></div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <div><div style="font-size:12.5px;font-weight:600">Match bank SMS to this card</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">Uses the last 4 digits.</div></div>
+      <div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div>
+    </div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 20px 26px;border-top:1px solid #17171F;padding-top:14px"><div class="pcta">Save wallet</div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s15">
+<div class="dv-olabel"><a class="dv-oid" href="#s15">s15</a>Add transaction — keypad state</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div style="display:flex;gap:4px;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330"><div style="padding:5px 14px;border-radius:100px;background:#FF6B6B;color:#0B0B12;font-size:11.5px;font-weight:600">Expense</div><div style="padding:5px 14px;border-radius:100px;font-size:11.5px;color:#8A8A94">Income</div><div style="padding:5px 14px;border-radius:100px;font-size:11.5px;color:#8A8A94">Transfer</div></div><div style="width:22px"></div></div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:22px 0 4px">
+    <span class="mn" style="font-size:22px;color:#5A5A66;padding-bottom:6px">₹</span>
+    <span class="tt" style="font-variant-numeric:tabular-nums;font-size:46px;letter-spacing:-1.4px;line-height:1">450</span>
+    <div style="width:2px;height:38px;background:#5B54F9"></div>
+  </div>
+  <div style="text-align:center;font-size:11.5px;color:#8A8A94">Today · 18 Aug</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:20px 20px 0">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#B9B6FF">credit_card</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Wallet</div><div style="font-size:13px;font-weight:600">HDFC Credit Card ·••4821</div></div><span class="ms" style="font-size:19px;color:#8A8A94">expand_more</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Category</div><div style="font-size:13px;font-weight:600">Food</div></div><span class="ms" style="font-size:19px;color:#8A8A94">expand_more</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#8A8A94">notes</span></div><div style="flex:1"><div style="font-size:13px;color:#8A8A94">Add a note (optional)</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-radius:16px;background:#16161F;border:1px solid #232330"><div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:19px;color:#8A8A94">repeat</span><span style="font-size:12.5px">Mark as recurring</span></div><div style="width:44px;height:26px;border-radius:100px;background:#232330;padding:3px"><div style="width:20px;height:20px;border-radius:50%;background:#5A5A66"></div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="background:#0F0F17;border-top:1px solid #232330;padding:10px 12px 14px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">1</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">2</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">3</div>
+      <div style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:21px;color:#C9C9D2">backspace</span></div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">4</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">5</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">6</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px;color:#B9B6FF">+</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">7</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">8</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">9</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px;color:#B9B6FF">−</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">.</div>
+      <div class="mn" style="height:52px;border-radius:14px;background:#16161F;display:flex;align-items:center;justify-content:center;font-size:20px">0</div>
+      <div style="grid-column:span 2;height:52px;border-radius:14px;background:#5B54F9;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600">Add expense</div>
+    </div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s16">
+<div class="dv-olabel"><a class="dv-oid" href="#s16">s16</a>Category picker — icon grid</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="flex:1;background:#0B0B12;opacity:.45"></div>
+  <div style="border-radius:26px 26px 0 0;background:#12121A;border-top:1px solid #232330;padding:12px 20px 26px">
+    <div style="display:flex;justify-content:center"><div style="width:38px;height:4px;border-radius:2px;background:#2A2A38"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px"><div class="tt" style="font-size:17px">Pick a category</div><span class="ms" style="font-size:21px;color:#8A8A94">close</span></div>
+    <div class="fldi" style="margin-top:14px"><span class="ms" style="font-size:18px;color:#8A8A94">search</span><span style="color:#8A8A94;font-size:13px">Search categories</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:rgba(232,163,61,.14);border:1px solid #E8A33D;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#E8A33D">restaurant</span></div><span style="font-size:11px;font-weight:600">Food</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#8FB4FF">local_gas_station</span></div><span style="font-size:11px;color:#8A8A94">Travel</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#7FE3B8">shopping_basket</span></div><span style="font-size:11px;color:#8A8A94">Groceries</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#D4A5FF">home</span></div><span style="font-size:11px;color:#8A8A94">Rent</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#FFB4B4">bolt</span></div><span style="font-size:11px;color:#8A8A94">Bills</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#FFD59B">local_hospital</span></div><span style="font-size:11px;color:#8A8A94">Health</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#9BE0FF">movie</span></div><span style="font-size:11px;color:#8A8A94">Fun</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:18px;background:#16161F;border:1px dashed #3B3670;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:24px;color:#B9B6FF">add</span></div><span style="font-size:11px;color:#8A8A94">New</span></div>
+    </div>
+    <div class="pcta" style="margin-top:22px">Use Food</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s17">
+<div class="dv-olabel"><a class="dv-oid" href="#s17">s17</a>Categories management</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div class="tt" style="font-size:18px">Categories</div></div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="display:flex;gap:6px;margin:16px 20px 0;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330">
+    <div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12.5px;font-weight:600">Expense</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12.5px;color:#8A8A94">Income</div>
+  </div>
+  <div style="display:flex;flex-direction:column;padding:8px 20px 0">
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic" style="background:rgba(232,163,61,.12);border-color:rgba(232,163,61,.4)"><span class="ms" style="font-size:19px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Food</div><div class="mn" style="font-size:11px;color:#8A8A94">₹12,480 this month · 24 entries</div></div><span class="ms" style="font-size:20px;color:#5A5A66">drag_indicator</span></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic" style="background:rgba(143,180,255,.12);border-color:rgba(143,180,255,.4)"><span class="ms" style="font-size:19px;color:#8FB4FF">local_gas_station</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Travel</div><div class="mn" style="font-size:11px;color:#8A8A94">₹8,900 this month · 11 entries</div></div><span class="ms" style="font-size:20px;color:#5A5A66">drag_indicator</span></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic" style="background:rgba(127,227,184,.12);border-color:rgba(127,227,184,.4)"><span class="ms" style="font-size:19px;color:#7FE3B8">shopping_basket</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Groceries</div><div class="mn" style="font-size:11px;color:#8A8A94">₹6,340 this month · 9 entries</div></div><span class="ms" style="font-size:20px;color:#5A5A66">drag_indicator</span></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic" style="background:rgba(212,165,255,.12);border-color:rgba(212,165,255,.4)"><span class="ms" style="font-size:19px;color:#D4A5FF">home</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Rent</div><div class="mn" style="font-size:11px;color:#8A8A94">₹32,000 this month · 1 entry</div></div><span class="ms" style="font-size:20px;color:#5A5A66">drag_indicator</span></div>
+    <div class="row" style="border-bottom:1px solid #17171F;opacity:.55"><div class="ic"><span class="ms" style="font-size:19px;color:#8A8A94">card_giftcard</span></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Gifts</div><div style="font-size:11px;color:#8A8A94">Archived · kept on old entries</div></div><span class="ms" style="font-size:19px;color:#5A5A66">unarchive</span></div>
+  </div>
+  <div style="margin:18px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div class="sect">Editing a category</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+      <div style="width:48px;height:48px;border-radius:16px;background:rgba(232,163,61,.14);border:1px solid #E8A33D;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:22px;color:#E8A33D">restaurant</span></div>
+      <div style="flex:1;height:44px;border-radius:12px;background:#0F0F17;border:1px solid #232330;display:flex;align-items:center;padding:0 12px;font-size:13.5px">Food</div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:14px">
+      <div style="width:26px;height:26px;border-radius:50%;background:#E8A33D;box-shadow:0 0 0 2px #12121A,0 0 0 4px #E8A33D"></div>
+      <div style="width:26px;height:26px;border-radius:50%;background:#8FB4FF"></div>
+      <div style="width:26px;height:26px;border-radius:50%;background:#7FE3B8"></div>
+      <div style="width:26px;height:26px;border-radius:50%;background:#D4A5FF"></div>
+      <div style="width:26px;height:26px;border-radius:50%;background:#FFB4B4"></div>
+      <div style="width:26px;height:26px;border-radius:50%;background:#9BE0FF"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px"><div style="flex:1;height:42px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Save category</div><div style="height:42px;padding:0 16px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;font-size:12.5px;color:#8A8A94">Archive</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="settings" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s18">
+<div class="dv-olabel"><a class="dv-oid" href="#s18">s18</a>Budgets</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Budgets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="margin:16px 20px 0;padding:16px 18px;border-radius:20px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:12.5px;color:#8A8A94">Overall, August</div><div style="font-size:11.5px;color:#8A8A94">13 days left</div></div>
+    <div style="display:flex;align-items:flex-end;gap:8px;margin-top:8px"><div class="tt" style="font-size:28px;letter-spacing:-.8px">₹34,200</div><div class="mn" style="font-size:12.5px;color:#8A8A94;padding-bottom:5px">of ₹52,000</div></div>
+    <div style="height:8px;border-radius:4px;background:#232330;overflow:hidden;margin-top:14px"><div style="width:66%;height:100%;background:linear-gradient(90deg,#5B54F9,#8F89FF)"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px"><span class="mn" style="font-size:11px;color:#2FD988">₹17,800 left</span><span class="mn" style="font-size:11px;color:#8A8A94">₹1,370/day to stay on track</span></div>
+  </div>
+  <div style="padding:20px 20px 8px" class="sect">By category</div>
+  <div style="display:flex;flex-direction:column;gap:10px;padding:0 20px">
+    <div style="padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span><span style="flex:1;font-size:13px;font-weight:600">Food</span><span class="mn" style="font-size:12.5px">₹12,480 <span style="color:#73737F">/ 16,000</span></span></div>
+      <div style="height:6px;border-radius:3px;background:#232330;overflow:hidden;margin-top:11px"><div style="width:78%;height:100%;background:#5B54F9"></div></div>
+    </div>
+    <div style="padding:14px;border-radius:16px;background:#16161F;border:1px solid rgba(255,107,107,.32)">
+      <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#8FB4FF">local_gas_station</span><span style="flex:1;font-size:13px;font-weight:600">Travel</span><span class="mn" style="font-size:12.5px;color:#FF6B6B">₹8,900 <span style="color:#73737F">/ 8,000</span></span></div>
+      <div style="height:6px;border-radius:3px;background:#232330;overflow:hidden;margin-top:11px"><div style="width:100%;height:100%;background:#FF6B6B"></div></div>
+      <div style="font-size:11px;color:#FF6B6B;margin-top:8px">₹900 over. Alerted at 90%.</div>
+    </div>
+    <div style="padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#7FE3B8">shopping_basket</span><span style="flex:1;font-size:13px;font-weight:600">Groceries</span><span class="mn" style="font-size:12.5px">₹6,340 <span style="color:#73737F">/ 15,000</span></span></div>
+      <div style="height:6px;border-radius:3px;background:#232330;overflow:hidden;margin-top:11px"><div style="width:42%;height:100%;background:#2FD988"></div></div>
+    </div>
+    <div style="padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330">
+      <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#B9B6FF">credit_card</span><span style="flex:1;font-size:13px;font-weight:600">HDFC Card spend</span><span class="mn" style="font-size:12.5px">₹9,120 <span style="color:#73737F">/ 20,000</span></span></div>
+      <div style="height:6px;border-radius:3px;background:#232330;overflow:hidden;margin-top:11px"><div style="width:46%;height:100%;background:#5B54F9"></div></div>
+    </div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="insights" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s19">
+<div class="dv-olabel"><a class="dv-oid" href="#s19">s19</a>Add budget — thresholds</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div class="tt" style="font-size:17px">Add budget</div></div>
+  <div style="padding:10px 20px 0" class="sect">Applies to</div>
+  <div style="display:flex;gap:8px;padding:10px 20px 0">
+    <div style="flex:1;padding:11px 0;border-radius:100px;background:rgba(91,84,249,.12);border:1px solid #5B54F9;text-align:center;font-size:12px;font-weight:600">Category</div>
+    <div style="flex:1;padding:11px 0;border-radius:100px;border:1px solid #232330;text-align:center;font-size:12px;color:#8A8A94">Wallet</div>
+    <div style="flex:1;padding:11px 0;border-radius:100px;border:1px solid #232330;text-align:center;font-size:12px;color:#8A8A94">Overall</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;padding:20px 20px 0">
+    <div class="fld"><div class="fldl">Category</div><div class="fldi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:19px;color:#E8A33D">restaurant</span>Food</span><span class="ms" style="font-size:18px;color:#8A8A94">expand_more</span></div></div>
+    <div class="fld"><div class="fldl">Monthly limit</div><div class="fldi mn" style="font-size:20px;height:60px">₹16,000</div></div>
+    <div class="fld"><div class="fldl">Resets</div><div class="fldi" style="justify-content:space-between"><span>1st of every month</span><span class="ms" style="font-size:18px;color:#8A8A94">expand_more</span></div></div>
+  </div>
+  <div style="margin:20px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:12.5px;font-weight:600">Warn me at</div><div class="mn" style="font-size:13px;color:#B9B6FF">80%</div></div>
+    <div style="position:relative;height:26px;margin-top:8px">
+      <div style="position:absolute;top:11px;left:0;right:0;height:4px;border-radius:2px;background:#232330"></div>
+      <div style="position:absolute;top:11px;left:0;width:80%;height:4px;border-radius:2px;background:#5B54F9"></div>
+      <div style="position:absolute;top:2px;left:80%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#F5F5F8;border:3px solid #5B54F9"></div>
+    </div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:16px"><div style="font-size:12.5px;font-weight:600">Alert again at</div><div class="mn" style="font-size:13px;color:#FF9B9B">100%</div></div>
+    <div style="position:relative;height:26px;margin-top:8px">
+      <div style="position:absolute;top:11px;left:0;right:0;height:4px;border-radius:2px;background:#232330"></div>
+      <div style="position:absolute;top:11px;left:0;width:100%;height:4px;border-radius:2px;background:#FF6B6B"></div>
+      <div style="position:absolute;top:2px;left:100%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#F5F5F8;border:3px solid #FF6B6B"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px"><div style="font-size:12.5px">Notify both of us</div><div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:14px 20px 26px;border-top:1px solid #17171F"><div class="pcta">Save budget</div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s20">
+<div class="dv-olabel"><a class="dv-oid" href="#s20">s20</a>Insights — trend, income vs expense, breakdown</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Insights</div><span class="ms" style="font-size:21px;color:#8A8A94">calendar_month</span></div>
+  <div style="display:flex;gap:4px;margin:14px 20px 0;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330">
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Daily</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12px;font-weight:600">Monthly</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Yearly</div>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#8A8A94">Total spent, August</div>
+    <div style="display:flex;align-items:flex-end;gap:10px;margin-top:6px"><div class="tt" style="font-size:32px;letter-spacing:-1px;line-height:1">₹34,200</div><div class="mn" style="font-size:12px;color:#2FD988;padding-bottom:4px">−8% vs Jul</div></div>
+  </div>
+  <div style="margin:14px 20px 0;height:132px;position:relative">
+    <svg viewBox="0 0 330 132" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+      <defs><linearGradient id="ig" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B54F9" stop-opacity="0.5"></stop><stop offset="1" stop-color="#5B54F9" stop-opacity="0"></stop></linearGradient></defs>
+      <path d="M0,96 C34,88 52,100 84,74 C118,46 140,84 176,62 C212,40 236,54 268,30 C292,13 312,26 330,18 L330,132 L0,132 Z" fill="url(#ig)"></path>
+      <path d="M0,96 C34,88 52,100 84,74 C118,46 140,84 176,62 C212,40 236,54 268,30 C292,13 312,26 330,18" fill="none" stroke="#8F89FF" stroke-width="2.4"></path>
+      <line x1="176" y1="62" x2="176" y2="132" stroke="#3B3670" stroke-width="1" stroke-dasharray="3 3"></line>
+      <circle cx="176" cy="62" r="4.5" fill="#0B0B12" stroke="#8F89FF" stroke-width="2.5"></circle>
+    </svg>
+    <div style="position:absolute;left:38%;top:6px;padding:6px 10px;border-radius:10px;background:#232330;border:1px solid #3B3670"><div class="mn" style="font-size:11px">₹9,140</div><div style="font-size:9.5px;color:#8A8A94">week 3</div></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;padding:6px 20px 0" class="mn"><span style="font-size:10px;color:#5A5A66">W1</span><span style="font-size:10px;color:#5A5A66">W2</span><span style="font-size:10px;color:#5A5A66">W3</span><span style="font-size:10px;color:#5A5A66">W4</span></div>
+  <div style="margin:16px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:12.5px;font-weight:600">In vs out</div><div style="display:flex;gap:12px"><span style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#8A8A94"><span style="width:7px;height:7px;border-radius:2px;background:#2FD988"></span>In</span><span style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#8A8A94"><span style="width:7px;height:7px;border-radius:2px;background:#FF6B6B"></span>Out</span></div></div>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:78px;margin-top:14px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="display:flex;gap:3px;align-items:flex-end;height:60px"><div style="width:9px;height:52px;border-radius:3px;background:#2FD988"></div><div style="width:9px;height:34px;border-radius:3px;background:#FF6B6B"></div></div><span class="mn" style="font-size:9.5px;color:#5A5A66">May</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="display:flex;gap:3px;align-items:flex-end;height:60px"><div style="width:9px;height:56px;border-radius:3px;background:#2FD988"></div><div style="width:9px;height:44px;border-radius:3px;background:#FF6B6B"></div></div><span class="mn" style="font-size:9.5px;color:#5A5A66">Jun</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="display:flex;gap:3px;align-items:flex-end;height:60px"><div style="width:9px;height:54px;border-radius:3px;background:#2FD988"></div><div style="width:9px;height:48px;border-radius:3px;background:#FF6B6B"></div></div><span class="mn" style="font-size:9.5px;color:#5A5A66">Jul</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="display:flex;gap:3px;align-items:flex-end;height:60px"><div style="width:9px;height:58px;border-radius:3px;background:#2FD988"></div><div style="width:9px;height:38px;border-radius:3px;background:#FF6B6B"></div></div><span class="mn" style="font-size:9.5px;color:#F5F5F8">Aug</span></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px"><div class="tt" style="font-size:14px">Where it went</div><div style="font-size:11.5px;color:#8A8A94">By category</div></div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:11px">
+    <div><div style="display:flex;justify-content:space-between;font-size:12px"><span>Rent</span><span class="mn">₹32,000</span></div><div style="height:5px;border-radius:3px;background:#232330;margin-top:6px;overflow:hidden"><div style="width:88%;height:100%;background:#D4A5FF"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;font-size:12px"><span>Food</span><span class="mn">₹12,480</span></div><div style="height:5px;border-radius:3px;background:#232330;margin-top:6px;overflow:hidden"><div style="width:52%;height:100%;background:#E8A33D"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;font-size:12px"><span>Travel</span><span class="mn">₹8,900</span></div><div style="height:5px;border-radius:3px;background:#232330;margin-top:6px;overflow:hidden"><div style="width:34%;height:100%;background:#8FB4FF"></div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="insights" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="tC">
+<div class="dv-thd"><a class="dv-tid" href="#tC">C</a><span class="dv-tname">SMS suggestion — the signature moment — plus inbox &amp; settings</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="s21">
+<div class="dv-olabel"><a class="dv-oid" href="#s21">s21</a>Push notification, expanded — on the lock screen</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc" style="background:#07070C">
+  <div style="padding:52px 0 0;text-align:center">
+    <div class="mn" style="font-size:60px;font-weight:400;letter-spacing:-2px;line-height:1">9:41</div>
+    <div style="font-size:13px;color:#8A8A94;margin-top:6px">Tuesday, 18 August</div>
+  </div>
+  <div style="margin:38px 14px 0;border-radius:22px;background:#16161F;border:1px solid #232330;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:9px;padding:13px 16px 0">
+      <div style="width:18px;height:18px;border-radius:6px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:10px">K</span></div>
+      <span style="font-size:11.5px;color:#8A8A94">Khaata · now</span>
+      <span style="flex:1"></span>
+      <span class="ms" style="font-size:18px;color:#5A5A66">expand_less</span>
+    </div>
+    <div style="padding:10px 16px 0">
+      <div style="font-size:14.5px;font-weight:600;line-height:1.35">₹450 at Swiggy, HDFC Card</div>
+      <div style="font-size:12.5px;color:#8A8A94;margin-top:4px">Add as a Food expense?</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:14px 16px 0;padding:11px 12px;border-radius:14px;background:#0F0F17;border:1px solid #232330">
+      <span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600">Food · HDFC Card ••4821</div><div style="font-size:10.5px;color:#8A8A94">Best guess from your history</div></div>
+    </div>
+    <div style="display:flex;border-top:1px solid #232330;margin-top:14px">
+      <div style="flex:1;padding:13px 0;text-align:center;font-size:12.5px;font-weight:600;color:#B9B6FF;border-right:1px solid #232330">Confirm</div>
+      <div style="flex:1;padding:13px 0;text-align:center;font-size:12.5px;color:#C9C9D2;border-right:1px solid #232330">Edit</div>
+      <div style="flex:1;padding:13px 0;text-align:center;font-size:12.5px;color:#8A8A94">Dismiss</div>
+    </div>
+  </div>
+  <div style="margin:10px 14px 0;padding:13px 16px;border-radius:18px;background:#12121A;border:1px solid #1D1D28;opacity:.75">
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:16px;height:16px;border-radius:5px;background:#232330"></div><span style="font-size:11px;color:#8A8A94">HDFCBK · 9:40</span></div>
+    <div style="font-size:12px;color:#8A8A94;margin-top:6px">Rs.450.00 spent on HDFC Card x4821...</div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:flex;justify-content:space-between;padding:0 44px 34px"><span class="ms" style="font-size:24px;color:#8A8A94">photo_camera</span><span class="ms" style="font-size:24px;color:#8A8A94">flashlight_on</span></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s22">
+<div class="dv-olabel"><a class="dv-oid" href="#s22">s22</a>In-app sheet — arrives over Home, slides up from the bottom</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="padding:14px 20px 0;opacity:.35">
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:15px">K</span></div><div style="font-size:13px;font-weight:600">Good evening, Ishaan</div></div><span class="ms" style="font-size:21px;color:#8A8A94">notifications</span></div>
+    <div style="font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:#8A8A94;margin-top:16px">Net worth</div>
+    <div class="tt" style="font-size:34px;letter-spacing:-1.1px;margin-top:6px">₹4,82,650</div>
+    <div style="height:96px;border-radius:20px;background:#1B1B26;border:1px solid #2A2A38;margin-top:18px"></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="border-radius:26px 26px 0 0;background:#12121A;border:1px solid #232330;border-bottom:none;padding:12px 20px 24px;box-shadow:0 -24px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;justify-content:center"><div style="width:38px;height:4px;border-radius:2px;background:#2A2A38"></div></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:16px"><span class="ms" style="font-size:17px;color:#B9B6FF">sms</span><span style="font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#B9B6FF">Detected from SMS</span><span style="flex:1"></span><span class="ms" style="font-size:20px;color:#8A8A94">close</span></div>
+    <div class="tt" style="font-size:23px;letter-spacing:-.5px;margin-top:14px;line-height:1.25">₹450 at Swiggy<br>on HDFC Card</div>
+    <div style="font-size:12.5px;color:#8A8A94;margin-top:8px">From HDFCBK, 9:40 pm today. Nothing is saved until you confirm.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#B9B6FF">credit_card</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Wallet</div><div style="font-size:13px;font-weight:600">HDFC Credit Card ••4821</div></div><span style="font-size:11.5px;color:#B9B6FF">Change</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:rgba(232,163,61,.12);border-color:rgba(232,163,61,.4)"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Category · guessed from 14 past Swiggy entries</div><div style="font-size:13px;font-weight:600">Food</div></div><span style="font-size:11.5px;color:#B9B6FF">Change</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:11px 14px;border-radius:14px;background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.28)">
+      <div style="width:20px;height:20px;border-radius:50%;border:1.5px solid #E8A33D;display:flex;align-items:center;justify-content:center;font-size:9px;color:#F1CB8E">M</div>
+      <span style="font-size:11.5px;color:#C9C9D2">Meera saw this suggestion too</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <div style="flex:1;height:50px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600">Confirm expense</div>
+      <div style="width:50px;height:50px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:20px;color:#C9C9D2">edit</span></div>
+    </div>
+    <div style="text-align:center;font-size:12.5px;color:#8A8A94;margin-top:14px">Dismiss</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s23">
+<div class="dv-olabel"><a class="dv-oid" href="#s23">s23</a>Suggestion — edit before saving, then the toast</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div class="tt" style="font-size:17px">Edit suggestion</div></div></div>
+  <div style="margin:10px 20px 0;padding:12px 14px;border-radius:14px;background:#12121A;border:1px solid #232330">
+    <div style="font-size:10.5px;color:#8A8A94">Original message · HDFCBK</div>
+    <div style="font-size:11.5px;color:#C9C9D2;margin-top:5px;line-height:1.5">Rs.450.00 spent on HDFC Card x4821 at SWIGGY on 18-08-26. Avl limit Rs.1,31,570.</div>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:22px 0 4px">
+    <span class="mn" style="font-size:20px;color:#5A5A66;padding-bottom:5px">₹</span>
+    <span class="tt" style="font-size:42px;letter-spacing:-1.3px;line-height:1">450</span>
+    <span class="ms" style="font-size:18px;color:#8A8A94;padding-bottom:8px">edit</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:18px 20px 0">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#B9B6FF">credit_card</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Wallet</div><div style="font-size:13px;font-weight:600">HDFC Credit Card ••4821</div></div><span class="ms" style="font-size:19px;color:#8A8A94">expand_more</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #5B54F9"><div class="ic" style="background:rgba(127,227,184,.12);border-color:rgba(127,227,184,.4)"><span class="ms" style="font-size:18px;color:#7FE3B8">shopping_basket</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Category</div><div style="font-size:13px;font-weight:600">Groceries</div></div><span class="ms" style="font-size:19px;color:#8A8A94">expand_more</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#8A8A94">notes</span></div><div style="flex:1;font-size:13px">Weekly order</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-radius:16px;background:#16161F;border:1px solid #232330"><div><div style="font-size:12.5px">Always file Swiggy as Groceries</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">Applies to future suggestions only.</div></div><div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin:0 16px 12px;padding:14px 16px;border-radius:16px;background:#232330">
+    <span class="ms" style="font-size:19px;color:#2FD988">check_circle</span>
+    <div style="flex:1;font-size:12.5px">Expense added · ₹450 Groceries</div>
+    <span style="font-size:12px;font-weight:600;color:#B9B6FF">Undo</span>
+  </div>
+  <div style="padding:0 20px 26px"><div class="pcta">Add expense</div></div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s24">
+<div class="dv-olabel"><a class="dv-oid" href="#s24">s24</a>Notifications inbox</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:12px"><span class="ms" style="font-size:22px;color:#C9C9D2">arrow_back</span><div class="tt" style="font-size:18px">Notifications</div></div><span style="font-size:11.5px;color:#B9B6FF">Mark all read</span></div>
+  <div style="padding:18px 20px 6px" class="sect">Needs you · 2</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="display:flex;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid #3B3670">
+      <div style="width:6px;height:6px;border-radius:50%;background:#5B54F9;margin-top:6px"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">₹1,299 at Netflix, ICICI Bank</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px">Waiting for you to confirm · 2h ago</div></div>
+      <span class="ms" style="font-size:18px;color:#B9B6FF">sms</span>
+    </div>
+    <div style="display:flex;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F;border:1px solid rgba(255,107,107,.32)">
+      <div style="width:6px;height:6px;border-radius:50%;background:#FF6B6B;margin-top:6px"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">Travel budget is over by ₹900</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px">₹8,900 of ₹8,000 · yesterday</div></div>
+      <span class="ms" style="font-size:18px;color:#FF9B9B">pie_chart</span>
+    </div>
+  </div>
+  <div style="padding:20px 20px 6px" class="sect">Earlier</div>
+  <div style="display:flex;flex-direction:column;padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F;opacity:.72"><div class="ic"><span class="ms" style="font-size:18px;color:#B9B6FF">event_upcoming</span></div><div style="flex:1"><div style="font-size:13px">HDFC Card due in 4 days</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">₹18,430 · today 8:00 am</div></div></div>
+    <div class="row" style="border-bottom:1px solid #17171F;opacity:.72"><div class="ic"><span class="ms" style="font-size:18px;color:#2FD988">check_circle</span></div><div style="flex:1"><div style="font-size:13px">Meera confirmed ₹450 at Swiggy</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">Filed as Food · yesterday</div></div></div>
+    <div class="row" style="border-bottom:1px solid #17171F;opacity:.72"><div class="ic"><span class="ms" style="font-size:18px;color:#8A8A94">close</span></div><div style="flex:1"><div style="font-size:13px">You dismissed ₹40 at ATM fee</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">Nothing was saved · 16 Aug</div></div></div>
+    <div class="row" style="border-bottom:1px solid #17171F;opacity:.72"><div class="ic"><span class="ms" style="font-size:18px;color:#E8A33D">group_add</span></div><div style="flex:1"><div style="font-size:13px">Meera joined the household</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">14 Aug</div></div></div>
+    <div class="row" style="opacity:.72"><div class="ic"><span class="ms" style="font-size:18px;color:#B9B6FF">savings</span></div><div style="flex:1"><div style="font-size:13px">Rent recurring expense added</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">₹32,000 · 1 Aug</div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s25">
+<div class="dv-olabel"><a class="dv-oid" href="#s25">s25</a>Settings</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="padding:14px 20px 0"><div class="tt" style="font-size:20px">Settings</div></div>
+  <div style="display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:13px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="width:44px;height:44px;border-radius:50%;background:#0B0B12;border:2px solid #5B54F9;display:flex;align-items:center;justify-content:center"><span style="font-size:16px;font-weight:600;color:#B9B6FF">I</span></div>
+    <div style="flex:1"><div style="font-size:14px;font-weight:600">Ishaan Rao</div><div class="mn" style="font-size:11.5px;color:#8A8A94">+91 98765 43210</div></div>
+    <span class="ms" style="font-size:19px;color:#8A8A94">chevron_right</span>
+  </div>
+  <div style="padding:14px 20px 4px" class="sect">Household</div>
+  <div style="margin:0 20px;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:center;gap:10px"><div style="display:flex"><div style="width:28px;height:28px;border-radius:50%;background:#0B0B12;border:1.5px solid #5B54F9;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#B9B6FF">I</div><div style="width:28px;height:28px;border-radius:50%;background:#0B0B12;border:1.5px solid #E8A33D;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#F1CB8E;margin-left:-7px">M</div></div><div style="flex:1;font-size:12.5px">Ishaan <span style="color:#8A8A94">· you</span> &amp; Meera</div><span style="font-size:11px;color:#8A8A94">joined 14 Aug</span></div>
+    <div style="height:1px;background:#232330;margin:11px 0"></div>
+    <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:11px;color:#8A8A94">Invite code</div><div class="mn" style="font-size:17px;letter-spacing:4px;color:#B9B6FF;margin-top:3px">7K4P2M</div></div><div style="display:flex;gap:8px"><div style="width:40px;height:36px;border-radius:100px;border:1px solid #2A2A38;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:17px;color:#C9C9D2">content_copy</span></div><div style="width:40px;height:36px;border-radius:100px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:17px">share</span></div></div></div>
+  </div>
+  <div style="padding:14px 20px 4px" class="sect">Book</div>
+  <div style="display:flex;flex-direction:column;padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic"><span class="ms" style="font-size:18px;color:#C9C9D2">category</span></div><div style="flex:1;font-size:13px">Manage categories</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic"><span class="ms" style="font-size:18px;color:#C9C9D2">account_balance_wallet</span></div><div style="flex:1;font-size:13px">Manage wallets</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+    <div class="row"><div class="ic"><span class="ms" style="font-size:18px;color:#C9C9D2">sms</span></div><div style="flex:1"><div style="font-size:13px">SMS detection</div><div style="font-size:11px;color:#8A8A94;margin-top:2px">On · 3 bank senders matched</div></div><div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+  </div>
+  <div style="padding:12px 20px 4px" class="sect">Security</div>
+  <div style="display:flex;flex-direction:column;padding:0 20px">
+    <div class="row" style="border-bottom:1px solid #17171F"><div class="ic"><span class="ms" style="font-size:18px;color:#C9C9D2">pin</span></div><div style="flex:1;font-size:13px">Change PIN</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+    <div class="row"><div class="ic"><span class="ms" style="font-size:18px;color:#C9C9D2">fingerprint</span></div><div style="flex:1;font-size:13px">Unlock with fingerprint</div><div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:14px 20px 8px"><div class="scta" style="border-color:rgba(255,107,107,.35);color:#FF9B9B">Log out</div></div>
+  <dc-import name="KhaataNav" active="settings" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="tD">
+<div class="dv-thd"><a class="dv-tid" href="#tD">D</a><span class="dv-tname">Empty, loading &amp; error — Home, Wallets, Add transaction, Insights</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="s26">
+<div class="dv-olabel"><a class="dv-oid" href="#s26">s26</a>Home — empty</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:15px">K</span></div><div style="font-size:13px;font-weight:600">Good evening, Ishaan</div></div><span class="ms" style="font-size:21px;color:#8A8A94">notifications</span></div>
+  <div style="padding:16px 20px 0"><div style="font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:#8A8A94">Net worth</div><div class="tt" style="font-size:34px;letter-spacing:-1.1px;margin-top:6px;color:#5A5A66">₹0</div></div>
+  <div style="margin:20px 20px 0;padding:22px;border-radius:20px;background:#16161F;border:1px dashed #3B3670;text-align:center">
+    <div style="width:46px;height:46px;border-radius:15px;background:rgba(91,84,249,.14);display:flex;align-items:center;justify-content:center;margin:0 auto"><span class="ms" style="font-size:23px;color:#B9B6FF">account_balance_wallet</span></div>
+    <div style="font-size:15px;font-weight:600;margin-top:14px">No wallets yet</div>
+    <div style="font-size:12.5px;color:#8A8A94;margin-top:6px;line-height:1.5">Add your first bank account or card and your balance shows up here.</div>
+    <div class="pcta" style="height:44px;margin-top:16px">Add a wallet</div>
+  </div>
+  <div style="margin:14px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#B9B6FF">sms</span><div style="flex:1;font-size:12.5px;font-weight:600">Turn on SMS detection</div></div>
+    <div style="font-size:11.5px;color:#8A8A94;margin-top:6px;line-height:1.5">Bank alerts become ready-made entries you just confirm.</div>
+  </div>
+  <div style="margin:10px 20px 0;padding:16px;border-radius:18px;background:#16161F;border:1px solid #232330">
+    <div style="display:flex;align-items:center;gap:10px"><span class="ms" style="font-size:18px;color:#E8A33D">group_add</span><div style="flex:1;font-size:12.5px;font-weight:600">Invite Meera</div></div>
+    <div style="font-size:11.5px;color:#8A8A94;margin-top:6px;line-height:1.5">Share code 7K4P2M so you both write in one book.</div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s27">
+<div class="dv-olabel"><a class="dv-oid" href="#s27">s27</a>Home — loading</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:15px">K</span></div><div style="width:130px;height:12px;border-radius:6px;background:#1B1B26"></div></div><span class="ms" style="font-size:21px;color:#8A8A94">notifications</span></div>
+  <div style="padding:16px 20px 0"><div style="width:74px;height:10px;border-radius:5px;background:#1B1B26"></div><div style="width:190px;height:32px;border-radius:10px;background:#1B1B26;margin-top:10px"></div></div>
+  <div style="position:relative;height:180px;margin-top:14px">
+    <div style="position:absolute;left:44px;right:44px;top:0;height:106px;border-radius:20px;background:#14141C;transform:rotate(-4deg)"></div>
+    <div style="position:absolute;left:34px;right:34px;top:10px;height:108px;border-radius:20px;background:#1B1B26;transform:rotate(2.5deg)"></div>
+    <div style="position:absolute;left:20px;right:20px;top:22px;height:104px;border-radius:20px;background:linear-gradient(100deg,#1B1B26 20%,#262636 50%,#1B1B26 80%)"></div>
+  </div>
+  <div style="margin:4px 16px 0;height:74px;border-radius:18px;background:#16161F"></div>
+  <div style="margin:10px 16px 0;height:60px;border-radius:18px;background:#16161F"></div>
+  <div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;border-radius:12px;background:#16161F"></div><div style="flex:1"><div style="width:110px;height:11px;border-radius:6px;background:#1B1B26"></div><div style="width:150px;height:9px;border-radius:5px;background:#16161F;margin-top:7px"></div></div><div style="width:56px;height:11px;border-radius:6px;background:#1B1B26"></div></div>
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;border-radius:12px;background:#16161F"></div><div style="flex:1"><div style="width:90px;height:11px;border-radius:6px;background:#1B1B26"></div><div style="width:130px;height:9px;border-radius:5px;background:#16161F;margin-top:7px"></div></div><div style="width:56px;height:11px;border-radius:6px;background:#1B1B26"></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s28">
+<div class="dv-olabel"><a class="dv-oid" href="#s28">s28</a>Home — error (cached figures kept)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;background:#5B54F9;display:flex;align-items:center;justify-content:center"><span class="tt" style="font-size:15px">K</span></div><div style="font-size:13px;font-weight:600">Good evening, Ishaan</div></div><span class="ms" style="font-size:21px;color:#8A8A94">notifications</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin:14px 16px 0;padding:14px 16px;border-radius:16px;background:rgba(255,107,107,.09);border:1px solid rgba(255,107,107,.34)">
+    <span class="ms" style="font-size:20px;color:#FF9B9B">cloud_off</span>
+    <div style="flex:1"><div style="font-size:12.5px;font-weight:600">Can't reach the server</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px;line-height:1.45">Showing figures from 9:12 pm. New entries save on this phone and sync later.</div></div>
+  </div>
+  <div style="padding:16px 20px 0;opacity:.6"><div style="font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:#8A8A94">Net worth · 9:12 pm</div><div class="tt" style="font-size:34px;letter-spacing:-1.1px;margin-top:6px">₹4,82,650</div></div>
+  <div style="position:relative;height:150px;margin-top:14px;opacity:.55">
+    <div style="position:absolute;left:34px;right:34px;top:6px;height:100px;border-radius:20px;background:#1B1B26;border:1px solid #2A2A38;transform:rotate(2.5deg)"></div>
+    <div style="position:absolute;left:20px;right:20px;top:18px;height:100px;border-radius:20px;background:linear-gradient(145deg,#4B45C4,#332DA8)"></div>
+  </div>
+  <div style="padding:6px 20px 0;display:flex;flex-direction:column;gap:10px">
+    <div class="pcta" style="height:46px">Try again</div>
+    <div style="text-align:center;font-size:12px;color:#8A8A94">Or keep going offline — nothing is lost.</div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s29">
+<div class="dv-olabel"><a class="dv-oid" href="#s29">s29</a>Wallets — empty</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Wallets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="padding:26px 24px 0;text-align:center">
+    <div style="position:relative;height:120px">
+      <div style="position:absolute;left:60px;right:60px;top:6px;height:70px;border-radius:18px;border:1px dashed #2A2A38;transform:rotate(-5deg)"></div>
+      <div style="position:absolute;left:48px;right:48px;top:18px;height:72px;border-radius:18px;border:1px dashed #3B3670;transform:rotate(3deg)"></div>
+      <div style="position:absolute;left:40px;right:40px;top:30px;height:74px;border-radius:18px;background:#16161F;border:1px solid #3B3670;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:26px;color:#B9B6FF">add_card</span></div>
+    </div>
+    <div style="font-size:16px;font-weight:600;margin-top:22px">No wallets yet</div>
+    <div style="font-size:13px;color:#8A8A94;margin-top:8px;line-height:1.55">Add your first bank account or card. You can add cash, pay-later and loans later too.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:24px 20px 0">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">account_balance</span></div><div style="flex:1;font-size:13px;font-weight:600">Add a bank account</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#B9B6FF">credit_card</span></div><div style="flex:1;font-size:13px;font-weight:600">Add a credit card</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:19px;color:#2FD988">payments</span></div><div style="flex:1;font-size:13px;font-weight:600">Track cash only</div><span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s30">
+<div class="dv-olabel"><a class="dv-oid" href="#s30">s30</a>Wallets — loading</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Wallets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="display:flex;gap:7px;padding:14px 20px 0"><div style="width:58px;height:28px;border-radius:100px;background:#1B1B26"></div><div style="width:54px;height:28px;border-radius:100px;background:#16161F"></div><div style="width:60px;height:28px;border-radius:100px;background:#16161F"></div><div style="width:52px;height:28px;border-radius:100px;background:#16161F"></div></div>
+  <div style="display:flex;gap:10px;padding:16px 20px 0"><div style="flex:1;height:66px;border-radius:16px;background:#16161F"></div><div style="flex:1;height:66px;border-radius:16px;background:#16161F"></div></div>
+  <div style="padding:20px 20px 8px"><div style="width:120px;height:9px;border-radius:5px;background:#1B1B26"></div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:linear-gradient(100deg,#16161F 20%,#1F1F2B 50%,#16161F 80%)"><div style="width:38px;height:38px;border-radius:12px;background:#232330"></div><div style="flex:1"><div style="width:120px;height:11px;border-radius:6px;background:#232330"></div><div style="width:70px;height:9px;border-radius:5px;background:#1D1D28;margin-top:7px"></div></div><div style="width:72px;height:12px;border-radius:6px;background:#232330"></div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F"><div style="width:38px;height:38px;border-radius:12px;background:#1D1D28"></div><div style="flex:1"><div style="width:100px;height:11px;border-radius:6px;background:#1D1D28"></div><div style="width:66px;height:9px;border-radius:5px;background:#1A1A24;margin-top:7px"></div></div><div style="width:66px;height:12px;border-radius:6px;background:#1D1D28"></div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#16161F"><div style="width:38px;height:38px;border-radius:12px;background:#1D1D28"></div><div style="flex:1"><div style="width:86px;height:11px;border-radius:6px;background:#1D1D28"></div><div style="width:110px;height:9px;border-radius:5px;background:#1A1A24;margin-top:7px"></div></div><div style="width:58px;height:12px;border-radius:6px;background:#1D1D28"></div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:9px;padding:26px 0 0"><div style="width:16px;height:16px;border-radius:50%;border:2px solid #232330;border-top-color:#5B54F9"></div><span style="font-size:11.5px;color:#8A8A94">Loading wallets</span></div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s31">
+<div class="dv-olabel"><a class="dv-oid" href="#s31">s31</a>Wallets — error</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Wallets</div><span class="ms" style="font-size:22px;color:#B9B6FF">add</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center;gap:14px">
+    <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.32);display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:27px;color:#FF9B9B">cloud_off</span></div>
+    <div style="font-size:16px;font-weight:600">Wallets didn't load</div>
+    <div style="font-size:13px;color:#8A8A94;line-height:1.55">The connection dropped partway. Your balances are safe — this screen just needs another go.</div>
+    <div class="pcta" style="width:180px;height:46px;margin-top:6px">Try again</div>
+    <div style="font-size:12px;color:#8A8A94">Add a wallet offline instead</div>
+  </div>
+  <dc-import name="KhaataNav" active="wallets" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s32">
+<div class="dv-olabel"><a class="dv-oid" href="#s32">s32</a>Add transaction — empty (no wallets)</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div class="tt" style="font-size:17px">Add expense</div><div style="width:22px"></div></div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:24px 0 4px;opacity:.4"><span class="mn" style="font-size:22px;color:#5A5A66;padding-bottom:6px">₹</span><span class="tt" style="font-size:46px;letter-spacing:-1.4px;line-height:1;color:#5A5A66">0</span></div>
+  <div style="margin:22px 20px 0;padding:20px;border-radius:20px;background:#16161F;border:1px dashed #3B3670;text-align:center">
+    <span class="ms" style="font-size:26px;color:#B9B6FF">add_card</span>
+    <div style="font-size:15px;font-weight:600;margin-top:12px">Add a wallet first</div>
+    <div style="font-size:12.5px;color:#8A8A94;margin-top:6px;line-height:1.5">Every expense sits in a wallet, so we need one before your first entry.</div>
+    <div class="pcta" style="height:44px;margin-top:16px">Add a wallet</div>
+  </div>
+  <div style="margin:12px 20px 0;padding:14px 16px;border-radius:16px;background:#16161F;border:1px solid #232330;display:flex;align-items:center;gap:12px">
+    <span class="ms" style="font-size:19px;color:#2FD988">payments</span>
+    <div style="flex:1"><div style="font-size:12.5px;font-weight:600">Or start with cash</div><div style="font-size:11.5px;color:#8A8A94;margin-top:2px">One tap, no account details.</div></div>
+    <span class="ms" style="font-size:19px;color:#5A5A66">chevron_right</span>
+  </div>
+  <div style="flex:1"></div>
+  <div style="background:#0F0F17;border-top:1px solid #232330;padding:10px 12px 14px;opacity:.35">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div>
+      <div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div>
+      <div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div><div style="height:52px;border-radius:14px;background:#16161F"></div>
+    </div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s33">
+<div class="dv-olabel"><a class="dv-oid" href="#s33">s33</a>Add transaction — saving</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between;opacity:.5"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div class="tt" style="font-size:17px">Add expense</div><div style="width:22px"></div></div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:22px 0 4px;opacity:.5"><span class="mn" style="font-size:22px;color:#5A5A66;padding-bottom:6px">₹</span><span class="tt" style="font-size:46px;letter-spacing:-1.4px;line-height:1">450</span></div>
+  <div style="text-align:center;font-size:11.5px;color:#8A8A94;opacity:.5">Today · 18 Aug</div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:20px 20px 0;opacity:.5">
+    <div style="height:64px;border-radius:16px;background:#16161F;border:1px solid #232330"></div>
+    <div style="height:64px;border-radius:16px;background:#16161F;border:1px solid #232330"></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 20px 26px">
+    <div style="height:52px;border-radius:100px;background:#4A43D6;display:flex;align-items:center;justify-content:center;gap:10px">
+      <div style="width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff"></div>
+      <span style="font-size:14px;font-weight:600">Saving…</span>
+    </div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s34">
+<div class="dv-olabel"><a class="dv-oid" href="#s34">s34</a>Add transaction — error</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div class="hdr" style="justify-content:space-between"><span class="ms" style="font-size:22px;color:#C9C9D2">close</span><div class="tt" style="font-size:17px">Add expense</div><div style="width:22px"></div></div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:22px 0 4px"><span class="mn" style="font-size:22px;color:#5A5A66;padding-bottom:6px">₹</span><span class="tt" style="font-size:46px;letter-spacing:-1.4px;line-height:1">450</span></div>
+  <div style="text-align:center;font-size:11.5px;color:#8A8A94">Today · 18 Aug</div>
+  <div style="display:flex;align-items:flex-start;gap:12px;margin:20px 20px 0;padding:14px 16px;border-radius:16px;background:rgba(255,107,107,.09);border:1px solid rgba(255,107,107,.34)">
+    <span class="ms" style="font-size:20px;color:#FF9B9B">error</span>
+    <div style="flex:1"><div style="font-size:12.5px;font-weight:600">This expense didn't save</div><div style="font-size:11.5px;color:#8A8A94;margin-top:3px;line-height:1.45">The connection dropped. It's kept on this phone — send it again when you're ready.</div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:14px 20px 0">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#B9B6FF">credit_card</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Wallet</div><div style="font-size:13px;font-weight:600">HDFC Credit Card ••4821</div></div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div class="ic" style="background:rgba(232,163,61,.12);border-color:rgba(232,163,61,.4)"><span class="ms" style="font-size:18px;color:#E8A33D">restaurant</span></div><div style="flex:1"><div style="font-size:10.5px;color:#8A8A94">Category</div><div style="font-size:13px;font-weight:600">Food</div></div></div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:0 20px 26px;display:flex;flex-direction:column;gap:10px">
+    <div class="pcta">Try again</div>
+    <div style="text-align:center;font-size:12.5px;color:#8A8A94">Keep it as a draft</div>
+  </div>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s35">
+<div class="dv-olabel"><a class="dv-oid" href="#s35">s35</a>Insights — empty</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Insights</div><span class="ms" style="font-size:21px;color:#8A8A94">calendar_month</span></div>
+  <div style="display:flex;gap:4px;margin:14px 20px 0;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330;opacity:.6">
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Daily</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12px;font-weight:600">Monthly</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Yearly</div>
+  </div>
+  <div style="margin:22px 20px 0;padding:20px;border-radius:20px;background:#16161F;border:1px solid #232330">
+    <div style="height:96px;position:relative">
+      <svg viewBox="0 0 300 96" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+        <path d="M0,72 C60,72 120,72 180,72 C230,72 270,72 300,72" fill="none" stroke="#232330" stroke-width="2" stroke-dasharray="5 6"></path>
+      </svg>
+      <div style="position:absolute;left:0;right:0;top:22px;text-align:center;font-size:12px;color:#5A5A66">Nothing to chart yet</div>
+    </div>
+    <div style="font-size:14.5px;font-weight:600;margin-top:6px">Add a few expenses first</div>
+    <div style="font-size:12.5px;color:#8A8A94;margin-top:6px;line-height:1.55">Trends and category splits appear once there are about a week's entries in the book.</div>
+    <div class="pcta" style="height:44px;margin-top:16px">Add an expense</div>
+  </div>
+  <div style="display:flex;gap:10px;padding:14px 20px 0">
+    <div style="flex:1;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div style="font-size:11px;color:#8A8A94">In this month</div><div class="mn" style="font-size:15px;margin-top:6px;color:#5A5A66">₹0</div></div>
+    <div style="flex:1;padding:14px;border-radius:16px;background:#16161F;border:1px solid #232330"><div style="font-size:11px;color:#8A8A94">Out this month</div><div class="mn" style="font-size:15px;margin-top:6px;color:#5A5A66">₹0</div></div>
+  </div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="insights" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s36">
+<div class="dv-olabel"><a class="dv-oid" href="#s36">s36</a>Insights — loading</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Insights</div><span class="ms" style="font-size:21px;color:#8A8A94">calendar_month</span></div>
+  <div style="display:flex;gap:4px;margin:14px 20px 0;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330">
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Daily</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12px;font-weight:600">Monthly</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Yearly</div>
+  </div>
+  <div style="padding:18px 20px 0"><div style="width:130px;height:9px;border-radius:5px;background:#1B1B26"></div><div style="width:170px;height:28px;border-radius:9px;background:#1B1B26;margin-top:10px"></div></div>
+  <div style="margin:16px 20px 0;height:132px;border-radius:18px;background:linear-gradient(100deg,#16161F 20%,#1F1F2B 50%,#16161F 80%)"></div>
+  <div style="display:flex;justify-content:space-between;padding:10px 20px 0"><div style="width:20px;height:8px;border-radius:4px;background:#16161F"></div><div style="width:20px;height:8px;border-radius:4px;background:#16161F"></div><div style="width:20px;height:8px;border-radius:4px;background:#16161F"></div><div style="width:20px;height:8px;border-radius:4px;background:#16161F"></div></div>
+  <div style="margin:16px 20px 0;height:126px;border-radius:18px;background:#16161F"></div>
+  <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:14px">
+    <div><div style="display:flex;justify-content:space-between"><div style="width:60px;height:10px;border-radius:5px;background:#1B1B26"></div><div style="width:60px;height:10px;border-radius:5px;background:#1B1B26"></div></div><div style="height:5px;border-radius:3px;background:#16161F;margin-top:8px"></div></div>
+    <div><div style="display:flex;justify-content:space-between"><div style="width:48px;height:10px;border-radius:5px;background:#1B1B26"></div><div style="width:56px;height:10px;border-radius:5px;background:#1B1B26"></div></div><div style="height:5px;border-radius:3px;background:#16161F;margin-top:8px"></div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:9px;padding:22px 0 0"><div style="width:16px;height:16px;border-radius:50%;border:2px solid #232330;border-top-color:#5B54F9"></div><span style="font-size:11.5px;color:#8A8A94">Crunching August</span></div>
+  <div style="flex:1"></div>
+  <dc-import name="KhaataNav" active="insights" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+<div class="dv-opt" id="s37">
+<div class="dv-olabel"><a class="dv-oid" href="#s37">s37</a>Insights — error</div>
+<div class="dv-card"><x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div class="sc">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0"><div class="tt" style="font-size:20px">Insights</div><span class="ms" style="font-size:21px;color:#8A8A94">calendar_month</span></div>
+  <div style="display:flex;gap:4px;margin:14px 20px 0;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330">
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Daily</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12px;font-weight:600">Monthly</div>
+    <div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Yearly</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center;gap:14px">
+    <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.32);display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:27px;color:#FF9B9B">show_chart</span></div>
+    <div style="font-size:16px;font-weight:600">Insights didn't load</div>
+    <div style="font-size:13px;color:#8A8A94;line-height:1.55">August's numbers couldn't be worked out just now. Your transactions are untouched.</div>
+    <div class="pcta" style="width:180px;height:46px;margin-top:6px">Try again</div>
+    <div style="font-size:12px;color:#8A8A94">See the transaction list instead</div>
+  </div>
+  <dc-import name="KhaataNav" active="insights" hint-size="100%,80px"></dc-import>
+</div>
+</x-import></div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="tE">
+<div class="dv-thd"><a class="dv-tid" href="#tE">E</a><span class="dv-tname">Handoff — tokens, components, motion notes</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="spec1" style="width:420px">
+<div class="dv-olabel"><a class="dv-oid" href="#spec1">spec</a>Final tokens</div>
+<div class="dv-card" style="background:#0B0B12;border:1px solid #232330;padding:24px;color:#F5F5F8">
+  <div class="tt" style="font-size:16px">Colour</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px">
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#0B0B12;border:1px solid #232330"></div><div><div class="mn" style="font-size:10.5px">#0B0B12</div><div style="font-size:10px;color:#8A8A94">bg base</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#0F0F17"></div><div><div class="mn" style="font-size:10.5px">#0F0F17</div><div style="font-size:10px;color:#8A8A94">bg raised (nav, keypad)</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#16161F"></div><div><div class="mn" style="font-size:10.5px">#16161F</div><div style="font-size:10px;color:#8A8A94">surface</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#232330"></div><div><div class="mn" style="font-size:10.5px">#232330</div><div style="font-size:10px;color:#8A8A94">border / track</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#5B54F9"></div><div><div class="mn" style="font-size:10.5px">#5B54F9</div><div style="font-size:10px;color:#8A8A94">primary · Ishaan</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#E8A33D"></div><div><div class="mn" style="font-size:10.5px">#E8A33D</div><div style="font-size:10px;color:#8A8A94">Meera</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#2FD988"></div><div><div class="mn" style="font-size:10.5px">#2FD988</div><div style="font-size:10px;color:#8A8A94">income / under budget</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#FF6B6B"></div><div><div class="mn" style="font-size:10.5px">#FF6B6B</div><div style="font-size:10px;color:#8A8A94">owe / over / error</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#F5F5F8"></div><div><div class="mn" style="font-size:10.5px">#F5F5F8</div><div style="font-size:10px;color:#8A8A94">text primary</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#8A8A94"></div><div><div class="mn" style="font-size:10.5px">#8A8A94</div><div style="font-size:10px;color:#8A8A94">text secondary</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:#B9B6FF"></div><div><div class="mn" style="font-size:10.5px">#B9B6FF</div><div style="font-size:10px;color:#8A8A94">indigo on dark (links, icons)</div></div></div>
+    <div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(145deg,#6A62FF,#3F38D4)"></div><div><div class="mn" style="font-size:10.5px">6A62FF→3F38D4</div><div style="font-size:10px;color:#8A8A94">hero / card gradient 145°</div></div></div>
+  </div>
+  <div style="font-size:11.5px;color:#8A8A94;margin-top:14px;line-height:1.55">Category hues (icon tints only, never fills): #E8A33D food · #8FB4FF travel · #7FE3B8 groceries · #D4A5FF rent · #FFB4B4 bills · #FFD59B health · #9BE0FF fun.</div>
+
+  <div class="tt" style="font-size:16px;margin-top:24px">Type</div>
+  <div style="font-size:11.5px;color:#C9C9D2;line-height:1.75;margin-top:10px">
+    <span class="tt">Space Grotesk 600</span> — hero figures 46/42/34, screen titles 20/18/17<br>
+    <span style="font-weight:600">Instrument Sans 400/500/600</span> — body 15/14/13.5/13, meta 11.5/11, label caps 11 (+0.5–1px tracking)<br>
+    <span class="mn">IBM Plex Mono 400/500</span> — every ₹ amount, masked digits, PIN, dates in lists (tabular by default)
+  </div>
+
+  <div class="tt" style="font-size:16px;margin-top:24px">Spacing, radius, hit areas</div>
+  <div class="mn" style="font-size:11px;color:#C9C9D2;line-height:1.8;margin-top:10px">
+    space 4 · 6 · 8 · 10 · 14 · 16 · 20 · 26<br>
+    screen padding 20 (16 for full-width cards)<br>
+    radius 12 icon-tile · 14 input/keypad · 16 row · 18–20 card · 22 hero · 26 sheet · 100 pill<br>
+    hit targets ≥44 · keypad key 52 · FAB 56 · PIN key 64<br>
+    icons Material Symbols Rounded 400 · 17–26px
+  </div>
+
+  <div class="tt" style="font-size:16px;margin-top:24px">Motion</div>
+  <div style="font-size:11.5px;color:#C9C9D2;line-height:1.7;margin-top:10px">
+    SMS sheet slides up 280ms ease-out, backdrop to 45%, amount line fades in 60ms later.<br>
+    Confirm collapses the sheet and the new row slides into the list from the top, 200ms.<br>
+    Chart scrub: tooltip follows the finger with no easing; dashed guide fades 120ms.<br>
+    Skeletons shimmer 1.6s linear; wallet cards restack 240ms on swipe.<br>
+    Budget bar fills from 0 on screen entry, 400ms ease-out.
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="spec2" style="width:420px">
+<div class="dv-olabel"><a class="dv-oid" href="#spec2">components</a>Component inventory</div>
+<div class="dv-card" style="background:#0B0B12;border:1px solid #232330;padding:24px;color:#F5F5F8">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><div class="sect">Buttons</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><div class="pcta">Primary · 52 pill</div><div class="scta">Secondary · outline</div><div style="height:38px;border-radius:100px;background:#F5F5F8;color:#0B0B12;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600">Compact light · 38</div></div></div>
+    <div><div class="sect">Input &amp; toggle</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><div class="fldi">Resting</div><div class="fldi" style="border-color:#5B54F9">Focused</div><div style="display:flex;gap:10px"><div style="width:44px;height:26px;border-radius:100px;background:#5B54F9;padding:3px;display:flex;justify-content:flex-end"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div><div style="width:44px;height:26px;border-radius:100px;background:#232330;padding:3px"><div style="width:20px;height:20px;border-radius:50%;background:#5A5A66"></div></div></div></div></div>
+    <div><div class="sect">List row · partner marks</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:16px;background:#16161F;border-left:2px solid #5B54F9"><div class="ic" style="background:#232330"><span class="ms" style="font-size:18px;color:#C9C9D2">receipt_long</span></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Edge — Ishaan</div><div style="font-size:11px;color:#8A8A94">Category · Wallet</div></div><div class="mn" style="font-size:13.5px">−₹000</div></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:16px;background:#16161F"><div class="ic" style="position:relative;background:#232330"><span class="ms" style="font-size:18px;color:#C9C9D2">receipt_long</span><div style="position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:#E8A33D;border:2px solid #0B0B12"></div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Dot — Meera</div><div style="font-size:11px;color:#8A8A94">Category · Wallet</div></div><div class="mn" style="font-size:13.5px">−₹000</div></div>
+    </div></div>
+    <div><div class="sect">Chips &amp; segmented</div><div style="display:flex;gap:7px;margin-top:10px"><div style="padding:6px 13px;border-radius:100px;background:#F5F5F8;color:#0B0B12;font-size:11.5px;font-weight:600">Selected</div><div style="padding:6px 13px;border-radius:100px;border:1px solid #232330;font-size:11.5px;color:#8A8A94">Rest</div></div><div style="display:flex;gap:4px;margin-top:10px;padding:3px;border-radius:100px;background:#16161F;border:1px solid #232330"><div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Daily</div><div style="flex:1;padding:8px 0;border-radius:100px;background:#232330;text-align:center;font-size:12px;font-weight:600">Monthly</div><div style="flex:1;padding:8px 0;border-radius:100px;text-align:center;font-size:12px;color:#8A8A94">Yearly</div></div></div>
+    <div><div class="sect">Bottom nav + FAB</div><div style="margin-top:16px;border-radius:16px;overflow:hidden;border:1px solid #232330"><dc-import name="KhaataNav" active="home" hint-size="100%,80px"></dc-import></div></div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "tighten the SMS sheet copy" · "show the wallet swipe mid-gesture" · "add a transactions list screen with filters"</p>
+</section>
+</x-dc>
+</body>
+</html>

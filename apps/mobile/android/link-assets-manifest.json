@@ -1,0 +1,33 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/IBMPlexMono-Medium.ttf",
+      "sha1": "edf16d6f8afa5e378fa8db6307826f9799cf890f"
+    },
+    {
+      "path": "src/assets/fonts/IBMPlexMono-Regular.ttf",
+      "sha1": "d6acbd905047bf48a872010f366ff7476f7e59ad"
+    },
+    {
+      "path": "src/assets/fonts/InstrumentSans-Medium.ttf",
+      "sha1": "312d5970140553bbb0cb5b6d44d8d1da9fe3e2d8"
+    },
+    {
+      "path": "src/assets/fonts/InstrumentSans-Regular.ttf",
+      "sha1": "b62434d9dfd9ee728ece7617579a3b18b7575dbb"
+    },
+    {
+      "path": "src/assets/fonts/InstrumentSans-SemiBold.ttf",
+      "sha1": "f7dbb3c713b9f2033d880980b9ca82faeaf4a8c4"
+    },
+    {
+      "path": "src/assets/fonts/SpaceGrotesk-Bold.ttf",
+      "sha1": "14f3d7d974d0232f0fba31566783b2c262b4d2a2"
+    },
+    {
+      "path": "src/assets/fonts/SpaceGrotesk-SemiBold.ttf",
+      "sha1": "e99da7dd55ac9ed7675a533c5a98cd7797613a67"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useLayoutEffect} from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, transactionsApi, walletsApi} from '@/api/client';
 import {Sparkline} from '@/components/InsightBars';
@@ -34,6 +35,21 @@ export function WalletDetailScreen({route, navigation}: Props) {
       navigation.goBack();
     },
   });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <Pressable onPress={() => navigation.navigate('WalletForm', {walletId})} hitSlop={8}>
+            <MaterialIcons name="edit" style={styles.headerActionIcon} />
+          </Pressable>
+          <Pressable onPress={() => archiveMutation.mutate()} disabled={archiveMutation.isPending} hitSlop={8}>
+            <MaterialIcons name="archive" style={styles.headerActionIcon} />
+          </Pressable>
+        </View>
+      ),
+    });
+  }, [navigation, walletId, archiveMutation]);
 
   if (walletQuery.isLoading) {
     return (
@@ -87,9 +103,17 @@ export function WalletDetailScreen({route, navigation}: Props) {
         <Pressable style={styles.actionButton} onPress={() => navigation.navigate('WalletReconcile', {walletId: wallet.id})}>
           <Text style={styles.actionButtonText}>Reconcile balance</Text>
         </Pressable>
-        <Pressable style={styles.actionButton} onPress={() => navigation.navigate('TransactionForm', {walletId: wallet.id})}>
-          <Text style={styles.actionButtonText}>Add transaction</Text>
-        </Pressable>
+        {isLiability ? (
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('TransactionForm', {mode: 'transfer', toWalletId: wallet.id})}>
+            <Text style={styles.actionButtonText}>Pay bill</Text>
+          </Pressable>
+        ) : (
+          <Pressable style={styles.actionButton} onPress={() => navigation.navigate('TransactionForm', {walletId: wallet.id})}>
+            <Text style={styles.actionButtonText}>Add transaction</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.chartCard}>
@@ -136,20 +160,14 @@ export function WalletDetailScreen({route, navigation}: Props) {
         ))}
       </View>
 
-      <View style={styles.footerActions}>
-        <Pressable onPress={() => navigation.navigate('WalletForm', {walletId: wallet.id})}>
-          <Text style={styles.footerLink}>Edit wallet</Text>
-        </Pressable>
-        <Pressable onPress={() => archiveMutation.mutate()} disabled={archiveMutation.isPending}>
-          <Text style={styles.archiveButtonText}>{archiveMutation.isPending ? 'Archiving…' : 'Archive wallet'}</Text>
-        </Pressable>
-      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.background, padding: spacing.lg},
+  headerActions: {flexDirection: 'row', gap: spacing.md, paddingRight: spacing.sm},
+  headerActionIcon: {fontSize: 20, color: colors.textSecondary},
   stateText: {color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl},
   errorText: {color: colors.negative, textAlign: 'center', marginTop: spacing.xl},
   heroCard: {padding: 18, borderRadius: radius.card, backgroundColor: colors.accent},
@@ -160,7 +178,7 @@ const styles = StyleSheet.create({
   heroDigits: {color: 'rgba(255,255,255,.72)', fontFamily: fontFamilies.monetary, fontSize: 13, letterSpacing: 2.5, marginTop: 14},
   heroFooter: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 10},
   heroLabel: {color: 'rgba(255,255,255,.62)', fontSize: 10},
-  heroAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 22, fontWeight: '500'},
+  heroAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetaryMedium, fontSize: 22},
   actionsRow: {flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md},
   actionButton: {flex: 1, height: 42, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center'},
   actionButtonText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
@@ -174,7 +192,4 @@ const styles = StyleSheet.create({
   txnMerchant: {color: colors.textPrimary, fontSize: 13, fontWeight: '500'},
   txnMeta: {color: colors.textSecondary, fontSize: 11, marginTop: 2},
   txnAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 13.5},
-  footerActions: {marginTop: spacing.xl, alignItems: 'center', gap: spacing.md},
-  footerLink: {color: colors.accentOnDark, fontSize: 13, fontWeight: '600'},
-  archiveButtonText: {color: colors.negative, fontSize: 14},
 });

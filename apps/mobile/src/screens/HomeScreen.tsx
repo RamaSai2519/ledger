@@ -1,6 +1,7 @@
 import React from 'react';
 import {FlatList, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useMutation, useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
@@ -10,14 +11,16 @@ import {budgetsApi, categoriesApi, insightsApi, smsApi, transactionsApi, wallets
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {Sparkline} from '@/components/InsightBars';
 import {WalletCardStack} from '@/components/WalletCardStack';
-import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
+import {Skeleton, SkeletonRow} from '@/components/Skeleton';
+import {SmsSuggestionSheet} from '@/components/SmsSuggestionSheet';
+import {categoryHues, colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 import {glyphForCategoryIcon} from '@/theme/categoryIcons';
 import {useAuthStore} from '@/state/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
-const BUDGET_BAR_COLORS = [colors.accent, colors.positive, '#8FB4FF', '#D4A5FF'];
+const BUDGET_BAR_COLORS = [colors.accent, colors.positive, categoryHues.travel, categoryHues.rent];
 
 function computeNetWorth(wallets: Wallet[]): number {
   return wallets.reduce((sum, w) => {
@@ -85,47 +88,109 @@ function BudgetStrip({navigation}: {navigation: Props['navigation']}) {
   );
 }
 
+function ConfirmToast({merchant, amount}: {merchant: string; amount: number}) {
+  return (
+    <View style={styles.toast}>
+      <MaterialIcons name="check-circle" style={styles.toastIcon} />
+      <Text style={styles.toastText}>
+        Added ₹{amount.toFixed(0)} at {merchant}
+      </Text>
+    </View>
+  );
+}
+
+// s22/s23 in the design project — a fresh suggestion first arrives as the
+// slide-up sheet (the "signature moment"); once seen (dismissed without
+// acting, or the app is reopened later with it still pending) it falls back
+// to this persistent inline card so it's never lost. `seenIds` is
+// session-local (a ref, not persisted) — each suggestion still only
+// interrupts with the sheet once per app session.
 function SmsSuggestionInlineCard({navigation}: {navigation: Props['navigation']}) {
   const queryClient = useQueryClient();
   const suggestionsQuery = useQuery({queryKey: ['sms', 'suggestions'], queryFn: () => smsApi.suggestions()});
   const suggestion = suggestionsQuery.data?.suggestions[0];
+
+  const seenIds = React.useRef(new Set<string>());
+  const [sheetSuggestionId, setSheetSuggestionId] = React.useState<string | null>(null);
+  const [toast, setToast] = React.useState<{merchant: string; amount: number} | null>(null);
+
+  React.useEffect(() => {
+    if (suggestion && !seenIds.current.has(suggestion.id)) {
+      seenIds.current.add(suggestion.id);
+      setSheetSuggestionId(suggestion.id);
+    }
+  }, [suggestion]);
+
+  React.useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
     queryClient.invalidateQueries({queryKey: ['transactions']});
     queryClient.invalidateQueries({queryKey: ['wallets']});
   };
-  const confirmMutation = useMutation({mutationFn: () => smsApi.accept(suggestion!.id), onSuccess: invalidate});
+  const confirmMutation = useMutation({
+    mutationFn: () => smsApi.accept(suggestion!.id),
+    onSuccess: () => {
+      setToast({merchant: suggestion!.parsed_merchant ?? 'a merchant', amount: suggestion!.parsed_amount ?? 0});
+      setSheetSuggestionId(null);
+      invalidate();
+    },
+  });
   const dismissMutation = useMutation({mutationFn: () => smsApi.dismiss(suggestion!.id), onSuccess: invalidate});
 
-  if (!suggestion) return null;
-  const canConfirm = !!(suggestion.suggested_wallet_id && suggestion.suggested_category_id);
-
   return (
-    <View style={styles.smsCard}>
-      <View style={styles.smsHeader}>
-        <Text style={styles.smsGlyph}>●</Text>
-        <Text style={styles.smsLabel}>Detected from SMS</Text>
-      </View>
-      <Text style={styles.smsBody}>
-        ₹{(suggestion.parsed_amount ?? 0).toFixed(0)} at {suggestion.parsed_merchant ?? 'a merchant'} — add as{' '}
-        {suggestion.parsed_direction === 'credit' ? 'income' : 'an expense'}?
-      </Text>
-      <View style={styles.smsActions}>
-        <Pressable
-          style={[styles.smsConfirm, (!canConfirm || confirmMutation.isPending) && {opacity: 0.5}]}
-          disabled={!canConfirm || confirmMutation.isPending}
-          onPress={() => confirmMutation.mutate()}>
-          <Text style={styles.smsConfirmText}>{confirmMutation.isPending ? 'Confirming…' : 'Confirm'}</Text>
-        </Pressable>
-        <Pressable style={styles.smsEdit} onPress={() => navigation.navigate('SmsSuggestionEdit', {suggestion})}>
-          <Text style={styles.smsEditText}>Edit</Text>
-        </Pressable>
-        <Pressable style={styles.smsDismiss} onPress={() => dismissMutation.mutate()}>
-          <Text style={styles.smsDismissText}>Dismiss</Text>
-        </Pressable>
-      </View>
-    </View>
+    <>
+      <SmsSuggestionSheet
+        visible={!!suggestion && sheetSuggestionId === suggestion.id}
+        suggestion={suggestion ?? null}
+        canConfirm={!!(suggestion?.suggested_wallet_id && suggestion?.suggested_category_id)}
+        confirming={confirmMutation.isPending}
+        onConfirm={() => confirmMutation.mutate()}
+        onEdit={() => {
+          setSheetSuggestionId(null);
+          navigation.navigate('SmsSuggestionEdit', {suggestion: suggestion!});
+        }}
+        onDismiss={() => {
+          setSheetSuggestionId(null);
+          dismissMutation.mutate();
+        }}
+        onRequestClose={() => setSheetSuggestionId(null)}
+      />
+      {toast && <ConfirmToast merchant={toast.merchant} amount={toast.amount} />}
+      {suggestion && sheetSuggestionId !== suggestion.id && (
+        <View style={styles.smsCard}>
+          <View style={styles.smsHeader}>
+            <MaterialIcons name="sms" style={styles.smsGlyph} />
+            <Text style={styles.smsLabel}>Detected from SMS</Text>
+          </View>
+          <Text style={styles.smsBody}>
+            ₹{(suggestion.parsed_amount ?? 0).toFixed(0)} at {suggestion.parsed_merchant ?? 'a merchant'} — add as{' '}
+            {suggestion.parsed_direction === 'credit' ? 'income' : 'an expense'}?
+          </Text>
+          <View style={styles.smsActions}>
+            <Pressable
+              style={[
+                styles.smsConfirm,
+                (!(suggestion.suggested_wallet_id && suggestion.suggested_category_id) || confirmMutation.isPending) && {opacity: 0.5},
+              ]}
+              disabled={!(suggestion.suggested_wallet_id && suggestion.suggested_category_id) || confirmMutation.isPending}
+              onPress={() => confirmMutation.mutate()}>
+              <Text style={styles.smsConfirmText}>{confirmMutation.isPending ? 'Confirming…' : 'Confirm'}</Text>
+            </Pressable>
+            <Pressable style={styles.smsEdit} onPress={() => navigation.navigate('SmsSuggestionEdit', {suggestion})}>
+              <Text style={styles.smsEditText}>Edit</Text>
+            </Pressable>
+            <Pressable style={styles.smsDismiss} onPress={() => dismissMutation.mutate()}>
+              <Text style={styles.smsDismissText}>Dismiss</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+    </>
   );
 }
 
@@ -193,19 +258,21 @@ export function HomeScreen({navigation}: Props) {
             </Text>
           </View>
           <Pressable onPress={() => navigation.navigate('Notifications')}>
-            <Text style={styles.bellGlyph}>🔔</Text>
+            <MaterialIcons name="notifications" style={styles.bellGlyph} />
           </Pressable>
         </View>
 
         <View style={styles.netWorthBlock}>
           <Text style={styles.netWorthLabel}>Net worth</Text>
           {walletsQuery.isLoading ? (
-            <Text style={styles.stateText}>Loading…</Text>
+            <Skeleton style={styles.netWorthSkeleton} />
           ) : (
-            <Text style={styles.netWorthAmount}>₹{netWorth.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
+              ₹{netWorth.toLocaleString('en-IN')}
+            </Text>
           )}
           {!walletsQuery.isLoading && (
-            <View style={styles.netWorthChart}>
+            <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
               <Sparkline points={sparklinePoints} color={colors.accent} />
             </View>
           )}
@@ -213,11 +280,14 @@ export function HomeScreen({navigation}: Props) {
 
         {walletsQuery.isError && (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Can't reach the server</Text>
-            <Text style={styles.errorSubtitle}>New entries save on this phone and sync later.</Text>
-            <Pressable onPress={() => walletsQuery.refetch()}>
-              <Text style={styles.errorRetry}>Try again</Text>
-            </Pressable>
+            <MaterialIcons name="cloud-off" style={styles.errorIcon} />
+            <View style={{flex: 1}}>
+              <Text style={styles.errorTitle}>Can't reach the server</Text>
+              <Text style={styles.errorSubtitle}>Showing figures from your last sync — new entries save on this phone and sync later.</Text>
+              <Pressable onPress={() => walletsQuery.refetch()}>
+                <Text style={styles.errorRetry}>Try again</Text>
+              </Pressable>
+            </View>
           </View>
         )}
 
@@ -241,7 +311,12 @@ export function HomeScreen({navigation}: Props) {
           <Text style={styles.sectionMeta}>−₹{todaysExpense.toLocaleString('en-IN')}</Text>
         </View>
 
-        {transactionsQuery.isLoading && <Text style={styles.stateText}>Loading…</Text>}
+        {transactionsQuery.isLoading && (
+          <View style={{paddingHorizontal: spacing.lg}}>
+            <SkeletonRow />
+            <SkeletonRow />
+          </View>
+        )}
         {transactionsQuery.isSuccess && todaysTransactions.length === 0 && (
           <Text style={styles.emptyText}>No transactions yet today — tap + to add your first one.</Text>
         )}
@@ -267,7 +342,7 @@ const styles = StyleSheet.create({
   topBar: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
   topBarLeft: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
   mark: {width: 30, height: 30, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
-  markText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 15, fontWeight: '700'},
+  markText: {color: colors.textPrimary, fontFamily: fontFamilies.displayBold, fontSize: 15},
   greeting: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
   bellGlyph: {fontSize: 18},
   netWorthBlock: {paddingHorizontal: spacing.lg, paddingTop: spacing.md},
@@ -282,6 +357,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   netWorthChart: {marginTop: spacing.sm},
+  netWorthSkeleton: {width: 180, height: 34, marginTop: 6},
   card: {marginHorizontal: 16, marginTop: 4, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   cardTitle: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
   budgetHeader: {flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between'},
@@ -293,7 +369,21 @@ const styles = StyleSheet.create({
   budgetLabel: {fontSize: 10, color: colors.textSecondary},
   smsCard: {marginHorizontal: 16, marginTop: 10, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: '#3B3670'},
   smsHeader: {flexDirection: 'row', alignItems: 'center', gap: 8},
-  smsGlyph: {color: colors.accentOnDark, fontSize: 10},
+  smsGlyph: {color: colors.accentOnDark, fontSize: 17},
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(47,217,136,.35)',
+  },
+  toastIcon: {color: colors.positive, fontSize: 18},
+  toastText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600', flex: 1},
   smsLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.accentOnDark, fontWeight: '600'},
   smsBody: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600', marginTop: 8, lineHeight: 18.5},
   smsActions: {flexDirection: 'row', gap: 8, marginTop: 11},
@@ -308,7 +398,18 @@ const styles = StyleSheet.create({
   sectionMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11.5},
   stateText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg},
   emptyText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg, lineHeight: 19},
-  errorCard: {marginHorizontal: 16, marginTop: spacing.sm, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: 'rgba(255,107,107,.3)'},
+  errorCard: {
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 16,
+    marginTop: spacing.sm,
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,.3)',
+  },
+  errorIcon: {color: colors.negative, fontSize: 22, marginTop: 2},
   errorTitle: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
   errorSubtitle: {color: colors.textSecondary, fontSize: 11.5, marginTop: 4, lineHeight: 16},
   errorRetry: {color: colors.accentOnDark, fontSize: 12, fontWeight: '600', marginTop: spacing.sm},

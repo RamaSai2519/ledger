@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {PinKeypad} from '@/components/PinKeypad';
 import {useAuthStore} from '@/state/authStore';
@@ -60,7 +61,7 @@ export function PinSetupScreen({navigation}: Props) {
       {!firstPin && (
         <Pressable style={styles.biometricRow} onPress={() => setBiometricEnabled((v) => !v)}>
           <View style={styles.biometricLeft}>
-            <Text style={styles.biometricGlyph}>⚷</Text>
+            <MaterialIcons name="fingerprint" style={styles.biometricGlyph} />
             <View>
               <Text style={styles.biometricTitle}>Use fingerprint too</Text>
               <Text style={styles.biometricSubtitle}>Faster unlock, same PIN as backup.</Text>

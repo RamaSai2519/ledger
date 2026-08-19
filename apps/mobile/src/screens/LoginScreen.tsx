@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useMutation} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {authApi} from '@/api/client';
 import {useAuthStore} from '@/state/authStore';
@@ -65,7 +66,7 @@ export function LoginScreen({navigation}: Props) {
               placeholderTextColor={colors.textSecondary}
             />
             <Pressable onPress={() => setPasswordVisible((v) => !v)} hitSlop={8}>
-              <Text style={styles.eyeGlyph}>{passwordVisible ? '🙈' : '👁'}</Text>
+              <MaterialIcons name={passwordVisible ? 'visibility-off' : 'visibility'} style={styles.eyeGlyph} />
             </Pressable>
           </View>
         </View>
@@ -80,16 +81,12 @@ export function LoginScreen({navigation}: Props) {
         </Pressable>
       </View>
 
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>OR</Text>
-        <View style={styles.dividerLine} />
-      </View>
-
-      <View style={styles.biometricButton}>
-        <Text style={styles.biometricGlyph}>⚷</Text>
-        <Text style={styles.biometricText}>Use fingerprint</Text>
-      </View>
+      {/* s05's "Use fingerprint" option has no real backing action here — by the
+          time a user reaches this screen, `clearSession`/a failed hydrate() has
+          already wiped the persisted refresh token and PIN, so there is no
+          dormant session for a biometric prompt to restore (biometrics only
+          gate re-entry to an *existing* session, via AppLockScreen). Left out
+          rather than wiring it to a prompt that always dead-ends. */}
 
       <View style={{flex: 1}} />
       <Pressable onPress={() => navigation.replace('SignUp')}>
@@ -129,22 +126,6 @@ const styles = StyleSheet.create({
   error: {color: colors.negative, marginTop: spacing.sm},
   button: {height: 52, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
-  dividerRow: {flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: spacing.lg},
-  dividerLine: {flex: 1, height: 1, backgroundColor: colors.border},
-  dividerText: {fontSize: 11, color: '#5A5A66'},
-  biometricButton: {
-    marginTop: spacing.md,
-    height: 52,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  biometricGlyph: {fontSize: 16, color: colors.accentOnDark},
-  biometricText: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
   link: {textAlign: 'center', color: colors.textSecondary, fontSize: 13, paddingBottom: spacing.sm},
   linkAccent: {color: colors.accentOnDark, fontWeight: '600'},
 });

@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, PanResponder, StyleSheet, Text, View} from 'react-native';
 import type {Wallet} from '@/api/client';
 import {colors, fontFamilies, motion, radius} from '@/theme/tokens';
+import {GradientCard} from '@/components/GradientCard';
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
 
@@ -13,10 +14,12 @@ const SWIPE_DISTANCE_THRESHOLD = 60;
 const SWIPE_VELOCITY_THRESHOLD = 0.5;
 const OFFSCREEN_Y = -260;
 
-function WalletFace({wallet}: {wallet: Wallet}) {
+function WalletFace({wallet, isFront}: {wallet: Wallet; isFront: boolean}) {
   const isLiability = LIABILITY_TYPES.has(wallet.type);
+  const Container = isFront ? GradientCard : View;
+  const containerProps = isFront ? {radius: radius.card} : {};
   return (
-    <View style={styles.card}>
+    <Container style={styles.card} {...containerProps}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardName} numberOfLines={1}>
           {wallet.name}
@@ -40,7 +43,7 @@ function WalletFace({wallet}: {wallet: Wallet}) {
           </View>
         )}
       </View>
-    </View>
+    </Container>
   );
 }
 
@@ -113,7 +116,7 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
           if (!isFront) {
             return (
               <View key={wallet.id} style={[styles.cardLayer, layerStyle]}>
-                <WalletFace wallet={wallet} />
+                <WalletFace wallet={wallet} isFront={false} />
               </View>
             );
           }
@@ -127,7 +130,7 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
                 {transform: [...layerStyle.transform, {translateX: translate.x}, {translateY: translate.y}]},
               ]}
               {...panResponder.panHandlers}>
-              <WalletFace wallet={wallet} />
+              <WalletFace wallet={wallet} isFront />
             </Animated.View>
           );
         })}
@@ -146,5 +149,5 @@ const styles = StyleSheet.create({
   cardDigits: {color: 'rgba(255,255,255,.72)', fontFamily: fontFamilies.monetary, fontSize: 13, letterSpacing: 2.5, marginTop: 14},
   cardFooter: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 9},
   cardLabel: {color: 'rgba(255,255,255,.62)', fontSize: 10},
-  cardAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 18, fontWeight: '500'},
+  cardAmount: {color: colors.textPrimary, fontFamily: fontFamilies.monetaryMedium, fontSize: 18},
 });

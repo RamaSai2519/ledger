@@ -3,6 +3,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {colors, fontFamilies, radius} from '@/theme/tokens';
+import {GradientCard} from '@/components/GradientCard';
 import {useAuthStore} from '@/state/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
@@ -10,10 +11,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 // s01 in the design project: gradient app-mark tile, wordmark, tagline, and
 // a bottom progress bar. The mockup labels the tile "K" for the design
 // project's working name ("Khaata") — CLAUDE.md is explicit that name never
-// propagates into this repo, so it's "L" for Ledger here. No
-// react-native-linear-gradient dependency exists yet (tokens.ts's
-// heroGradient is unused pending that), so the tile falls back to the flat
-// accent color rather than adding a new native dependency for one screen.
+// propagates into this repo, so it's "L" for Ledger here.
 export function SplashScreen({navigation}: Props) {
   const {accessToken, householdId, pinHash, hydrated, hydrate} = useAuthStore();
 
@@ -43,9 +41,9 @@ export function SplashScreen({navigation}: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.mark}>
+      <GradientCard style={styles.mark} radius={radius.card}>
         <Text style={styles.markText}>L</Text>
-      </View>
+      </GradientCard>
       <Text style={styles.title}>Ledger</Text>
       <Text style={styles.tagline}>One book, two people</Text>
       <View style={styles.progressTrack}>
@@ -60,13 +58,11 @@ const styles = StyleSheet.create({
   mark: {
     width: 76,
     height: 76,
-    borderRadius: radius.card,
-    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  markText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 38, fontWeight: '600'},
-  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 26, letterSpacing: -0.4, fontWeight: '600'},
+  markText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 38},
+  title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 26, letterSpacing: -0.4},
   tagline: {color: colors.textSecondary, fontSize: 12.5},
   progressTrack: {
     position: 'absolute',

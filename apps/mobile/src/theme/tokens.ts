@@ -76,16 +76,21 @@ export const hitTargets = {
   pinKey: 64,
 } as const;
 
-// Typography roles per spec1's "Type" section. Real faces (Space Grotesk /
-// Instrument Sans / IBM Plex Mono) require bundling .ttf assets and native
-// linking (react-native.config.js `assets` + `npx react-native-asset`) —
-// not done yet, tracked as a follow-up; these tokens use the spec's exact
-// sizes/weights today with the system font as a placeholder face so every
-// screen is at least metrically correct ahead of the real fonts landing.
+// Typography roles per spec1's "Type" section. Real .ttf faces are bundled
+// under src/assets/fonts and linked into android/app/src/main/assets/fonts
+// via react-native.config.js + `npx react-native-asset`. Android's Typeface
+// loader has no notion of a single family with multiple weights the way iOS
+// does — each weight actually used by a screen is its own named family here
+// (mirroring the bundled filenames); `fontWeight` in a screen's style is
+// mostly redundant once the right family is picked, but harmless to leave.
 export const fontFamilies = {
-  display: 'Space Grotesk', // hero figures, screen titles — weight 600
-  body: 'Instrument Sans', // body/meta/labels — weights 400/500/600
-  monetary: 'IBM Plex Mono', // every ₹ amount, masked digits, PIN, list dates
+  display: 'SpaceGrotesk-SemiBold', // hero figures, screen titles — weight 600 (the spec's only display weight)
+  displayBold: 'SpaceGrotesk-Bold', // the one weight-700 use (Splash/Home brand mark)
+  body: 'InstrumentSans-Regular', // body/meta/labels default — applied globally, see applyFontDefaults.ts
+  bodyMedium: 'InstrumentSans-Medium',
+  bodySemiBold: 'InstrumentSans-SemiBold',
+  monetary: 'IBMPlexMono-Regular', // every ₹ amount, masked digits, PIN, list dates
+  monetaryMedium: 'IBMPlexMono-Medium',
 } as const;
 
 export const typography = {

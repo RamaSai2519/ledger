@@ -71,7 +71,11 @@ export function CategoryIconGridField({label, categories, value, onChange}: Prop
                         isSelected && styles.gridIconTileSelected,
                       ]}>
                       <MaterialCommunityIcons name={glyphForCategoryIcon(item.icon)} size={22} color={color} />
-                      {isSelected && <View style={[styles.checkBadge, {backgroundColor: color}]}><Text style={styles.checkBadgeText}>✓</Text></View>}
+                      {isSelected && (
+                        <View style={[styles.checkBadge, {backgroundColor: color}]}>
+                          <MaterialCommunityIcons name="check" style={styles.checkBadgeText} />
+                        </View>
+                      )}
                     </View>
                     <Text style={styles.gridItemLabel} numberOfLines={1}>
                       {item.name}
