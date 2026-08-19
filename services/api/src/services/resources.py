@@ -120,7 +120,7 @@ class Wallets(Resource):
 
     @jwt_required()
     def post(self):
-        return wallet_create.process(_body(), get_jwt_identity())
+        return wallet_create.process(build_input(wallet_create.Input, _body(), user_id=get_jwt_identity()))
 
 
 class WalletDetail(Resource):
@@ -130,7 +130,7 @@ class WalletDetail(Resource):
 
     @jwt_required()
     def patch(self, wallet_id):
-        return wallet_update.process(wallet_id, _body(), get_jwt_identity())
+        return wallet_update.process(wallet_update.Input(body=_body(), wallet_id=wallet_id, user_id=get_jwt_identity()))
 
     @jwt_required()
     def delete(self, wallet_id):
@@ -140,7 +140,9 @@ class WalletDetail(Resource):
 class WalletReconcile(Resource):
     @jwt_required()
     def post(self, wallet_id):
-        return wallet_reconcile.process(wallet_id, _body(), get_jwt_identity())
+        return wallet_reconcile.process(
+            build_input(wallet_reconcile.Input, _body(), wallet_id=wallet_id, user_id=get_jwt_identity())
+        )
 
 
 class WalletBalanceHistory(Resource):
@@ -164,13 +166,15 @@ class Categories(Resource):
 
     @jwt_required()
     def post(self):
-        return category_create.process(_body(), get_jwt_identity())
+        return category_create.process(build_input(category_create.Input, _body(), user_id=get_jwt_identity()))
 
 
 class CategoryDetail(Resource):
     @jwt_required()
     def patch(self, category_id):
-        return category_update.process(category_id, _body(), get_jwt_identity())
+        return category_update.process(
+            category_update.Input(body=_body(), category_id=category_id, user_id=get_jwt_identity())
+        )
 
     @jwt_required()
     def delete(self, category_id):
@@ -191,7 +195,7 @@ class Transactions(Resource):
 
     @jwt_required()
     def post(self):
-        return transaction_create.process(_body(), get_jwt_identity())
+        return transaction_create.process(build_input(transaction_create.Input, _body(), user_id=get_jwt_identity()))
 
 
 class TransactionDetail(Resource):
@@ -201,7 +205,9 @@ class TransactionDetail(Resource):
 
     @jwt_required()
     def patch(self, transaction_id):
-        return transaction_update.process(transaction_id, _body(), get_jwt_identity())
+        return transaction_update.process(
+            transaction_update.Input(body=_body(), transaction_id=transaction_id, user_id=get_jwt_identity())
+        )
 
     @jwt_required()
     def delete(self, transaction_id):
@@ -213,13 +219,15 @@ class TransactionDetail(Resource):
 class TransactionTransfer(Resource):
     @jwt_required()
     def post(self):
-        return transaction_transfer.process(_body(), get_jwt_identity())
+        return transaction_transfer.process(
+            build_input(transaction_transfer.Input, _body(), user_id=get_jwt_identity())
+        )
 
 
 class FcmTokenRegister(Resource):
     @jwt_required()
     def post(self):
-        return fcm_token_register.process(_body(), get_jwt_identity())
+        return fcm_token_register.process(build_input(fcm_token_register.Input, _body(), user_id=get_jwt_identity()))
 
 
 class Budgets(Resource):
@@ -229,13 +237,13 @@ class Budgets(Resource):
 
     @jwt_required()
     def post(self):
-        return budget_create.process(_body(), get_jwt_identity())
+        return budget_create.process(build_input(budget_create.Input, _body(), user_id=get_jwt_identity()))
 
 
 class BudgetDetail(Resource):
     @jwt_required()
     def patch(self, budget_id):
-        return budget_update.process(budget_id, _body(), get_jwt_identity())
+        return budget_update.process(budget_update.Input(body=_body(), budget_id=budget_id, user_id=get_jwt_identity()))
 
     @jwt_required()
     def delete(self, budget_id):
@@ -257,13 +265,17 @@ class RecurringRules(Resource):
 
     @jwt_required()
     def post(self):
-        return recurring_rule_create.process(_body(), get_jwt_identity())
+        return recurring_rule_create.process(
+            build_input(recurring_rule_create.Input, _body(), user_id=get_jwt_identity())
+        )
 
 
 class RecurringRuleDetail(Resource):
     @jwt_required()
     def patch(self, rule_id):
-        return recurring_rule_update.process(rule_id, _body(), get_jwt_identity())
+        return recurring_rule_update.process(
+            recurring_rule_update.Input(body=_body(), rule_id=rule_id, user_id=get_jwt_identity())
+        )
 
     @jwt_required()
     def delete(self, rule_id):
@@ -344,7 +356,7 @@ class NotificationRead(Resource):
 class SmsIngest(Resource):
     @jwt_required()
     def post(self):
-        return sms_ingest.process(_body(), get_jwt_identity())
+        return sms_ingest.process(build_input(sms_ingest.Input, _body(), user_id=get_jwt_identity()))
 
 
 class SmsSuggestions(Resource):
@@ -356,7 +368,9 @@ class SmsSuggestions(Resource):
 class SmsSuggestionAccept(Resource):
     @jwt_required()
     def post(self, sms_id):
-        return sms_suggestion_accept.process(sms_id, _body(), get_jwt_identity())
+        return sms_suggestion_accept.process(
+            build_input(sms_suggestion_accept.Input, _body(), sms_id=sms_id, user_id=get_jwt_identity())
+        )
 
 
 class SmsSuggestionDismiss(Resource):
@@ -372,4 +386,6 @@ class SmsParserRules(Resource):
 
     @jwt_required()
     def post(self):
-        return sms_parser_rules_create.process(_body(), get_jwt_identity())
+        return sms_parser_rules_create.process(
+            build_input(sms_parser_rules_create.Input, _body(), user_id=get_jwt_identity())
+        )

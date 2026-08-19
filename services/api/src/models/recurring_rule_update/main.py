@@ -2,16 +2,17 @@ from datetime import datetime, timezone
 
 from models.recurring_rule_update import validate
 from shared.db import get_recurring_rules_collection
+from shared.interfaces import RecurringRuleUpdateInput as Input
 from shared.output import ValidationError, success
 from shared.scope import get_household_category, get_household_recurring_rule, require_household_id
 from shared.serializers import serialize_recurring_rule
 from shared.transactions_engine import get_household_wallet
 
 
-def process(rule_id: str, request_json: dict, user_id: str):
-    household_id = require_household_id(user_id)
-    rule = get_household_recurring_rule(household_id, rule_id)
-    updates = validate.validate(request_json)
+def process(inp: Input):
+    household_id = require_household_id(inp.user_id)
+    rule = get_household_recurring_rule(household_id, inp.rule_id)
+    updates = validate.validate(inp.body)
 
     if "wallet_id" in updates:
         wallet = get_household_wallet(household_id, updates["wallet_id"])
