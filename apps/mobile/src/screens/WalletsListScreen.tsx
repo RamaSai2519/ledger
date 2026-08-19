@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
+import {Swipeable} from 'react-native-gesture-handler';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Wallet} from '@/api/client';
@@ -29,31 +30,65 @@ const FILTERS: Array<{key: FilterKey; label: string; types: Wallet['type'][] | n
   {key: 'loans', label: 'Loans', types: ['loan']},
 ];
 
-function WalletRow({wallet, navigation}: {wallet: Wallet; navigation: Props['navigation']}) {
-  const isLiability = LIABILITY_TYPES.has(wallet.type);
+// s40 in the design project — swipe-left reveal held at a fixed −88px,
+// exposing a single archive action (react-native-gesture-handler's legacy
+// `Swipeable`, not Reanimated — no reveal animation library is otherwise in
+// the dependency tree, so this keeps the added surface area small).
+const SWIPE_ACTION_WIDTH = 88;
+
+function ArchiveAction({onPress}: {onPress: () => void}) {
   return (
-    <Pressable
-      style={[styles.row, isLiability && styles.rowLiability]}
-      onPress={() => navigation.navigate('WalletDetail', {walletId: wallet.id})}>
-      <View style={styles.rowIcon}>
-        <Text style={[styles.rowIconGlyph, isLiability && {color: '#FF9B9B'}]}>{wallet.name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={{flex: 1}}>
-        <Text style={styles.rowName}>{wallet.name}</Text>
-        <Text style={styles.rowMeta}>
-          {wallet.account_last4 ? `•••• ${wallet.account_last4}` : WALLET_TYPE_LABELS[wallet.type]}
-        </Text>
-      </View>
-      <Text style={[styles.rowAmount, isLiability && {color: colors.negative}]}>
-        ₹{Math.abs(wallet.current_balance).toLocaleString('en-IN')}
-      </Text>
+    <Pressable style={styles.swipeAction} onPress={onPress}>
+      <Text style={styles.swipeActionText}>Archive</Text>
     </Pressable>
+  );
+}
+
+function WalletRow({wallet, navigation, onArchive}: {wallet: Wallet; navigation: Props['navigation']; onArchive: (id: string) => void}) {
+  const isLiability = LIABILITY_TYPES.has(wallet.type);
+  const swipeableRef = React.useRef<Swipeable>(null);
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      friction={2}
+      rightThreshold={SWIPE_ACTION_WIDTH / 2}
+      overshootRight={false}
+      renderRightActions={() => (
+        <ArchiveAction
+          onPress={() => {
+            swipeableRef.current?.close();
+            onArchive(wallet.id);
+          }}
+        />
+      )}>
+      <Pressable
+        style={[styles.row, isLiability && styles.rowLiability]}
+        onPress={() => navigation.navigate('WalletDetail', {walletId: wallet.id})}>
+        <View style={styles.rowIcon}>
+          <Text style={[styles.rowIconGlyph, isLiability && {color: '#FF9B9B'}]}>{wallet.name.charAt(0).toUpperCase()}</Text>
+        </View>
+        <View style={{flex: 1}}>
+          <Text style={styles.rowName}>{wallet.name}</Text>
+          <Text style={styles.rowMeta}>
+            {wallet.account_last4 ? `•••• ${wallet.account_last4}` : WALLET_TYPE_LABELS[wallet.type]}
+          </Text>
+        </View>
+        <Text style={[styles.rowAmount, isLiability && {color: colors.negative}]}>
+          ₹{Math.abs(wallet.current_balance).toLocaleString('en-IN')}
+        </Text>
+      </Pressable>
+    </Swipeable>
   );
 }
 
 export function WalletsListScreen({navigation}: Props) {
   const [filter, setFilter] = useState<FilterKey>('all');
+  const queryClient = useQueryClient();
   const query = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => walletsApi.archive(id),
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ['wallets']}),
+  });
 
   const wallets = (query.data?.wallets ?? []).filter((w) => !w.is_archived);
   const activeFilter = FILTERS.find((f) => f.key === filter)!;
@@ -135,7 +170,7 @@ export function WalletsListScreen({navigation}: Props) {
           item.type === 'header' ? (
             <Text style={styles.sectionLabel}>{item.label}</Text>
           ) : (
-            <WalletRow wallet={item.wallet} navigation={navigation} />
+            <WalletRow wallet={item.wallet} navigation={navigation} onArchive={(id) => archiveMutation.mutate(id)} />
           )
         }
       />
@@ -169,6 +204,17 @@ const styles = StyleSheet.create({
   emptyOption: {flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   emptyOptionText: {flex: 1, color: colors.textPrimary, fontSize: 13},
   emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
+  swipeAction: {
+    width: SWIPE_ACTION_WIDTH,
+    marginLeft: 8,
+    borderRadius: radius.row,
+    backgroundColor: 'rgba(255,107,107,.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swipeActionText: {color: colors.negative, fontSize: 12.5, fontWeight: '600'},
   row: {flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   rowLiability: {borderWidth: 0, borderLeftWidth: 2, borderLeftColor: colors.negative},
   rowIcon: {width: 38, height: 38, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center'},

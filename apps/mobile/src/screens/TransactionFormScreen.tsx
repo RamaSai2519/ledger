@@ -4,6 +4,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, recurringApi, transactionsApi, walletsApi} from '@/api/client';
+import {CategoryIconGridField} from '@/components/CategoryIconGridField';
 import {PickerField} from '@/components/PickerField';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -154,9 +155,42 @@ export function TransactionFormScreen({route, navigation}: Props) {
     Number(amount) > 0 && (mode === 'transfer' ? walletId && toWalletId && walletId !== toWalletId : walletId && categoryId);
 
   const walletOptions = (walletsQuery.data?.wallets ?? []).map((w) => ({label: w.name, value: w.id, sublabel: w.type.replace('_', ' ')}));
-  const categoryOptions = (categoriesQuery.data?.categories ?? [])
-    .filter((c) => c.name !== 'Balance Adjustment')
-    .map((c) => ({label: c.name, value: c.id}));
+  const selectableCategories = (categoriesQuery.data?.categories ?? []).filter((c) => c.name !== 'Balance Adjustment');
+
+  if (walletsQuery.isLoading || (isEdit && existingQuery.isLoading)) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Text style={styles.closeGlyph}>✕</Text>
+          </Pressable>
+          <Text style={styles.editTitle}>{isEdit ? 'Edit transaction' : 'Add expense'}</Text>
+          <View style={{width: 22}} />
+        </View>
+        <Text style={styles.stateText}>Loading…</Text>
+      </View>
+    );
+  }
+
+  if ((walletsQuery.isError || (isEdit && existingQuery.isError)) && !walletOptions.length) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Text style={styles.closeGlyph}>✕</Text>
+          </Pressable>
+          <Text style={styles.editTitle}>Add expense</Text>
+          <View style={{width: 22}} />
+        </View>
+        <View style={styles.emptyWalletBlock}>
+          <Text style={styles.emptyWalletTitle}>Couldn't load this form</Text>
+          <Pressable style={styles.emptyWalletCta} onPress={() => (isEdit ? existingQuery.refetch() : walletsQuery.refetch())}>
+            <Text style={styles.emptyWalletCtaText}>Try again</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
 
   if (walletsQuery.isSuccess && walletOptions.length === 0) {
     return (
@@ -223,7 +257,7 @@ export function TransactionFormScreen({route, navigation}: Props) {
         ) : (
           <>
             <PickerField label="Wallet" options={walletOptions} value={walletId} onChange={setWalletId} />
-            <PickerField label="Category" options={categoryOptions} value={categoryId} onChange={setCategoryId} />
+            <CategoryIconGridField label="Category" categories={selectableCategories} value={categoryId} onChange={setCategoryId} />
           </>
         )}
 
@@ -332,6 +366,7 @@ const styles = StyleSheet.create({
   keyText: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 20},
   submitKey: {flex: 2, height: 52, borderRadius: 14, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   submitKeyText: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600'},
+  stateText: {color: colors.textSecondary, fontSize: 13, textAlign: 'center', marginTop: spacing.xl},
   emptyWalletBlock: {margin: spacing.lg, padding: 16, borderRadius: radius.card - 2, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   emptyWalletTitle: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
   emptyWalletSubtitle: {color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17},

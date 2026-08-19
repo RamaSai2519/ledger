@@ -1,10 +1,11 @@
-import React, {useState} from 'react';
-import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Linking, PermissionsAndroid, Platform, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
+import {isBiometricSensorAvailable} from '@/native/biometrics';
 import {useAuthStore} from '@/state/authStore';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -37,10 +38,36 @@ export function SettingsScreen({navigation}: Props) {
   const name = useAuthStore((s) => s.name);
   const householdName = useAuthStore((s) => s.householdName);
   const clearSession = useAuthStore((s) => s.clearSession);
-  const [smsDetectionOn] = useState(true);
-  const [biometricOn] = useState(true);
+  const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
+  const setBiometricEnabled = useAuthStore((s) => s.setBiometricEnabled);
+
+  const [smsDetectionOn, setSmsDetectionOn] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS).then(setSmsDetectionOn);
+    isBiometricSensorAvailable().then(setBiometricAvailable);
+  }, []);
 
   const inviteCodeQuery = useQuery({queryKey: ['household', 'invite-code'], queryFn: () => householdApi.inviteCode()});
+
+  const onToggleSms = async () => {
+    if (smsDetectionOn) {
+      // Android doesn't let an app revoke its own granted permission —
+      // send the user to system settings, same pattern as most apps use
+      // for a "turn this off" toggle on an already-granted permission.
+      Linking.openSettings();
+      return;
+    }
+    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS);
+    setSmsDetectionOn(granted === PermissionsAndroid.RESULTS.GRANTED);
+  };
+
+  const onToggleBiometric = () => {
+    if (!biometricAvailable) return;
+    setBiometricEnabled(!biometricEnabled);
+  };
 
   return (
     <View style={styles.container}>
@@ -84,13 +111,25 @@ export function SettingsScreen({navigation}: Props) {
           <Row glyph="⊞" title="Manage categories" onPress={() => navigation.navigate('Categories')} />
           <Row glyph="◧" title="Manage wallets" onPress={() => navigation.navigate('WalletsList')} />
           <Row glyph="↻" title="Recurring transactions" onPress={() => navigation.navigate('RecurringRulesList')} />
-          <Row glyph="✉" title="SMS detection" subtitle={smsDetectionOn ? 'On' : 'Off'} right={<Toggle on={smsDetectionOn} />} />
+          <Row
+            glyph="✉"
+            title="SMS detection"
+            subtitle={smsDetectionOn ? 'On' : 'Off — tap to allow'}
+            onPress={onToggleSms}
+            right={<Toggle on={smsDetectionOn} />}
+          />
         </View>
 
         <Text style={styles.sectionLabel}>Security</Text>
         <View style={styles.section}>
           <Row glyph="•" title="Change PIN" onPress={() => navigation.navigate('PinSetup')} />
-          <Row glyph="⚷" title="Unlock with fingerprint" right={<Toggle on={biometricOn} />} />
+          <Row
+            glyph="⚷"
+            title="Unlock with fingerprint"
+            subtitle={biometricAvailable ? undefined : 'No fingerprint sensor on this device'}
+            onPress={biometricAvailable ? onToggleBiometric : undefined}
+            right={<Toggle on={biometricEnabled} />}
+          />
         </View>
 
         <Pressable

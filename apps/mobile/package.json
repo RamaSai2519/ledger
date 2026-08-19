@@ -14,8 +14,12 @@
     "@tanstack/react-query": "^5.59.0",
     "react": "18.3.1",
     "react-native": "0.75.4",
+    "react-native-biometrics": "^3.0.1",
+    "react-native-gesture-handler": "2.14.1",
+    "react-native-keychain": "^9.2.2",
     "react-native-safe-area-context": "^4.11.0",
     "react-native-screens": "^3.34.0",
+    "react-native-svg": "^15.7.1",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {BudgetScope} from '@/api/client';
 import {budgetsApi, categoriesApi, walletsApi} from '@/api/client';
+import {CategoryIconGridField} from '@/components/CategoryIconGridField';
 import {PickerField} from '@/components/PickerField';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -141,13 +142,16 @@ export function BudgetFormScreen({route, navigation}: Props) {
             ))}
           </View>
 
-          {scopeRequiresRef && (
-            <PickerField
-              label={scope === 'category' ? 'Category' : 'Wallet'}
-              options={scopeOptions}
+          {scopeRequiresRef && scope === 'category' && (
+            <CategoryIconGridField
+              label="Category"
+              categories={categoriesQuery.data?.categories ?? []}
               value={scopeRefId}
               onChange={setScopeRefId}
             />
+          )}
+          {scopeRequiresRef && scope === 'wallet' && (
+            <PickerField label="Wallet" options={scopeOptions} value={scopeRefId} onChange={setScopeRefId} />
           )}
         </>
       )}

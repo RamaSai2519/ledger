@@ -1,48 +1,110 @@
-import React from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import {colors, spacing} from '@/theme/tokens';
+import React, {useState} from 'react';
+import {LayoutChangeEvent, StyleSheet, Text, View} from 'react-native';
+import Svg, {Circle, Defs, LinearGradient, Path, Stop} from 'react-native-svg';
+import {colors, fontFamilies, spacing} from '@/theme/tokens';
 
-// LED-6 note: plan.md calls for a "gradient-filled trend area chart with a
-// floating value tooltip on scrub" via react-native-gifted-charts or
-// victory-native. Neither is in package.json, and there's no device/
-// emulator reliably available here to verify a large new native charting
-// dependency actually builds — so this ships a plain, honest bar
-// visualization built only from Views, deferring the real gradient/scrub
-// chart to a follow-up once a charting library is chosen and validated.
+// LED-10: replaces the flexbox-bar approximation with a real react-native-svg
+// gradient area/line chart (smooth curve, highlighted last point + value
+// callout), matching the design project's trend charts (e.g.
+// `Khaata App.dc.html#s13`, `#s20`).
 
-const SPARKLINE_HEIGHT = 64;
-const BAR_WIDTH = 10;
+const CHART_HEIGHT = 88;
+const H_PADDING = 6;
+const V_PADDING = 14; // headroom for the top callout + bottom labels
 
-function barHeight(value: number, max: number): number {
-  if (max <= 0) return 2;
-  return Math.max(2, (Math.abs(value) / max) * SPARKLINE_HEIGHT);
+// Builds a smoothed SVG path through `points` (screen-space [x, y] pairs)
+// using per-segment cubic-bezier control points offset 1/3 of the way along
+// each segment — a simple, well-known technique for a natural-looking curve
+// without a full Catmull-Rom implementation.
+function smoothPath(points: {x: number; y: number}[]): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const cx = p0.x + (p1.x - p0.x) / 2;
+    d += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+  }
+  return d;
+}
+
+function toScreenPoints(values: number[], width: number, min: number, max: number): {x: number; y: number}[] {
+  const usableWidth = Math.max(1, width - H_PADDING * 2);
+  const usableHeight = CHART_HEIGHT - V_PADDING * 2;
+  const range = Math.max(1e-6, max - min);
+  const step = values.length > 1 ? usableWidth / (values.length - 1) : 0;
+  return values.map((v, i) => ({
+    x: H_PADDING + (values.length > 1 ? i * step : usableWidth / 2),
+    y: V_PADDING + usableHeight - ((v - min) / range) * usableHeight,
+  }));
+}
+
+function useMeasuredWidth(fallback = 280) {
+  const [width, setWidth] = useState(fallback);
+  const onLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && Math.abs(w - width) > 1) setWidth(w);
+  };
+  return {width, onLayout};
 }
 
 export type SparklinePoint = {label: string; value: number};
 
-// Single-series bar sparkline — used for the expense trend.
+// Single-series gradient area chart — used for the expense trend and net
+// worth history.
 export function Sparkline({points, color}: {points: SparklinePoint[]; color: string}) {
-  const max = Math.max(1, ...points.map((p) => Math.abs(p.value)));
+  const {width, onLayout} = useMeasuredWidth();
+  const gradientId = `sparkline-${color.replace('#', '')}`;
+  const values = points.map((p) => p.value);
+  const min = Math.min(0, ...values);
+  const max = Math.max(1, ...values);
+  const screenPoints = toScreenPoints(values, width, min, max);
+  const linePath = smoothPath(screenPoints);
+  const baseline = V_PADDING + (CHART_HEIGHT - V_PADDING * 2);
+  const areaPath = screenPoints.length
+    ? `${linePath} L ${screenPoints[screenPoints.length - 1].x} ${baseline} L ${screenPoints[0].x} ${baseline} Z`
+    : '';
+  const last = screenPoints[screenPoints.length - 1];
+  const lastValue = points[points.length - 1];
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-      {points.map((point, i) => (
-        <View key={`${point.label}-${i}`} style={styles.column}>
-          <View style={styles.barTrack}>
-            <View style={[styles.bar, {height: barHeight(point.value, max), backgroundColor: color}]} />
-          </View>
-          <Text style={styles.barLabel} numberOfLines={1}>
-            {point.label}
+    <View onLayout={onLayout} style={styles.chartWrap}>
+      {width > 0 && points.length > 0 && (
+        <Svg width={width} height={CHART_HEIGHT}>
+          <Defs>
+            <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={color} stopOpacity={0.35} />
+              <Stop offset="1" stopColor={color} stopOpacity={0} />
+            </LinearGradient>
+          </Defs>
+          <Path d={areaPath} fill={`url(#${gradientId})`} />
+          <Path d={linePath} stroke={color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          {last && <Circle cx={last.x} cy={last.y} r={3.5} fill={color} stroke={colors.background} strokeWidth={1.5} />}
+        </Svg>
+      )}
+      {lastValue && last && (
+        <View style={[styles.callout, {left: Math.min(Math.max(last.x - 26, 0), width - 52)}]}>
+          <Text style={styles.calloutText} numberOfLines={1}>
+            {lastValue.value < 0 ? '−' : ''}₹{Math.abs(lastValue.value).toLocaleString('en-IN')}
           </Text>
         </View>
-      ))}
-    </ScrollView>
+      )}
+      <View style={styles.labelRow}>
+        {points.map((p, i) => (
+          <Text key={`${p.label}-${i}`} style={styles.axisLabel} numberOfLines={1}>
+            {p.label}
+          </Text>
+        ))}
+      </View>
+    </View>
   );
 }
 
 export type GroupedSparklinePoint = {label: string; a: number; b: number};
 
-// Two-series bar sparkline (income vs expense) — paired bars per bucket.
+// Two-series line chart (income vs expense) — series A gets the gradient
+// fill (primary), series B is an unfilled accent stroke.
 export function GroupedSparkline({
   points,
   colorA,
@@ -52,22 +114,48 @@ export function GroupedSparkline({
   colorA: string;
   colorB: string;
 }) {
-  const max = Math.max(1, ...points.map((p) => Math.max(Math.abs(p.a), Math.abs(p.b))));
+  const {width, onLayout} = useMeasuredWidth();
+  const gradientId = `grouped-sparkline-${colorA.replace('#', '')}`;
+  const valuesA = points.map((p) => p.a);
+  const valuesB = points.map((p) => p.b);
+  const min = Math.min(0, ...valuesA, ...valuesB);
+  const max = Math.max(1, ...valuesA, ...valuesB);
+  const screenA = toScreenPoints(valuesA, width, min, max);
+  const screenB = toScreenPoints(valuesB, width, min, max);
+  const lineA = smoothPath(screenA);
+  const lineB = smoothPath(screenB);
+  const baseline = V_PADDING + (CHART_HEIGHT - V_PADDING * 2);
+  const areaA = screenA.length
+    ? `${lineA} L ${screenA[screenA.length - 1].x} ${baseline} L ${screenA[0].x} ${baseline} Z`
+    : '';
+  const lastA = screenA[screenA.length - 1];
+  const lastB = screenB[screenB.length - 1];
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-      {points.map((point, i) => (
-        <View key={`${point.label}-${i}`} style={styles.column}>
-          <View style={styles.groupedBarTrack}>
-            <View style={[styles.bar, styles.groupedBar, {height: barHeight(point.a, max), backgroundColor: colorA}]} />
-            <View style={[styles.bar, styles.groupedBar, {height: barHeight(point.b, max), backgroundColor: colorB}]} />
-          </View>
-          <Text style={styles.barLabel} numberOfLines={1}>
-            {point.label}
+    <View onLayout={onLayout} style={styles.chartWrap}>
+      {width > 0 && points.length > 0 && (
+        <Svg width={width} height={CHART_HEIGHT}>
+          <Defs>
+            <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colorA} stopOpacity={0.3} />
+              <Stop offset="1" stopColor={colorA} stopOpacity={0} />
+            </LinearGradient>
+          </Defs>
+          <Path d={areaA} fill={`url(#${gradientId})`} />
+          <Path d={lineB} stroke={colorB} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" />
+          <Path d={lineA} stroke={colorA} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          {lastA && <Circle cx={lastA.x} cy={lastA.y} r={3.5} fill={colorA} stroke={colors.background} strokeWidth={1.5} />}
+          {lastB && <Circle cx={lastB.x} cy={lastB.y} r={3} fill={colorB} stroke={colors.background} strokeWidth={1.5} />}
+        </Svg>
+      )}
+      <View style={styles.labelRow}>
+        {points.map((p, i) => (
+          <Text key={`${p.label}-${i}`} style={styles.axisLabel} numberOfLines={1}>
+            {p.label}
           </Text>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -105,13 +193,11 @@ export function HorizontalBarList({
 }
 
 const styles = StyleSheet.create({
-  row: {gap: spacing.sm, alignItems: 'flex-end', paddingVertical: spacing.xs},
-  column: {alignItems: 'center', width: 28},
-  barTrack: {height: SPARKLINE_HEIGHT, justifyContent: 'flex-end'},
-  groupedBarTrack: {height: SPARKLINE_HEIGHT, flexDirection: 'row', alignItems: 'flex-end', gap: 2},
-  bar: {width: BAR_WIDTH, borderRadius: 3},
-  groupedBar: {width: (BAR_WIDTH - 2) / 2},
-  barLabel: {color: colors.textSecondary, fontSize: 9, marginTop: spacing.xs, width: 28, textAlign: 'center'},
+  chartWrap: {width: '100%'},
+  labelRow: {flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: H_PADDING, marginTop: 2},
+  axisLabel: {color: colors.textSecondary, fontSize: 9, flexShrink: 1},
+  callout: {position: 'absolute', top: 0, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  calloutText: {color: colors.textPrimary, fontFamily: fontFamilies.monetary, fontSize: 9.5},
   hBarHeaderRow: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4},
   hBarLabel: {color: colors.textPrimary, fontSize: 13, fontWeight: '600', flexShrink: 1},
   hBarAmount: {color: colors.textSecondary, fontSize: 12},

@@ -54,6 +54,7 @@ export const authApi = {
   signup: (input: SignupInput) => request<AuthTokens>('/auth/signup', {method: 'POST', body: input, auth: 'none'}),
   login: (input: LoginInput) => request<AuthTokens>('/auth/login', {method: 'POST', body: input, auth: 'none'}),
   logout: () => request<{logged_out: boolean}>('/auth/logout', {method: 'POST', auth: 'refresh'}),
+  refresh: () => request<{access_token: string}>('/auth/refresh', {method: 'POST', auth: 'refresh'}),
 };
 
 export const householdApi = {

@@ -4,6 +4,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, transactionsApi, walletsApi} from '@/api/client';
+import {Sparkline} from '@/components/InsightBars';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletDetail'>;
@@ -53,7 +54,6 @@ export function WalletDetailScreen({route, navigation}: Props) {
   const wallet = walletQuery.data;
   const isLiability = LIABILITY_TYPES.has(wallet.type);
   const points = historyQuery.data?.points.slice(-8) ?? [];
-  const maxBalance = Math.max(1, ...points.map((p) => Math.abs(p.balance)));
   const categoryColor = new Map(
     (categoriesQuery.data?.categories ?? []).map((c, i) => [c.id, c.color ?? CATEGORY_COLORS[i % CATEGORY_COLORS.length]]),
   );
@@ -96,23 +96,13 @@ export function WalletDetailScreen({route, navigation}: Props) {
         <Text style={styles.chartLabel}>Balance history</Text>
         {historyQuery.isLoading && <Text style={styles.stateText}>Loading history…</Text>}
         {historyQuery.isSuccess && points.length === 0 && <Text style={styles.stateText}>No history yet.</Text>}
-        <View style={styles.chartBars}>
-          {points.map((point, index) => (
-            <View key={`${point.transaction_id ?? 'opening'}-${index}`} style={styles.chartBarCol}>
-              <View style={styles.chartBarTrack}>
-                <View
-                  style={[
-                    styles.chartBarFill,
-                    {height: `${Math.max(6, (Math.abs(point.balance) / maxBalance) * 100)}%`},
-                    index === points.length - 1 && {backgroundColor: colors.accent},
-                  ]}
-                />
-              </View>
-            </View>
-          ))}
-        </View>
         {points.length > 0 && (
-          <Text style={styles.chartLatest}>Latest ₹{Math.abs(points[points.length - 1].balance).toLocaleString('en-IN')}</Text>
+          <View style={{marginTop: spacing.sm}}>
+            <Sparkline
+              color={isLiability ? colors.negative : colors.accent}
+              points={points.map((p) => ({label: p.label, value: Math.abs(p.balance)}))}
+            />
+          </View>
         )}
       </View>
 
@@ -176,11 +166,6 @@ const styles = StyleSheet.create({
   actionButtonText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
   chartCard: {marginTop: spacing.lg, padding: 16, borderRadius: radius.card - 2, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   chartLabel: {fontSize: 12, color: colors.textSecondary},
-  chartBars: {flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 96, marginTop: spacing.sm},
-  chartBarCol: {flex: 1, height: '100%', justifyContent: 'flex-end'},
-  chartBarTrack: {height: '100%', justifyContent: 'flex-end'},
-  chartBarFill: {borderRadius: 3, backgroundColor: '#3B3670'},
-  chartLatest: {textAlign: 'right', fontFamily: fontFamilies.monetary, fontSize: 10.5, color: colors.textSecondary, marginTop: spacing.xs},
   sectionHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.lg, marginBottom: spacing.sm},
   sectionTitle: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 14, fontWeight: '600'},
   sectionLink: {color: colors.textSecondary, fontSize: 11.5},

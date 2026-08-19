@@ -5,6 +5,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {RecurringFrequency} from '@/api/client';
 import {categoriesApi, recurringApi, walletsApi} from '@/api/client';
+import {CategoryIconGridField} from '@/components/CategoryIconGridField';
 import {PickerField} from '@/components/PickerField';
 import {colors, radius, spacing} from '@/theme/tokens';
 
@@ -106,7 +107,7 @@ export function RecurringRuleFormScreen({route, navigation}: Props) {
   const canSubmit = merchantName.trim() && walletId && categoryId && (varies || Number(amount) > 0);
 
   const walletOptions = (walletsQuery.data?.wallets ?? []).map((w) => ({label: w.name, value: w.id}));
-  const categoryOptions = (categoriesQuery.data?.categories ?? []).filter((c) => c.name !== 'Balance Adjustment').map((c) => ({label: c.name, value: c.id}));
+  const selectableCategories = (categoriesQuery.data?.categories ?? []).filter((c) => c.name !== 'Balance Adjustment');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{padding: spacing.lg, paddingBottom: spacing.xl}}>
@@ -124,7 +125,7 @@ export function RecurringRuleFormScreen({route, navigation}: Props) {
       <TextInput style={styles.input} value={merchantName} onChangeText={setMerchantName} placeholder="e.g. Rent, Netflix" placeholderTextColor={colors.textSecondary} />
 
       <PickerField label="Wallet" options={walletOptions} value={walletId} onChange={setWalletId} />
-      <PickerField label="Category" options={categoryOptions} value={categoryId} onChange={setCategoryId} />
+      <CategoryIconGridField label="Category" categories={selectableCategories} value={categoryId} onChange={setCategoryId} />
 
       <Pressable style={styles.toggleRow} onPress={() => setVaries((v) => !v)}>
         <Text style={styles.toggleLabel}>Amount varies each cycle</Text>

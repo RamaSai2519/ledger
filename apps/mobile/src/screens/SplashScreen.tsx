@@ -15,20 +15,31 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 // heroGradient is unused pending that), so the tile falls back to the flat
 // accent color rather than adding a new native dependency for one screen.
 export function SplashScreen({navigation}: Props) {
-  const {accessToken, householdId} = useAuthStore();
+  const {accessToken, householdId, pinHash, hydrated, hydrate} = useAuthStore();
+
+  // LED-9: accessToken only ever lived in memory, so before the Keychain-backed
+  // rehydrate below existed, every cold start looked logged-out even for a
+  // returning user with a valid refresh token. hydrate() silently attempts
+  // /auth/refresh from the persisted session before this screen routes.
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
 
   useEffect(() => {
+    if (!hydrated) return;
     const timer = setTimeout(() => {
       if (!accessToken) {
         navigation.replace('Onboarding');
       } else if (!householdId) {
         navigation.replace('HouseholdCreate');
+      } else if (pinHash) {
+        navigation.replace('AppLock');
       } else {
         navigation.replace('Home');
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [accessToken, householdId, navigation]);
+  }, [accessToken, householdId, pinHash, hydrated, navigation]);
 
   return (
     <View style={styles.container}>

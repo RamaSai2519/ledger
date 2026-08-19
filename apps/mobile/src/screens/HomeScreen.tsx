@@ -7,6 +7,7 @@ import type {Category, Wallet} from '@/api/client';
 import type {Budget} from '@/api/client';
 import {budgetsApi, categoriesApi, insightsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
+import {Sparkline} from '@/components/InsightBars';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 import {useAuthStore} from '@/state/authStore';
 
@@ -63,25 +64,6 @@ function WalletHeroCard({wallet}: {wallet: Wallet}) {
           )}
         </View>
       </View>
-    </View>
-  );
-}
-
-function NetWorthSparkline({points}: {points: number[]}) {
-  const max = Math.max(1, ...points);
-  return (
-    <View style={styles.sparkline}>
-      {points.map((v, i) => (
-        <View
-          key={i}
-          style={[
-            styles.sparklineBar,
-            {height: `${Math.max(8, (v / max) * 100)}%`},
-            i === points.length - 1 && {backgroundColor: colors.accent},
-            i === points.length - 2 && {backgroundColor: '#3B3670'},
-          ]}
-        />
-      ))}
     </View>
   );
 }
@@ -218,9 +200,13 @@ export function HomeScreen({navigation}: Props) {
   const wallets = walletsQuery.data?.wallets.filter((w) => !w.is_archived) ?? [];
   const netWorth = computeNetWorth(wallets);
   const featuredWallet = wallets.find((w) => LIABILITY_TYPES.has(w.type)) ?? wallets[0];
-  const sparklinePoints = (netWorthHistoryQuery.data?.snapshots.slice(-6).map((s) => s.net_worth) ?? [1, 1, 1, 1, 1, 1]).map((v) =>
-    Math.max(0, v),
-  );
+  const sparklinePoints = (
+    netWorthHistoryQuery.data?.snapshots.slice(-6) ??
+    Array.from({length: 6}, (_, i) => ({date: null as string | null, net_worth: 0}))
+  ).map((s) => ({
+    label: s.date ? new Date(s.date).toLocaleDateString('en-IN', {day: 'numeric', month: 'short'}) : '',
+    value: s.net_worth,
+  }));
 
   const categoryById = new Map((categoriesQuery.data?.categories ?? []).map((c) => [c.id, c]));
   const todaysTransactions = (transactionsQuery.data?.transactions ?? []).filter((t) => {
@@ -249,14 +235,16 @@ export function HomeScreen({navigation}: Props) {
 
         <View style={styles.netWorthBlock}>
           <Text style={styles.netWorthLabel}>Net worth</Text>
-          <View style={styles.netWorthRow}>
-            {walletsQuery.isLoading ? (
-              <Text style={styles.stateText}>Loading…</Text>
-            ) : (
-              <Text style={styles.netWorthAmount}>₹{netWorth.toLocaleString('en-IN')}</Text>
-            )}
-            <NetWorthSparkline points={sparklinePoints} />
-          </View>
+          {walletsQuery.isLoading ? (
+            <Text style={styles.stateText}>Loading…</Text>
+          ) : (
+            <Text style={styles.netWorthAmount}>₹{netWorth.toLocaleString('en-IN')}</Text>
+          )}
+          {!walletsQuery.isLoading && (
+            <View style={styles.netWorthChart}>
+              <Sparkline points={sparklinePoints} color={colors.accent} />
+            </View>
+          )}
         </View>
 
         {walletsQuery.isError && (
@@ -320,7 +308,6 @@ const styles = StyleSheet.create({
   bellGlyph: {fontSize: 18},
   netWorthBlock: {paddingHorizontal: spacing.lg, paddingTop: spacing.md},
   netWorthLabel: {fontSize: 11, letterSpacing: 0.9, textTransform: 'uppercase', color: colors.textSecondary},
-  netWorthRow: {flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 6},
   netWorthAmount: {
     color: colors.textPrimary,
     fontFamily: fontFamilies.display,
@@ -328,9 +315,9 @@ const styles = StyleSheet.create({
     letterSpacing: -1.1,
     lineHeight: 34,
     fontWeight: '600',
+    marginTop: 6,
   },
-  sparkline: {flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 34},
-  sparklineBar: {width: 5, borderRadius: 2, backgroundColor: colors.border, minHeight: 4},
+  netWorthChart: {marginTop: spacing.sm},
   walletStack: {height: 180, marginTop: 14, marginHorizontal: 20},
   walletBackdrop: {position: 'absolute', left: 24, right: 24, borderRadius: 20, backgroundColor: colors.backgroundRaised, borderWidth: 1, borderColor: colors.border},
   walletBackdropFar: {top: 0, height: 106, transform: [{rotate: '-4deg'}]},

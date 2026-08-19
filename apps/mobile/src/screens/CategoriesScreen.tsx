@@ -70,6 +70,25 @@ export function CategoriesScreen({}: Props) {
         ))}
       </View>
 
+      {query.isLoading && <Text style={styles.stateText}>Loading categories…</Text>}
+      {query.isError && (
+        <View style={styles.errorBlock}>
+          <Text style={styles.errorTitle}>Categories didn't load</Text>
+          <Pressable onPress={() => query.refetch()}>
+            <Text style={styles.errorRetry}>Try again</Text>
+          </Pressable>
+        </View>
+      )}
+      {query.isSuccess && categories.length === 0 && archived.length === 0 && !editing && (
+        <View style={styles.emptyBlock}>
+          <Text style={styles.emptyTitle}>No {tab} categories yet</Text>
+          <Pressable style={styles.emptyOption} onPress={() => setEditing({id: null, name: '', color: SWATCHES[0]})}>
+            <Text style={styles.emptyOptionText}>Add your first {tab} category</Text>
+            <Text style={styles.emptyOptionChevron}>›</Text>
+          </Pressable>
+        </View>
+      )}
+
       <FlatList
         data={[...categories.map((c) => ({...c, archived: false})), ...archived.map((c) => ({...c, archived: true}))]}
         keyExtractor={(item) => item.id}
@@ -166,6 +185,15 @@ const styles = StyleSheet.create({
   tabSelected: {backgroundColor: colors.border},
   tabText: {color: colors.textSecondary, fontSize: 12.5},
   tabTextSelected: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
+  stateText: {color: colors.textSecondary, textAlign: 'center', marginTop: spacing.lg, paddingHorizontal: spacing.lg},
+  errorBlock: {alignItems: 'center', marginTop: spacing.lg, gap: spacing.sm},
+  errorTitle: {color: colors.textPrimary, fontSize: 14, fontWeight: '600'},
+  errorRetry: {color: colors.accentOnDark, fontSize: 12.5, fontWeight: '600'},
+  emptyBlock: {marginHorizontal: spacing.lg, marginTop: spacing.md, gap: spacing.sm},
+  emptyTitle: {color: colors.textPrimary, fontSize: 15, fontWeight: '600', marginBottom: spacing.xs},
+  emptyOption: {flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  emptyOptionText: {flex: 1, color: colors.textPrimary, fontSize: 13},
+  emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
   row: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#17171F'},
   rowIcon: {width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center'},
   rowIconGlyph: {fontWeight: '700', fontSize: 14},

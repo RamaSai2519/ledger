@@ -107,6 +107,18 @@ android {
     }
 }
 
+// A transitive dependency of one of the LED-9/LED-10 native libs pulls in
+// androidx.core 1.16.0, which requires compileSdk 35 + AGP 8.6+ (this
+// project is pinned to compileSdk 34 / AGP 8.5 — bumping either is a much
+// bigger blast radius than pinning this one transitive version back down to
+// one that's compileSdk-34-compatible).
+configurations.all {
+    resolutionStrategy {
+        force "androidx.core:core:1.13.1"
+        force "androidx.core:core-ktx:1.13.1"
+    }
+}
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")

@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {PinKeypad} from '@/components/PinKeypad';
+import {promptBiometricUnlock} from '@/native/biometrics';
 import {useAuthStore} from '@/state/authStore';
 import {colors, fontFamilies, spacing} from '@/theme/tokens';
 
@@ -11,16 +12,27 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AppLock'>;
 const PIN_LENGTH = 4;
 
 // s10 in the design project — shown on every app open/foreground when a PIN
-// has been set (wired via the AppState listener in RootNavigator). The
-// fingerprint slot is a placeholder: no react-native-biometrics dependency
-// is installed yet (plan.md §5.5's biometric unlock is native follow-up
-// work), so it's inert rather than pretending to prompt for a fingerprint.
+// has been set (wired via the AppState listener in RootNavigator).
 export function AppLockScreen({navigation}: Props) {
   const [digits, setDigits] = useState('');
   const [error, setError] = useState(false);
   const householdName = useAuthStore((s) => s.householdName);
   const verifyPin = useAuthStore((s) => s.verifyPin);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
+
+  const tryBiometricUnlock = async () => {
+    if (!biometricEnabled) return;
+    const success = await promptBiometricUnlock();
+    if (success) navigation.replace('Home');
+  };
+
+  // Auto-prompt once on mount when the user has opted in from Settings —
+  // still falls through to the PIN pad on cancel/failure/no-sensor.
+  useEffect(() => {
+    tryBiometricUnlock();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onDigit = (d: string) => {
     if (digits.length >= PIN_LENGTH) return;
@@ -61,7 +73,13 @@ export function AppLockScreen({navigation}: Props) {
           variant="circle"
           onDigit={onDigit}
           onBackspace={() => setDigits((d) => d.slice(0, -1))}
-          rightSlot={<Text style={styles.fingerprintGlyph}>⚷</Text>}
+          rightSlot={
+            biometricEnabled ? (
+              <Pressable onPress={tryBiometricUnlock} hitSlop={12}>
+                <Text style={styles.fingerprintGlyph}>⚷</Text>
+              </Pressable>
+            ) : undefined
+          }
         />
       </View>
       <Pressable
