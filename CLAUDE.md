@@ -4,9 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Phase 0 (monorepo scaffold) and Phase 1 (auth & household) are built, tested, and deployed live — see the root [`README.md`](README.md) for the live API URL and current status. Phases 2-7 are tracked as Jira issues under project **LED** (see below), not yet built.
+All of `plan.md`'s phased roadmap (§15, Phase 0 through Phase 7) is implemented and pushed to `master` — see Jira `LED-2` through `LED-9` (one issue per phase). A substantial amount of post-MVP work has landed on top: loans as a dedicated domain (`LED-14`), a fully layered/explainable SMS parser (`LED-18`), layered wallet/category SMS prefill with a learning loop (`LED-19`), mobile FCM integration + household-join preview + category drag-reorder (`LED-15`), several UI-fidelity and bugfix passes (`LED-10`, `LED-12`, `LED-16`, `LED-17`), and a backend route-input refactor (`LED-13`). Backend is deployed live on AWS Lambda — see the root [`README.md`](README.md) for the URL.
 
-- `plan.md` — full backend + mobile implementation plan (data model, API reference, phased roadmap)
+Per the Jira workflow below, most of these issues sit in **In Review** rather than **Done** — that's a process gate (only moved to Done once confirmed merged/deployed), not a signal the work is incomplete. Check an issue's own status/comments in Jira before assuming something is unbuilt; don't infer scope from this file's prose alone.
+
+**One known, real gap**: the nightly balance-reconciliation safety net (plan.md §6) exists as a tested function (`services/api/src/jobs/balance_reconciliation.py`) but is **not wired to any scheduler** — it's absent from `infra/terraform/scheduler.tf` and from `index.py`'s `scheduled_handler` dispatch table, unlike every other job in `jobs/`. It only runs if invoked manually. Worth its own Jira issue if picked up.
+
+**Known plan.md/reality drift** (implementation is correct; the spec text is stale):
+- **Scheduled jobs run via AWS EventBridge Scheduler invoking the deployed Lambda's `scheduled_handler`**, not APScheduler/Celery as plan.md §3/§15 describes — see `docs/decisions/0005-eventbridge-scheduler-for-jobs.md` for why (a zip-deployed Lambda has no persistent process for an in-process scheduler to run in).
+- **API base path is root, not `/api`** — plan.md §11 documents every route under `/api`, but the actual deployed API and `apps/mobile/src/api/client.ts`'s `API_BASE_URL` both use unprefixed paths (e.g. `/auth/login`, `/actions/health`), consistently with each other, just not with the written spec.
+- **Loans are a dedicated `loans` collection**, not a `wallet` with `type=loan` — `LED-14` moved them out of the wallet model (EMI-driven amortization doesn't fit the wallet shape) and migrated the one pre-existing loan wallet. `loan` was fully removed from `CREATABLE_WALLET_TYPES`; plan.md §4's `wallets.loan_details` subdoc description is stale.
+- **Mobile token storage uses `react-native-keychain`** (`apps/mobile/src/state/authStore.ts`), not `react-native-mmkv`/`expo-secure-store` as plan.md §3/§14 suggests — same encrypted-native-storage requirement, different library.
+
+- `plan.md` — full backend + mobile implementation plan (data model, API reference, phased roadmap). Treat it as the original design intent, not a live source of truth for what's built — cross-check against Jira/the code for anything load-bearing, per the drift noted above.
 - `DESIGN_BRIEF.md` — visual/UX design brief; the actual mockups it produced live in the Claude Design project linked under "Design reference" below, not as files in this repo
 
 Backend: `cd services/api/src && pipenv install && pipenv run pytest -v`. Mobile: `cd apps/mobile && npm install && npm run typecheck`. See each directory's own README for the full command list and layout.
@@ -17,9 +27,9 @@ Backend: `cd services/api/src && pipenv install && pipenv run pytest -v`. Mobile
 
 Full product/architecture detail lives in `plan.md`; read it before scaffolding the backend or mobile app. Key points to know going in:
 
-### Tech stack (planned)
-- **Backend:** Python 3.12, Flask (Blueprints), PyMongo, Flask-JWT-Extended, Pydantic/Marshmallow, APScheduler (MVP) → Celery/Redis later, Firebase Admin SDK for FCM, Gunicorn + Nginx in Docker, MongoDB Atlas, deployed on AWS.
-- **Mobile:** React Native (bare workflow — required for a custom native SMS module, not Expo-managed), React Navigation, TanStack Query (server state) + Zustand (local UI state), a custom Kotlin `BroadcastReceiver` native module for SMS, `@react-native-firebase/messaging`, `react-native-biometrics`, encrypted local storage for tokens/PIN.
+### Tech stack (as built)
+- **Backend:** Python 3.12/3.14 (see `services/api/Pipfile` for the pinned version), Flask + Flask-RESTful, PyMongo, Flask-JWT-Extended, shared `Input` dataclasses (`shared/interfaces.py`) for request validation, AWS EventBridge Scheduler dispatching into the same Lambda's `scheduled_handler` for background jobs (not APScheduler/Celery — see the drift note above), Firebase Admin SDK for FCM, MongoDB Atlas, zip-deployed to AWS Lambda behind API Gateway via Terraform (not Docker/Gunicorn/Nginx — see the deployment section below).
+- **Mobile:** React Native (bare workflow — required for the custom native SMS module, not Expo-managed; `apps/mobile/android/` is a real generated native project), React Navigation, TanStack Query (server state) + Zustand (local UI state), a custom Kotlin `BroadcastReceiver` native module for SMS (`apps/mobile/android/.../sms/SmsReceiver.kt` + `SmsAllowlist.kt`, plus a debug-only `SmsExportReceiver.kt` for the LED-18 ADB dev pipeline), `@react-native-firebase/messaging`, `react-native-biometrics`, `react-native-keychain` for encrypted token storage, `react-native-svg`/`react-native-reanimated`/`react-native-gesture-handler`/`react-native-draggable-flatlist` for charts, wallet-card swipe, and category drag-reorder.
 
 ### Non-negotiable constraints (from plan.md §2)
 1. **Play Store SMS policy**: general apps can't get broad `READ_SMS`/`RECEIVE_SMS` approval for public listing. Distribute via sideloaded APK or Play Console Internal Testing track only — never plan for open Play Store release while SMS reading exists.
@@ -28,21 +38,21 @@ Full product/architecture detail lives in `plan.md`; read it before scaffolding 
 4. Use **MongoDB Atlas**, not self-hosted Mongo.
 
 ### Core domain model
-All collections are scoped by `household_id` except `users`. See `plan.md` §4 for full field-level schemas of `users`, `households`, `wallets`, `categories`, `transactions`, `recurring_rules`, `budgets`, `notifications`, `sms_inbox`, `merchant_category_map`, `sms_parser_rules`, `net_worth_snapshots`.
+All collections are scoped by `household_id` except `users`. See `plan.md` §4 for full field-level schemas of `users`, `households`, `wallets`, `categories`, `transactions`, `recurring_rules`, `budgets`, `notifications`, `sms_inbox`, `merchant_category_map`, `sms_parser_rules`, `net_worth_snapshots` — still accurate for those. Two collections plan.md §4 doesn't describe (added post-MVP): `loans` (`LED-14`, dedicated collection — see the drift note above, `loan` is no longer a wallet type) and `merchant_wallet_map` (`LED-19`, mirrors `merchant_category_map` but learns merchant → wallet instead of merchant → category, with a frequency>2 decay guard).
 
 Things that are easy to get wrong if you don't read the plan first:
-- **Balance sign convention**: for `bank_account`/`cash`, positive `current_balance` = asset. For `credit_card`/`pay_later`/`loan`, positive = liability owed. Net worth = Σassets − Σliabilities.
-- **`current_balance` is a cached field**, atomically maintained via `$inc` on every transaction write, wrapped in a Mongo multi-document transaction for transfers (two wallets touched at once). A nightly job recomputes from `opening_balance` + transaction history and flags drift as a correctness safety net — don't let the cached field silently diverge.
+- **Balance sign convention**: for `bank_account`/`cash`, positive `current_balance` = asset. For `credit_card`/`pay_later`, positive = liability owed; `loans` (a separate collection, not a wallet type) contribute their own `outstanding_balance` to net-worth liabilities. Net worth = Σassets − Σliabilities.
+- **`current_balance` is a cached field**, atomically maintained via `$inc` on every transaction write, wrapped in a Mongo multi-document transaction for transfers (two wallets touched at once). `jobs/balance_reconciliation.py` recomputes from `opening_balance` + transaction history and flags drift as a correctness safety net, but **is not currently wired to any scheduler** (see the known-gap note above) — don't assume it's actually running nightly in production without checking `scheduler.tf` first.
 - **Manual reconcile never silently overwrites a balance** — it computes the delta and inserts an `adjustment`-type transaction against a system "Balance Adjustment" category, so the ledger stays internally consistent and auditable.
-- **SMS pipeline dedup**: before creating a suggestion, check for an existing transaction on the same wallet with a similar amount within the same day; if found, silently link `sms_id` to it instead of prompting again.
-- **The "learning" mechanism** for SMS category suggestions is simple frequency-based matching via `merchant_category_map` (normalized merchant string → category/wallet, incremented on confirm) — no ML, intentionally.
+- **SMS pipeline dedup**: before creating a suggestion, check for an existing transaction on the same wallet with a similar amount within the same day (or a matching `transaction_id`/UTR, LED-18); if found, silently link `sms_id` to it instead of prompting again.
+- **The "learning" mechanism** for SMS suggestions is layered, frequency-based matching (`LED-19`) — `merchant_category_map` (+ its `aliases` field for fuzzy merchant matching) for category, `merchant_wallet_map` for wallet, both incremented on accept, both falling back through cheaper heuristics (institution match, single-wallet-of-type, a household's `is_default` wallet, a small keyword-rule collection) when there's no learned mapping yet — no ML, intentionally. See `shared/sms_parsing.py`'s `resolve_wallet_layered`/`suggest_category_layered`.
 - Net worth history is served from a **daily snapshot job** (`net_worth_snapshots`), not computed on the fly, since historical net worth requires replaying all transactions up to a date.
 
 ### API surface
-Base path `/api`; full route table (auth, users, wallets, categories, transactions, recurring, budgets, insights, sms, notifications) is in `plan.md` §11.
+**Base path is root, not `/api`** (see the drift note above) — routes are `/auth/...`, `/wallets/...`, `/sms/...` etc. directly, matching `apps/mobile/src/api/client.ts`. plan.md §11's route *table* (which endpoints exist, their methods/params) is otherwise still accurate; only its stated `/api` prefix is wrong. Loans (`/loans`, `LED-14`) and the SMS suggestion accept/dismiss/parser-rules routes (`LED-7`/`LED-18`/`LED-19`) aren't in plan.md §11 at all — check `services/api/src/services/controller.py` for the current full route list.
 
 ### Build order
-The plan defines a phased roadmap (§15): Setup → Auth & Household → Core Ledger (wallets/categories/transactions/balance engine) → Budgets & Notifications → Insights → SMS Pipeline → Recurring Transactions → Polish & Ship. Follow this order when scaffolding — later phases (SMS, recurring) assume the ledger and auth foundations from earlier phases exist.
+plan.md §15's phased roadmap (Setup → Auth & Household → Core Ledger → Budgets & Notifications → Insights → SMS Pipeline → Recurring Transactions → Polish & Ship) is now historical — all phases are built (Jira `LED-2` through `LED-9`). It's still useful as a dependency map if you're ever rebuilding a phase from scratch (later phases assume earlier ones' foundations), but isn't a to-do list any more.
 
 ## Jira task tracking — required
 

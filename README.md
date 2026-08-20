@@ -9,12 +9,16 @@ agent) working in this repo.
 
 ## Status
 
-Phase 0 (scaffold) and Phase 1 (auth & household) are built, tested, and
-**deployed live**: https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com
-(Lambda `ledger-api` + HTTP API Gateway, `ap-south-1`, backed by a real
-MongoDB Atlas cluster). Phases 2-7 (core ledger, budgets, insights, SMS
-pipeline, recurring transactions, polish) are tracked as Jira backlog, not
-yet built — see `plan.md` §15.
+All phases (0-7) from `plan.md` §15 are built and **deployed live**:
+https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com (Lambda
+`ledger-api` + HTTP API Gateway, `ap-south-1`, backed by a real MongoDB
+Atlas cluster — note the API's routes are unprefixed at the root, not
+under `/api` as `plan.md` §11 describes). Substantial post-MVP work has
+also landed: a dedicated loans domain, a layered/explainable SMS parser,
+layered wallet/category SMS prefill with a learning loop, mobile FCM
+integration, and several UI/bugfix passes. See `CLAUDE.md`'s "Project
+status" section for the full picture, known gaps, and where the plan
+document has drifted from what's actually built.
 
 ## Layout
 
