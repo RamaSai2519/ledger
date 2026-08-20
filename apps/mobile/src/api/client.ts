@@ -331,7 +331,7 @@ export type NotificationListResult = {
 };
 
 export const notificationsApi = {
-  list: (params?: {page?: number; page_size?: number}) =>
+  list: (params?: {page?: number; page_size?: number; user_id?: 'me'; is_read?: 'true' | 'false'}) =>
     request<NotificationListResult>(withQuery('/notifications', params as Record<string, string>)),
   markRead: (id: string) => request<Notification>(`/notifications/${id}/read`, {method: 'POST'}),
 };

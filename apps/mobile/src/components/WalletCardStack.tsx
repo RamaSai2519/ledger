@@ -10,9 +10,17 @@ const MAX_VISIBLE = 3;
 const CARD_HEIGHT = 108;
 const LAYER_OFFSET = 12; // vertical step between stacked layers
 const LAYER_SCALE_STEP = 0.045;
+const LAYER_OPACITY_STEP = 0.18;
 const SWIPE_DISTANCE_THRESHOLD = 60;
 const SWIPE_VELOCITY_THRESHOLD = 0.5;
-const OFFSCREEN_Y = -260;
+
+function layerStyleForDepth(depth: number) {
+  return {
+    top: depth * LAYER_OFFSET,
+    opacity: Math.max(0, 1 - depth * LAYER_OPACITY_STEP),
+    scale: 1 - depth * LAYER_SCALE_STEP,
+  };
+}
 
 function WalletFace({wallet, isFront}: {wallet: Wallet; isFront: boolean}) {
   const isLiability = LIABILITY_TYPES.has(wallet.type);
@@ -48,31 +56,42 @@ function WalletFace({wallet, isFront}: {wallet: Wallet; isFront: boolean}) {
 }
 
 // Swipeable stack of every wallet — the front card can be dragged/swiped
-// up, at which point it animates off-screen and cycles to the back of the
-// stack, bringing the next wallet to the front. Up to MAX_VISIBLE cards are
+// up, at which point it settles behind the stack while the other layers
+// step forward, cycling it to the back. Up to MAX_VISIBLE cards are
 // rendered at once (peeking behind the front card) so it always reads as a
 // stack even with just 2 wallets.
 export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
   const [order, setOrder] = useState<number[]>(() => wallets.map((_, i) => i));
-  const translate = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
+  const [cycling, setCycling] = useState(false);
+  // `drag` follows the finger for the live swipe gesture on the front card;
+  // `restack` is the 0→1 progress of the settle animation once a swipe is
+  // released past threshold, driving every visible layer's transition to
+  // its new depth (front card tucking behind, others stepping forward) at
+  // once instead of the old fly-off-then-instant-reorder jump cut.
+  const drag = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
+  const restack = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     setOrder((prev) => (prev.length === wallets.length ? prev : wallets.map((_, i) => i)));
   }, [wallets.length]);
 
+  const visibleCount = Math.min(MAX_VISIBLE, wallets.length);
+
   const cycleToBack = () => {
-    Animated.timing(translate, {
-      toValue: {x: 0, y: OFFSCREEN_Y},
-      duration: motion.walletCardRestackMs,
-      useNativeDriver: true,
-    }).start(() => {
-      translate.setValue({x: 0, y: 0});
+    setCycling(true);
+    Animated.parallel([
+      Animated.timing(restack, {toValue: 1, duration: motion.walletCardRestackMs, useNativeDriver: true}),
+      Animated.timing(drag, {toValue: {x: 0, y: 0}, duration: motion.walletCardRestackMs, useNativeDriver: true}),
+    ]).start(() => {
+      restack.setValue(0);
+      drag.setValue({x: 0, y: 0});
       setOrder((prev) => [...prev.slice(1), prev[0]]);
+      setCycling(false);
     });
   };
 
   const resetPosition = () => {
-    Animated.spring(translate, {toValue: {x: 0, y: 0}, useNativeDriver: true, friction: 7}).start();
+    Animated.spring(drag, {toValue: {x: 0, y: 0}, useNativeDriver: true, friction: 7}).start();
   };
 
   const panResponder = useRef(
@@ -81,10 +100,10 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
       onPanResponderMove: (_, gesture) => {
         // Only let the drag travel upward — this is a swipe-to-cycle
         // gesture, not a free-drag card.
-        translate.setValue({x: gesture.dx * 0.3, y: Math.min(0, gesture.dy)});
+        drag.setValue({x: gesture.dx * 0.3, y: Math.min(0, gesture.dy)});
       },
       onPanResponderRelease: (_, gesture) => {
-        if (gesture.dy < -SWIPE_DISTANCE_THRESHOLD || gesture.vy < -SWIPE_VELOCITY_THRESHOLD) {
+        if (wallets.length > 1 && (gesture.dy < -SWIPE_DISTANCE_THRESHOLD || gesture.vy < -SWIPE_VELOCITY_THRESHOLD)) {
           cycleToBack();
         } else {
           resetPosition();
@@ -96,41 +115,49 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
 
   if (wallets.length === 0) return null;
 
-  const visible = order.slice(0, MAX_VISIBLE);
+  // While idle this is just the visible slice. While cycling, also include
+  // the card waiting behind the stack (if any) so it can animate into the
+  // back visible layer instead of popping in once the rotation commits.
+  const enteringIndex = cycling && visibleCount < order.length ? order[visibleCount] : null;
+  const slots = order
+    .slice(0, visibleCount)
+    .map((walletIndex, depth) => ({walletIndex, depth}))
+    .concat(enteringIndex !== null ? [{walletIndex: enteringIndex, depth: visibleCount}] : []);
 
   return (
     <View style={styles.stackWrap}>
-      {visible
-        .map((walletIndex, depth) => ({walletIndex, depth}))
+      {slots
+        .slice()
         .reverse()
         .map(({walletIndex, depth}) => {
           const wallet = wallets[walletIndex];
           const isFront = depth === 0;
-          const layerStyle = {
-            top: depth * LAYER_OFFSET,
-            zIndex: MAX_VISIBLE - depth,
-            opacity: 1 - depth * 0.18,
-            transform: [{scale: 1 - depth * LAYER_SCALE_STEP}],
-          };
+          const isEntering = depth === visibleCount;
+          const from = isEntering ? {...layerStyleForDepth(depth), opacity: 0} : layerStyleForDepth(depth);
+          const to = layerStyleForDepth(isFront ? visibleCount : depth - 1);
+          const targetOpacity = isFront ? 0 : to.opacity;
 
-          if (!isFront) {
-            return (
-              <View key={wallet.id} style={[styles.cardLayer, layerStyle]}>
-                <WalletFace wallet={wallet} isFront={false} />
-              </View>
-            );
-          }
+          const top = restack.interpolate({inputRange: [0, 1], outputRange: [from.top, to.top]});
+          const opacity = restack.interpolate({inputRange: [0, 1], outputRange: [from.opacity, targetOpacity]});
+          const scale = restack.interpolate({inputRange: [0, 1], outputRange: [from.scale, to.scale]});
 
           return (
             <Animated.View
               key={wallet.id}
               style={[
                 styles.cardLayer,
-                layerStyle,
-                {transform: [...layerStyle.transform, {translateX: translate.x}, {translateY: translate.y}]},
+                {
+                  top,
+                  opacity,
+                  // The outgoing front card drops behind every other layer
+                  // the instant the settle animation starts, so it reads as
+                  // tucking behind the stack rather than sliding over it.
+                  zIndex: isFront ? (cycling ? 0 : MAX_VISIBLE + 1) : MAX_VISIBLE - depth,
+                  transform: [{scale}, ...(isFront ? [{translateX: drag.x}, {translateY: drag.y}] : [])],
+                },
               ]}
-              {...panResponder.panHandlers}>
-              <WalletFace wallet={wallet} isFront />
+              {...(isFront && !cycling ? panResponder.panHandlers : {})}>
+              <WalletFace wallet={wallet} isFront={isFront} />
             </Animated.View>
           );
         })}

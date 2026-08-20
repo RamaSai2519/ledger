@@ -215,7 +215,13 @@ export function InsightsScreen({navigation}: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Insights</Text>
-        <MaterialIcons name="event" style={styles.calendarGlyph} />
+        <View style={styles.headerActions}>
+          <Pressable style={styles.budgetsLink} onPress={() => navigation.navigate('BudgetsList')} hitSlop={8}>
+            <MaterialIcons name="donut-large" style={styles.budgetsLinkGlyph} />
+            <Text style={styles.budgetsLinkText}>Budgets</Text>
+          </Pressable>
+          <MaterialIcons name="event" style={styles.calendarGlyph} />
+        </View>
       </View>
       {allLoading ? (
         <View style={styles.content}>
@@ -263,6 +269,20 @@ const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.background},
   header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
   title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 20, fontWeight: '600'},
+  headerActions: {flexDirection: 'row', alignItems: 'center', gap: spacing.md},
+  budgetsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 30,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  budgetsLinkGlyph: {fontSize: 13, color: colors.accentOnDark},
+  budgetsLinkText: {color: colors.textPrimary, fontSize: 12, fontWeight: '600'},
   calendarGlyph: {fontSize: 18},
   totalLabel: {fontSize: 11, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.textSecondary},
   totalAmount: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 32, letterSpacing: -1, fontWeight: '600', marginTop: 4},

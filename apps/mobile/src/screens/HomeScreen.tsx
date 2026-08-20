@@ -7,7 +7,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import type {Category, Wallet} from '@/api/client';
 import type {Budget} from '@/api/client';
-import {budgetsApi, categoriesApi, insightsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
+import {budgetsApi, categoriesApi, insightsApi, notificationsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {Sparkline} from '@/components/InsightBars';
 import {WalletCardStack} from '@/components/WalletCardStack';
@@ -215,6 +215,23 @@ function TransactionRow({txn, category}: {txn: import('@/api/client').Transactio
 
 export function HomeScreen({navigation}: Props) {
   const name = useAuthStore((s) => s.name);
+  const queryClient = useQueryClient();
+
+  const unreadQuery = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: () => notificationsApi.list({user_id: 'me', is_read: 'false', page_size: 1}),
+  });
+  const unreadCount = unreadQuery.data?.total ?? 0;
+
+  React.useEffect(() => {
+    // Re-check the unread count whenever Home regains focus (e.g. coming
+    // back from the Notifications screen after reading/dismissing some),
+    // so the badge clears without waiting for its own background refetch.
+    const unsubscribe = navigation.addListener('focus', () => {
+      queryClient.invalidateQueries({queryKey: ['notifications']});
+    });
+    return unsubscribe;
+  }, [navigation, queryClient]);
 
   const walletsQuery = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
   const transactionsQuery = useQuery({
@@ -257,8 +274,13 @@ export function HomeScreen({navigation}: Props) {
               {greeting()}, {name}
             </Text>
           </View>
-          <Pressable onPress={() => navigation.navigate('Notifications')}>
+          <Pressable style={styles.bellWrap} onPress={() => navigation.navigate('Notifications')}>
             <MaterialIcons name="notifications" style={styles.bellGlyph} />
+            {unreadCount > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
@@ -344,7 +366,23 @@ const styles = StyleSheet.create({
   mark: {width: 30, height: 30, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   markText: {color: colors.textPrimary, fontFamily: fontFamilies.displayBold, fontSize: 15},
   greeting: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
+  bellWrap: {position: 'relative'},
   bellGlyph: {fontSize: 18},
+  bellBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.negative,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  bellBadgeText: {color: colors.textPrimary, fontSize: 9, fontWeight: '700', lineHeight: 11},
   netWorthBlock: {paddingHorizontal: spacing.lg, paddingTop: spacing.md},
   netWorthLabel: {fontSize: 11, letterSpacing: 0.9, textTransform: 'uppercase', color: colors.textSecondary},
   netWorthAmount: {
