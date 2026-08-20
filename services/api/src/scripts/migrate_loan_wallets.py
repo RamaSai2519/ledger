@@ -13,7 +13,7 @@ For every wallet with type == "loan" that hasn't already been migrated:
     from) and a category_id for the new loan doc, neither of which exists
     on the old loan wallet itself. Best-effort: picks the household's
     first non-archived bank_account wallet as the EMI source, and an
-    expense category named "Loan Payment" if the household has one, else
+    expense category named "EMI / Loan Payment" if the household has one, else
     falls back to the household's first non-archived expense category.
     Logs a warning and SKIPS the wallet (leaving it unmigrated, safe to
     re-run) if neither can be found — those households need a manual
@@ -46,7 +46,7 @@ from shared.recurring import advance_due_date
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-LOAN_PAYMENT_CATEGORY_NAME = "Loan Payment"
+LOAN_PAYMENT_CATEGORY_NAME = "EMI / Loan Payment"  # shared/constants.py's default category name
 
 
 def _find_source_wallet(household_id):
