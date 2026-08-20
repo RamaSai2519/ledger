@@ -22,6 +22,7 @@ def create_wallet(inp, user_id: str) -> dict:
         "icon": inp.icon,
         "color": inp.color,
         "is_archived": False,
+        "is_default": False,
         "credit_card_details": inp.credit_card_details,
         "pay_later_details": inp.pay_later_details,
         "created_by": ObjectId(user_id),

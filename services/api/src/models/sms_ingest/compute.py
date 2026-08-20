@@ -2,11 +2,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from shared.db import get_sms_inbox_collection, get_transactions_collection, get_wallets_collection
+from shared.db import get_sms_inbox_collection, get_transactions_collection
 from shared.notify import notify_household
 from shared.scope import require_household_id
 from shared.sms.types import NON_COMPLETING_TYPES
-from shared.sms_parsing import find_dedup_transaction, parse_sms, resolve_wallet, suggest_category, utcnow
+from shared.sms_parsing import find_dedup_transaction, parse_sms, resolve_wallet_layered, suggest_category_layered, utcnow
 
 
 def _parse_received_at(raw: str | None) -> datetime | None:
@@ -44,6 +44,8 @@ def _base_doc(inp, household_id: ObjectId, user_id: str, now: datetime, received
         "parse_evidence": None,
         "suggested_wallet_id": None,
         "suggested_category_id": None,
+        "wallet_confidence": 0.0,
+        "category_confidence": 0.0,
         "confidence_score": 0.0,
         "status": "suggested",
         "resolved_transaction_id": None,
@@ -115,23 +117,30 @@ def ingest_sms(inp, user_id: str) -> dict:
         doc["_id"] = result.inserted_id
         return doc
 
-    wallet = resolve_wallet(household_id, parsed["parsed_last4"])
-    category_id, mapped_wallet_id, category_confidence = suggest_category(household_id, parsed["parsed_merchant"])
-
-    # If last4 didn't resolve a wallet directly, fall back to whichever
-    # wallet this merchant has historically been logged against (learning
-    # layer helping wallet resolution too, not just category).
-    if wallet is None and mapped_wallet_id is not None:
-        wallet = get_wallets_collection().find_one(
-            {"_id": mapped_wallet_id, "household_id": household_id, "is_archived": {"$ne": True}}
-        )
+    # LED-19: layered wallet/category prefill — each degrades through
+    # several match strategies (last4/merchant-history/institution/
+    # single-wallet/default for wallet; exact/alias/keyword for category)
+    # rather than the single exact-match-or-null lookups this used to do, so
+    # a suggestion still prefills something actionable even when the SMS
+    # lacks a clean last4 or the merchant has never been seen before.
+    # merchant_category_map still carries a wallet_id from past accepts
+    # (kept for the category side's own bookkeeping), but wallet *suggestion*
+    # now goes exclusively through resolve_wallet_layered's own
+    # decay-guarded merchant_wallet_map layer below — reusing
+    # merchant_category_map.wallet_id here too would let a single accept
+    # lock in a wallet with no decay guard at all, defeating the point of
+    # MERCHANT_WALLET_MAP_MIN_FREQUENCY.
+    category_id, _mapped_wallet_id, category_confidence, _category_layer = suggest_category_layered(
+        household_id, parsed["parsed_merchant"]
+    )
+    wallet, wallet_confidence, _wallet_layer = resolve_wallet_layered(household_id, parsed, inp.raw_text)
 
     doc["suggested_wallet_id"] = wallet["_id"] if wallet else None
     doc["suggested_category_id"] = category_id
+    doc["wallet_confidence"] = round(wallet_confidence, 2)
+    doc["category_confidence"] = round(category_confidence, 2)
     base_confidence = parsed["confidence_score"]
-    doc["confidence_score"] = round(
-        (base_confidence * 0.6 + category_confidence * 0.4) if wallet else (base_confidence * 0.5), 2
-    )
+    doc["confidence_score"] = round(base_confidence * 0.5 + wallet_confidence * 0.25 + category_confidence * 0.25, 2)
 
     if wallet is not None:
         existing = find_dedup_transaction(

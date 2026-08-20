@@ -15,6 +15,14 @@ def process(inp: Input):
     updates = validate.validate(inp.body)
     updates["updated_at"] = datetime.now(timezone.utc)
 
+    if updates.get("is_default") is True:
+        # LED-19: exactly one default wallet per household — unset any other
+        # wallet currently holding it rather than allowing several.
+        get_wallets_collection().update_many(
+            {"household_id": household_id, "_id": {"$ne": wallet["_id"]}, "is_default": True},
+            {"$set": {"is_default": False}},
+        )
+
     get_wallets_collection().update_one({"_id": wallet["_id"]}, {"$set": updates})
     wallet.update(updates)
     return success(serialize_wallet(wallet))

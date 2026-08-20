@@ -11,14 +11,19 @@ type Props = {
   options: PickerOption[];
   value: string | null;
   onChange: (value: string) => void;
+  // LED-19: SmsSuggestionEditScreen sets this for a null/low-confidence
+  // prefill so the picker sheet opens on its own rather than waiting for a
+  // tap — the field the household is least likely to have gotten "for free"
+  // is the one that should ask for their input first.
+  autoOpen?: boolean;
 };
 
 // A lightweight modal picker used for wallet/category selection in the
 // transaction and wallet forms. No native picker/select library is in the
 // dependency tree yet (would need native linking we can't verify here), so
 // this stays pure-JS/RN — a Pressable that opens a full list in a Modal.
-export function PickerField({label, placeholder = 'Select…', options, value, onChange}: Props) {
-  const [open, setOpen] = useState(false);
+export function PickerField({label, placeholder = 'Select…', options, value, onChange, autoOpen = false}: Props) {
+  const [open, setOpen] = useState(autoOpen);
   const selected = options.find((o) => o.value === value);
 
   return (

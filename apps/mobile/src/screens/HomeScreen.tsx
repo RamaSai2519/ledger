@@ -20,6 +20,9 @@ import {useAuthStore} from '@/state/authStore';
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later']);
+// LED-19: same threshold SmsSuggestionSheet uses — below this, a wallet/
+// category prefill is a best guess rather than a confident match.
+const LOW_CONFIDENCE_THRESHOLD = 0.5;
 const BUDGET_BAR_COLORS = [colors.accent, colors.positive, categoryHues.travel, categoryHues.rent];
 
 // Loans (LED-14) no longer live as a wallet type — their outstanding
@@ -166,35 +169,51 @@ function SmsSuggestionInlineCard({navigation}: {navigation: Props['navigation']}
         onRequestClose={() => setSheetSuggestionId(null)}
       />
       {toast && <ConfirmToast merchant={toast.merchant} amount={toast.amount} />}
-      {suggestion && sheetSuggestionId !== suggestion.id && (
-        <View style={styles.smsCard}>
-          <View style={styles.smsHeader}>
-            <MaterialIcons name="sms" style={styles.smsGlyph} />
-            <Text style={styles.smsLabel}>Detected from SMS</Text>
-          </View>
-          <Text style={styles.smsBody}>
-            ₹{(suggestion.parsed_amount ?? 0).toFixed(0)} at {suggestion.parsed_merchant ?? 'a merchant'} — add as{' '}
-            {suggestion.parsed_direction === 'credit' ? 'income' : 'an expense'}?
-          </Text>
-          <View style={styles.smsActions}>
-            <Pressable
-              style={[
-                styles.smsConfirm,
-                (!(suggestion.suggested_wallet_id && suggestion.suggested_category_id) || confirmMutation.isPending) && {opacity: 0.5},
-              ]}
-              disabled={!(suggestion.suggested_wallet_id && suggestion.suggested_category_id) || confirmMutation.isPending}
-              onPress={() => confirmMutation.mutate()}>
-              <Text style={styles.smsConfirmText}>{confirmMutation.isPending ? 'Confirming…' : 'Confirm'}</Text>
-            </Pressable>
-            <Pressable style={styles.smsEdit} onPress={() => navigation.navigate('SmsSuggestionEdit', {suggestion})}>
-              <Text style={styles.smsEditText}>Edit</Text>
-            </Pressable>
-            <Pressable style={styles.smsDismiss} onPress={() => dismissMutation.mutate()}>
-              <Text style={styles.smsDismissText}>Dismiss</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      {suggestion &&
+        sheetSuggestionId !== suggestion.id &&
+        (() => {
+          // LED-19: same low-confidence gate as SmsSuggestionSheet — a
+          // prefill under threshold (or missing) forces Edit rather than a
+          // one-tap Confirm.
+          const needsPickBeforeConfirm =
+            !suggestion.suggested_wallet_id ||
+            suggestion.wallet_confidence < LOW_CONFIDENCE_THRESHOLD ||
+            !suggestion.suggested_category_id ||
+            suggestion.category_confidence < LOW_CONFIDENCE_THRESHOLD;
+          return (
+            <View style={styles.smsCard}>
+              <View style={styles.smsHeader}>
+                <MaterialIcons name="sms" style={styles.smsGlyph} />
+                <Text style={styles.smsLabel}>Detected from SMS</Text>
+              </View>
+              <Text style={styles.smsBody}>
+                ₹{(suggestion.parsed_amount ?? 0).toFixed(0)} at {suggestion.parsed_merchant ?? 'a merchant'} — add as{' '}
+                {suggestion.parsed_direction === 'credit' ? 'income' : 'an expense'}?
+              </Text>
+              {needsPickBeforeConfirm && (
+                <Text style={styles.smsLowConfidenceHint}>
+                  {!suggestion.suggested_wallet_id || !suggestion.suggested_category_id
+                    ? 'Pick a wallet and category to confirm'
+                    : "We're not totally sure — check before confirming"}
+                </Text>
+              )}
+              <View style={styles.smsActions}>
+                <Pressable
+                  style={[styles.smsConfirm, (needsPickBeforeConfirm || confirmMutation.isPending) && {opacity: 0.5}]}
+                  disabled={needsPickBeforeConfirm || confirmMutation.isPending}
+                  onPress={() => confirmMutation.mutate()}>
+                  <Text style={styles.smsConfirmText}>{confirmMutation.isPending ? 'Confirming…' : 'Confirm'}</Text>
+                </Pressable>
+                <Pressable style={styles.smsEdit} onPress={() => navigation.navigate('SmsSuggestionEdit', {suggestion})}>
+                  <Text style={styles.smsEditText}>Edit</Text>
+                </Pressable>
+                <Pressable style={styles.smsDismiss} onPress={() => dismissMutation.mutate()}>
+                  <Text style={styles.smsDismissText}>Dismiss</Text>
+                </Pressable>
+              </View>
+            </View>
+          );
+        })()}
     </>
   );
 }
@@ -442,6 +461,7 @@ const styles = StyleSheet.create({
   toastText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600', flex: 1},
   smsLabel: {fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.accentOnDark, fontWeight: '600'},
   smsBody: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600', marginTop: 8, lineHeight: 18.5},
+  smsLowConfidenceHint: {color: '#E0C88A', fontSize: 11.5, marginTop: 6},
   smsActions: {flexDirection: 'row', gap: 8, marginTop: 11},
   smsConfirm: {flex: 1, height: 38, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   smsConfirmText: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},

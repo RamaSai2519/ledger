@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from shared.db import get_merchant_category_map_collection, get_sms_inbox_collection
+from shared.db import get_merchant_category_map_collection, get_merchant_wallet_map_collection, get_sms_inbox_collection
 from shared.output import ValidationError
 from shared.scope import get_household_category
-from shared.sms_parsing import normalize_merchant
+from shared.sms_parsing import aliases_for_merchant, normalize_merchant
 from shared.transactions_engine import create_single_wallet_transaction, get_household_wallet
 
 _DIRECTION_TO_TYPE = {"debit": "expense", "credit": "income"}
@@ -28,15 +28,40 @@ def _resolve_category(inp, sms: dict, household_id: ObjectId) -> dict:
 
 
 def _update_merchant_category_map(household_id: ObjectId, sms: dict, category_id: ObjectId, wallet_id: ObjectId, now: datetime) -> None:
-    merchant_pattern = normalize_merchant(sms.get("parsed_merchant"))
+    merchant_raw = sms.get("parsed_merchant")
+    merchant_pattern = normalize_merchant(merchant_raw)
     if not merchant_pattern:
         return
+    # LED-19: aliases lets a *differently-worded* future SMS for the same
+    # canonical merchant (e.g. "SWIGGY BANGALORE" vs the "SWIGGY" this entry
+    # was keyed on) still fuzzy-match this entry (suggest_category_layered's
+    # layer 2) instead of only ever matching the exact wording seen here.
+    aliases = [key for key in aliases_for_merchant(merchant_raw) if key != merchant_pattern]
     get_merchant_category_map_collection().update_one(
         {"household_id": household_id, "merchant_pattern": merchant_pattern},
         {
-            "$set": {"category_id": category_id, "wallet_id": wallet_id, "updated_at": now},
+            "$set": {"category_id": category_id, "wallet_id": wallet_id, "aliases": aliases, "updated_at": now},
             "$inc": {"frequency": 1},
             "$setOnInsert": {"household_id": household_id, "merchant_pattern": merchant_pattern, "created_at": now},
+        },
+        upsert=True,
+    )
+
+
+def _update_merchant_wallet_map(household_id: ObjectId, sms: dict, wallet_id: ObjectId, now: datetime) -> None:
+    """LED-19 learning loop: every accept records merchant -> wallet history
+    (mirrors _update_merchant_category_map) so a future SMS from the same
+    merchant can be biased toward this wallet once frequency clears
+    MERCHANT_WALLET_MAP_MIN_FREQUENCY (see resolve_wallet_layered)."""
+    merchant_normalized = normalize_merchant(sms.get("parsed_merchant"))
+    if not merchant_normalized:
+        return
+    get_merchant_wallet_map_collection().update_one(
+        {"household_id": household_id, "merchant_normalized": merchant_normalized},
+        {
+            "$set": {"wallet_id": wallet_id, "updated_at": now},
+            "$inc": {"frequency": 1},
+            "$setOnInsert": {"household_id": household_id, "merchant_normalized": merchant_normalized, "created_at": now},
         },
         upsert=True,
     )
@@ -81,6 +106,7 @@ def accept_suggestion(sms: dict, inp, household_id: ObjectId, user_id: str) -> d
     txn = create_single_wallet_transaction(household_id, wallet, doc)
 
     _update_merchant_category_map(household_id, sms, category["_id"], wallet["_id"], now)
+    _update_merchant_wallet_map(household_id, sms, wallet["_id"], now)
 
     get_sms_inbox_collection().update_one(
         {"_id": sms["_id"]},

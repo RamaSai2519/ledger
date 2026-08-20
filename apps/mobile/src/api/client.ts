@@ -112,6 +112,7 @@ export type Wallet = {
   icon: string | null;
   color: string | null;
   is_archived: boolean;
+  is_default: boolean;
   credit_card_details: CreditCardDetails | null;
   pay_later_details: PayLaterDetails | null;
   created_by: string;
@@ -135,7 +136,15 @@ export type WalletCreateInput = {
 export type WalletUpdateInput = Partial<
   Pick<
     Wallet,
-    'name' | 'provider' | 'account_last4' | 'icon' | 'color' | 'is_archived' | 'credit_card_details' | 'pay_later_details'
+    | 'name'
+    | 'provider'
+    | 'account_last4'
+    | 'icon'
+    | 'color'
+    | 'is_archived'
+    | 'is_default'
+    | 'credit_card_details'
+    | 'pay_later_details'
   >
 >;
 
@@ -412,6 +421,8 @@ export type SmsInboxSuggestion = {
   parsed_ref: string | null;
   suggested_wallet_id: string | null;
   suggested_category_id: string | null;
+  wallet_confidence: number;
+  category_confidence: number;
   confidence_score: number;
   status: 'suggested' | 'accepted' | 'dismissed';
   resolved_transaction_id: string | null;

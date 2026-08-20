@@ -27,6 +27,14 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
   const [categoryId, setCategoryId] = useState<string | null>(suggestion.suggested_category_id);
   const [justAdded, setJustAdded] = useState(false);
 
+  // LED-19: a null/low-confidence prefill opens its own picker sheet on
+  // arrival rather than waiting for a tap — category takes priority over
+  // wallet when both need a look, since it's rarely resolvable from SMS text
+  // alone (no merchant_category_map/keyword match) whereas wallet at least
+  // has the default-wallet fallback.
+  const categoryNeedsInput = !suggestion.suggested_category_id || suggestion.category_confidence < 0.5;
+  const walletNeedsInput = !suggestion.suggested_wallet_id || suggestion.wallet_confidence < 0.5;
+
   const walletsQuery = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
   const categoriesQuery = useQuery({
     queryKey: ['categories', txnType],
@@ -79,8 +87,20 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
         />
       </View>
 
-      <PickerField label="Wallet" options={walletOptions} value={walletId} onChange={setWalletId} />
-      <PickerField label="Category" options={categoryOptions} value={categoryId} onChange={setCategoryId} />
+      <PickerField
+        label="Wallet"
+        options={walletOptions}
+        value={walletId}
+        onChange={setWalletId}
+        autoOpen={walletNeedsInput && !categoryNeedsInput}
+      />
+      <PickerField
+        label="Category"
+        options={categoryOptions}
+        value={categoryId}
+        onChange={setCategoryId}
+        autoOpen={categoryNeedsInput}
+      />
 
       <Text style={styles.hint}>We'll remember this pairing for future Swiggy-style suggestions.</Text>
 

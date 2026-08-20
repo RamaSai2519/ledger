@@ -20,6 +20,7 @@ def serialize_wallet(wallet: dict) -> dict:
         "icon": wallet.get("icon"),
         "color": wallet.get("color"),
         "is_archived": wallet.get("is_archived", False),
+        "is_default": wallet.get("is_default", False),
         "credit_card_details": wallet.get("credit_card_details"),
         "pay_later_details": wallet.get("pay_later_details"),
         "created_by": _str_id(wallet.get("created_by")),
@@ -106,6 +107,8 @@ def serialize_sms_inbox(sms: dict) -> dict:
         "parsed_ref": sms.get("parsed_ref"),
         "suggested_wallet_id": _str_id(sms.get("suggested_wallet_id")),
         "suggested_category_id": _str_id(sms.get("suggested_category_id")),
+        "wallet_confidence": sms.get("wallet_confidence", 0.0),
+        "category_confidence": sms.get("category_confidence", 0.0),
         "confidence_score": sms.get("confidence_score"),
         # LED-18: layered parser output - transaction_type is one of the
         # full spec'd enum (upi_payment/imps/refund/emi_payment/...), while

@@ -72,6 +72,14 @@ def get_loans_collection():
     return get_db()["loans"]
 
 
+def get_merchant_wallet_map_collection():
+    return get_db()["merchant_wallet_map"]
+
+
+def get_category_keyword_rules_collection():
+    return get_db()["category_keyword_rules"]
+
+
 def get_client():
     # Ensures the client is initialized, then returns it directly for
     # session/transaction use (start_session lives on the client, not the db).

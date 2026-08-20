@@ -7,6 +7,7 @@ PATCHABLE_FIELDS = {
     "icon",
     "color",
     "is_archived",
+    "is_default",
     "credit_card_details",
     "pay_later_details",
 }

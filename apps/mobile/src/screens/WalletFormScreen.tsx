@@ -44,6 +44,8 @@ export function WalletFormScreen({route, navigation}: Props) {
   const [accountLast4, setAccountLast4] = useState('');
   const [openingBalance, setOpeningBalance] = useState('0');
 
+  const [isDefault, setIsDefault] = useState(false);
+
   const [creditLimit, setCreditLimit] = useState('');
   const [statementDay, setStatementDay] = useState('');
   const [dueDay, setDueDay] = useState('');
@@ -58,6 +60,7 @@ export function WalletFormScreen({route, navigation}: Props) {
       setProvider(loaded.provider ?? '');
       setAccountLast4(loaded.account_last4 ?? '');
       setOpeningBalance(String(loaded.opening_balance));
+      setIsDefault(loaded.is_default);
       if (loaded.credit_card_details) {
         setCreditLimit(String(loaded.credit_card_details.credit_limit ?? ''));
         setStatementDay(String(loaded.credit_card_details.statement_day ?? ''));
@@ -119,6 +122,7 @@ export function WalletFormScreen({route, navigation}: Props) {
         name,
         provider: provider || undefined,
         account_last4: accountLast4 || undefined,
+        is_default: isDefault,
         ...buildTypeDetails(),
       }),
     onSuccess: () => {
@@ -232,6 +236,18 @@ export function WalletFormScreen({route, navigation}: Props) {
               <View style={styles.toggleThumb} />
             </View>
           </View>
+        )}
+
+        {isEdit && (
+          <Pressable style={styles.toggleRow} onPress={() => setIsDefault((v) => !v)}>
+            <View style={{flex: 1}}>
+              <Text style={styles.toggleTitle}>Default wallet</Text>
+              <Text style={styles.toggleSubtitle}>Used to prefill SMS suggestions when nothing else matches.</Text>
+            </View>
+            <View style={[styles.toggleTrack, isDefault && styles.toggleTrackOn]}>
+              <View style={styles.toggleThumb} />
+            </View>
+          </Pressable>
         )}
       </View>
 
