@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground layer (API 26+) — the Ledger logo mark
+  (assets/brand/logo-mark.svg), sized to the 66dp safe zone within the
+  108dp adaptive icon canvas so it survives circle/squircle/rounded-square
+  masking on any launcher.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M44.5,29 A23.5,23.5 0 1,0 44.5,76 A23.5,23.5 0 1,0 44.5,29 Z"
+        android:fillColor="#5B54F9"/>
+    <path
+        android:pathData="M63.5,29 A23.5,23.5 0 1,0 63.5,76 A23.5,23.5 0 1,0 63.5,29 Z"
+        android:fillColor="#E8A33D"
+        android:fillAlpha="0.85"/>
+</vector>

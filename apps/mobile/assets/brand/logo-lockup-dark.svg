@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ledger primary lockup — mark + wordmark, dark background. Matches the
+  "Primary lockup" treatment from the Claude Design logo project (1a).
+  Space Grotesk must be embedded/linked by the consumer (Google Fonts on
+  web, bundled .ttf via react-native-vector-icons/asset-fonts on mobile) —
+  this file references the family by name only.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 108" width="300" height="108">
+  <rect width="300" height="108" rx="20" fill="#0B0B12" stroke="#232330"/>
+  <g transform="translate(40,32)">
+    <circle cx="15" cy="20" r="15" fill="#5B54F9"/>
+    <circle cx="27" cy="20" r="15" fill="#E8A33D" fill-opacity="0.85"/>
+  </g>
+  <text x="98" y="63" font-family="'Space Grotesk', sans-serif" font-size="32" font-weight="600" letter-spacing="-0.3" fill="#F5F5F8">Ledger</text>
+</svg>

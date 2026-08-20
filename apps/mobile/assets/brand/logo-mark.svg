@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ledger logo mark — two overlapping circles, one per household partner's
+  dual-identity accent hue (theme/tokens.ts colors.accent / partnerAccents[1]),
+  meeting in a shared middle. Reads as "two people, one pooled ledger"
+  without a literal book/coin/chart icon. Source of truth for all exported
+  app-icon and in-app renders — regenerate those from this file, don't
+  hand-edit the exports.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 84" width="84" height="84">
+  <circle cx="30" cy="40" r="30" fill="#5B54F9"/>
+  <circle cx="54" cy="40" r="30" fill="#E8A33D" fill-opacity="0.85"/>
+</svg>

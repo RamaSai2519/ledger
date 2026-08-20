@@ -3,15 +3,15 @@ import {StyleSheet, Text, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {colors, fontFamilies, radius} from '@/theme/tokens';
-import {GradientCard} from '@/components/GradientCard';
+import {LogoMark} from '@/components/LogoMark';
 import {useAuthStore} from '@/state/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
 // s01 in the design project: gradient app-mark tile, wordmark, tagline, and
-// a bottom progress bar. The mockup labels the tile "K" for the design
-// project's working name ("Khaata") — CLAUDE.md is explicit that name never
-// propagates into this repo, so it's "L" for Ledger here.
+// a bottom progress bar. Now uses the actual Ledger logo mark (design
+// project "Logo design iteration", option 1a) instead of the placeholder
+// "L" letter tile.
 export function SplashScreen({navigation}: Props) {
   const {accessToken, householdId, pinHash, hydrated, hydrate} = useAuthStore();
 
@@ -41,9 +41,9 @@ export function SplashScreen({navigation}: Props) {
 
   return (
     <View style={styles.container}>
-      <GradientCard style={styles.mark} radius={radius.card}>
-        <Text style={styles.markText}>L</Text>
-      </GradientCard>
+      <View style={styles.mark}>
+        <LogoMark size={44} />
+      </View>
       <Text style={styles.title}>Ledger</Text>
       <Text style={styles.tagline}>One book, two people</Text>
       <View style={styles.progressTrack}>
@@ -58,10 +58,13 @@ const styles = StyleSheet.create({
   mark: {
     width: 76,
     height: 76,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  markText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 38},
   title: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 26, letterSpacing: -0.4},
   tagline: {color: colors.textSecondary, fontSize: 12.5},
   progressTrack: {
