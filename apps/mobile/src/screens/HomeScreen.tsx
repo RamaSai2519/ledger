@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   markText: {color: colors.textPrimary, fontFamily: fontFamilies.displayBold, fontSize: 15},
   greeting: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
   bellWrap: {position: 'relative'},
-  bellGlyph: {fontSize: 18},
+  bellGlyph: {fontSize: 18, color: colors.textPrimary},
   bellBadge: {
     position: 'absolute',
     top: -4,

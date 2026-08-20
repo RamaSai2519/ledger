@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   budgetsLinkGlyph: {fontSize: 13, color: colors.accentOnDark},
   budgetsLinkText: {color: colors.textPrimary, fontSize: 12, fontWeight: '600'},
-  calendarGlyph: {fontSize: 18},
+  calendarGlyph: {fontSize: 18, color: colors.textPrimary},
   totalLabel: {fontSize: 11, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.textSecondary},
   totalAmount: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 32, letterSpacing: -1, fontWeight: '600', marginTop: 4},
   content: {padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl},
