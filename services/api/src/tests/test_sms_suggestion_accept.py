@@ -101,13 +101,14 @@ def test_accept_already_resolved_suggestion_fails(client):
 
 def test_accept_without_resolvable_wallet_or_category_fails(client):
     token = _signup_household(client)
-    # Unrecognized sender + free-text -> parse fails entirely, so nothing
-    # is suggested and accept must be rejected without an override.
+    # Unrecognized sender + free-text -> not classified as a transaction at
+    # all (LED-18), so nothing is suggested and accept must be rejected
+    # without an override.
     resp = client.post(
         "/sms/ingest", json={"raw_text": "just chatting, nothing financial here", "sender_id": "FRIEND1"}, headers=auth_headers(token)
     )
     sms = resp.get_json()["data"]
-    assert sms["parse_status"] == "failed"
+    assert sms["parse_status"] == "not_transaction"
 
     accept_resp = client.post(f"/sms/suggestions/{sms['id']}/accept", json={}, headers=auth_headers(token))
     assert accept_resp.status_code == 400

@@ -2,8 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- LED-18 dev-only ADB validation pipeline (scripts/sms_dev/): merged
+         into the manifest for debug builds only, never a release build.
+         Broader than production's RECEIVE_SMS (main/AndroidManifest.xml) -
+         READ_SMS is needed to query full SMS *history* via the content
+         provider, not just live-received messages. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+
     <application
         android:usesCleartextTraffic="true"
         tools:targetApi="28"
-        tools:ignore="GoogleAppIndexingWarning"/>
+        tools:ignore="GoogleAppIndexingWarning">
+
+        <!-- Not exported to other apps generally - only ADB (running as
+             shell, which bypasses exported/permission checks for
+             am broadcast) can trigger this in practice. -->
+        <receiver
+            android:name=".sms.SmsExportReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerapp.mobile.dev.EXPORT_SMS" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

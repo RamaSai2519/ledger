@@ -64,6 +64,10 @@ def get_recurring_rules_collection():
     return get_db()["recurring_rules"]
 
 
+def get_merchant_alias_collection():
+    return get_db()["merchant_aliases"]
+
+
 def get_loans_collection():
     return get_db()["loans"]
 

@@ -5,6 +5,7 @@ from bson import ObjectId
 from shared.db import get_sms_inbox_collection, get_transactions_collection, get_wallets_collection
 from shared.notify import notify_household
 from shared.scope import require_household_id
+from shared.sms.types import NON_COMPLETING_TYPES
 from shared.sms_parsing import find_dedup_transaction, parse_sms, resolve_wallet, suggest_category, utcnow
 
 
@@ -33,6 +34,14 @@ def _base_doc(inp, household_id: ObjectId, user_id: str, now: datetime, received
         "parsed_last4": None,
         "parsed_merchant": None,
         "parsed_ref": None,
+        "transaction_type": None,
+        "transaction_status": None,
+        "merchant_normalized": None,
+        "counterparty": None,
+        "payment_method": None,
+        "balance_after": None,
+        "field_confidences": None,
+        "parse_evidence": None,
         "suggested_wallet_id": None,
         "suggested_category_id": None,
         "confidence_score": 0.0,
@@ -56,9 +65,26 @@ def ingest_sms(inp, user_id: str) -> dict:
     doc = _base_doc(inp, household_id, user_id, now, received_at)
     inbox = get_sms_inbox_collection()
 
-    parsed = parse_sms(household_id, inp.sender_id, inp.raw_text)
+    parsed = parse_sms(household_id, inp.sender_id, inp.raw_text, received_at)
     if parsed is None:
+        # Classified as a transaction attempt (has a debit/credit-shaped
+        # verb) but no amount could be extracted at all — a genuine parse
+        # failure, distinct from `not_transaction` below (spec Part 3).
         doc["parse_status"] = "failed"
+        result = inbox.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return doc
+
+    if not parsed["is_transaction"]:
+        # Recognized as OTP/promotional/balance-only/statement/due-reminder/
+        # other — correctly *not* a transaction, so no suggestion, no push
+        # (spec Part 3). Recorded for audit/debugging only.
+        doc["parse_status"] = "not_transaction"
+        doc["transaction_type"] = parsed["transaction_type"]
+        doc["confidence_score"] = parsed["confidence_score"]
+        doc["field_confidences"] = parsed["field_confidences"]
+        doc["parse_evidence"] = parsed["parse_evidence"]
+        doc["status"] = "not_applicable"
         result = inbox.insert_one(doc)
         doc["_id"] = result.inserted_id
         return doc
@@ -69,6 +95,25 @@ def ingest_sms(inp, user_id: str) -> dict:
     doc["parsed_last4"] = parsed["parsed_last4"]
     doc["parsed_merchant"] = parsed["parsed_merchant"]
     doc["parsed_ref"] = parsed["parsed_ref"]
+    doc["transaction_type"] = parsed["transaction_type"]
+    doc["transaction_status"] = parsed["transaction_status"]
+    doc["merchant_normalized"] = parsed["merchant_normalized"]
+    doc["counterparty"] = parsed["counterparty"]
+    doc["payment_method"] = parsed["payment_method"]
+    doc["balance_after"] = parsed["balance_after"]
+    doc["field_confidences"] = parsed["field_confidences"]
+    doc["parse_evidence"] = parsed["parse_evidence"]
+
+    # A transaction SMS whose *state* isn't a completed success (a reversed/
+    # failed/pending payment) must never silently turn into a suggested
+    # expense/income — sms_inbox doesn't yet model those states separately
+    # (spec Part 3), so the conservative move is: record it, but never
+    # surface it as an actionable suggestion or push.
+    if parsed["transaction_type"] in {t.value for t in NON_COMPLETING_TYPES}:
+        doc["status"] = "not_applicable"
+        result = inbox.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return doc
 
     wallet = resolve_wallet(household_id, parsed["parsed_last4"])
     category_id, mapped_wallet_id, category_confidence = suggest_category(household_id, parsed["parsed_merchant"])
@@ -89,10 +134,13 @@ def ingest_sms(inp, user_id: str) -> dict:
     )
 
     if wallet is not None:
-        existing = find_dedup_transaction(household_id, wallet["_id"], parsed["parsed_amount"], received_at)
+        existing = find_dedup_transaction(
+            household_id, wallet["_id"], parsed["parsed_amount"], received_at, parsed.get("transaction_id")
+        )
         if existing is not None:
-            # Dedup (plan.md §7 step 11): silently link instead of prompting
-            # again — no sms_inbox status=suggested, no push.
+            # Dedup (plan.md §7 step 11, spec Part 14): silently link
+            # instead of prompting again — no sms_inbox status=suggested,
+            # no push.
             doc["status"] = "accepted"
             doc["resolved_transaction_id"] = existing["_id"]
             result = inbox.insert_one(doc)

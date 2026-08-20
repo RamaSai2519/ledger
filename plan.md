@@ -173,11 +173,22 @@ All collections below are scoped by `household_id` except `users`. Use ObjectIds
 | raw_text | string | purge after resolution window (see §2.3) |
 | sender_id | string | e.g. `HDFCBK` |
 | received_at | datetime | |
-| parse_status | enum | `pending`, `parsed`, `ignored`, `failed` |
+| parse_status | enum | `pending`, `parsed`, `ignored`, `failed`, `not_transaction` (LED-18: recognized as OTP/promotional/balance-only/statement/due-reminder/other — distinct from `failed`, which means transactional wording matched but no amount could be extracted) |
 | parsed_amount, parsed_direction (debit/credit), parsed_last4, parsed_merchant, parsed_ref | — | extracted fields |
+| transaction_type | enum, LED-18 | full type (`upi_payment`, `imps`, `refund`, `emi_payment`, `salary`, ... — see `shared/sms/types.py::TransactionType`), separate from the coarser `parsed_direction` |
+| transaction_status | enum, LED-18 | `success`/`pending`/`failed`/`reversed`/`refunded` |
+| merchant_normalized, counterparty, payment_method, balance_after | — | LED-18: alias-normalized merchant name, P2P counterparty (mutually exclusive with merchant), detected UPI/wallet app, balance-after-transaction |
+| field_confidences, parse_evidence | object, array[string] | LED-18: per-field confidence + human-readable reasoning trail (spec Part 13 "explainable confidence"), not just the single `confidence_score` |
 | suggested_wallet_id, suggested_category_id, confidence_score | — | |
-| status | enum | `suggested`, `accepted`, `dismissed` |
+| status | enum | `suggested`, `accepted`, `dismissed`, `not_applicable` (LED-18: set for `not_transaction` parse_status and for transactional-but-not-completed states — reversed/failed/pending — so they never surface via `/sms/suggestions` or a push) |
 | resolved_transaction_id | ObjectId, optional | |
+
+### `merchant_aliases` (LED-18, merchant canonicalization)
+| Field | Type | Notes |
+|---|---|---|
+| raw_key | string | `normalize_key()`'d raw merchant string variant, unique |
+| raw_variant | string | the original (un-normalized) variant, for reference |
+| canonical_name | string | display name every variant maps to |
 
 ### `merchant_category_map` (the "learning" layer)
 | Field | Type | Notes |
@@ -194,7 +205,8 @@ All collections below are scoped by `household_id` except `users`. Use ObjectIds
 |---|---|---|
 | bank_code | string | e.g. `HDFC`, `AXIS`, `KOTAK`, `SBI`, `ZET`, `AXIO`, `JUPITER`, `CANARA` |
 | sender_ids | array[string] | known SMS sender IDs for this bank |
-| patterns | array[object] | `{txn_type: debit/credit, regex, field_groups: {amount, last4, merchant, ref}}` |
+| institution_name, aliases, keywords | string, array[string], array[string] | LED-18: weighted evidence for `InstitutionResolver` (sender match / body name match / keyword match) — see `shared/sms/institution_resolver.py` |
+| patterns | array[object] | `{txn_type: debit/credit, regex, field_groups: {amount, last4, merchant, ref}}` — legacy per-bank extraction patterns, still stored/listable via `POST /sms/parser-rules` but no longer executed by the LED-18 pipeline, which extracts generically instead (see `services/api/docs/sms_parser.md`) |
 | is_active | bool | |
 | household_id | ObjectId, nullable | null = global/default rule; set = household-specific custom rule |
 

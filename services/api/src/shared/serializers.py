@@ -107,6 +107,20 @@ def serialize_sms_inbox(sms: dict) -> dict:
         "suggested_wallet_id": _str_id(sms.get("suggested_wallet_id")),
         "suggested_category_id": _str_id(sms.get("suggested_category_id")),
         "confidence_score": sms.get("confidence_score"),
+        # LED-18: layered parser output - transaction_type is one of the
+        # full spec'd enum (upi_payment/imps/refund/emi_payment/...), while
+        # parsed_direction stays debit/credit for existing balance-engine
+        # code that only understands that binary. field_confidences/
+        # parse_evidence make the confidence_score explainable rather than
+        # a bare number (spec Part 13).
+        "transaction_type": sms.get("transaction_type"),
+        "transaction_status": sms.get("transaction_status"),
+        "merchant_normalized": sms.get("merchant_normalized"),
+        "counterparty": sms.get("counterparty"),
+        "payment_method": sms.get("payment_method"),
+        "balance_after": sms.get("balance_after"),
+        "field_confidences": sms.get("field_confidences"),
+        "parse_evidence": sms.get("parse_evidence"),
         "status": sms.get("status"),
         "resolved_transaction_id": _str_id(sms.get("resolved_transaction_id")),
         # raw_text is deliberately omitted (plan.md §2.3/§14 data minimization

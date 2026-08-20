@@ -20,3 +20,15 @@ mongomock = "*"
 
 [requires]
 python_version = "3.13"
+
+[scripts]
+# LED-18 dev-only ADB SMS validation pipeline (this repo's equivalent of
+# `npm run x` - services/api has no package.json). See
+# scripts/sms_dev/cli.py for what each one does and
+# docs/sms_parser.md for the full pipeline walkthrough.
+sms-pull = "python -m scripts.sms_dev.cli pull"
+sms-sanitize = "python -m scripts.sms_dev.cli sanitize"
+sms-validate = "python -m scripts.sms_dev.cli validate"
+sms-review = "python -m scripts.sms_dev.cli review"
+sms-promote-test = "python -m scripts.sms_dev.cli promote-test"
+sms-evaluate = "python -m scripts.sms_dev.cli evaluate"

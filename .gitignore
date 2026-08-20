@@ -11,6 +11,13 @@ Pipfile.lock
 # services/api build output
 services/api/build/
 
+# LED-18 dev-only ADB SMS validation pipeline (scripts/sms_dev/) - raw pulls,
+# sanitized corpora, reports, and human-review corrections. NEVER commit
+# this: raw/ contains unredacted real SMS text pulled from a physical
+# device. Promoted regression-test fixtures are sanitized separately into
+# services/api/src/tests/fixtures/real_world_promoted/, which IS tracked.
+services/api/.sms_dev_data/
+
 # Terraform
 infra/terraform/.terraform/
 infra/terraform/.terraform.lock.hcl

@@ -161,37 +161,53 @@ def test_ingest_canara_sms_credit_creates_suggestion(client):
     assert body["parsed_amount"] == 3000.00
 
 
-def test_ingest_kotak_upi_sent_wording_fails_to_parse(client):
-    # A real-world QA finding from this pass: Kotak's UPI-transfer template
-    # ("Sent Rs.X ... to <payee>") doesn't use any of the shared debit
-    # regex's verbs (debited/spent/paid/debit), so it fails to match KOTAK's
-    # bank-specific rule. It does NOT fall through to the low-confidence
-    # GENERIC fallback either — find_matching_rules (shared/sms_parsing.py)
-    # only tries GENERIC when no rule's sender_ids list contains this
-    # sender_id at all, and KOTAKB is already claimed by the KOTAK rule set,
-    # so an unmatched KOTAK message is dropped as parse_status="failed"
-    # rather than degrading to a low-confidence suggestion. Documented here
-    # rather than "fixed", since a real fix means adding a new bank-specific
-    # pattern row (data-driven, plan.md §2.2) covering the UPI-sent wording,
-    # not an app/server code change — out of scope for this QA pass, but
-    # worth a follow-up ticket since UPI transfers are common.
+def test_ingest_kotak_upi_sent_wording_parses(client):
+    # LED-18 fix: Kotak's UPI-transfer template ("Sent Rs.X ... to <payee>")
+    # used to fail because the old parser only matched a fixed per-bank
+    # debit/credit regex whose verb list didn't include "sent", and the
+    # sender's KOTAKB claim on the KOTAK bank_code meant it never fell
+    # through to the GENERIC fallback either. The new layered pipeline's
+    # generic extractors aren't tied to a single verb list per bank (the
+    # normalizer/classifier/amount-extractor all recognize "sent" as a debit
+    # verb), so this now parses like any other transactional SMS.
     token = _signup_household(client)
     resp = _ingest(
         client,
         token,
-        "Sent Rs.250.00 from Kotak Bank AC X4321 to MERCHANT UPI on 09-Jan-24 via UPI. Avl Bal Rs.14750",
+        "Sent Rs.250.00 from Kotak Bank AC X4321 to BIGBASKET on 09-Jan-24 via UPI Ref 998877. Avl Bal Rs.14750",
         "KOTAKB",
     )
     assert resp.status_code == 200
     body = resp.get_json()["data"]
-    assert body["parse_status"] == "failed"
-    assert body["parsed_merchant"] is None
-    assert body["suggested_wallet_id"] is None
+    assert body["parse_status"] == "parsed"
+    assert body["parsed_amount"] == 250.00
+    assert body["parsed_direction"] == "debit"
+    assert body["parsed_merchant"] == "BIGBASKET"
+    assert body["transaction_type"] == "upi_payment"
+    assert body["parsed_ref"] == "998877"
 
 
-def test_ingest_unrecognized_sender_and_format_fails_to_parse(client):
+def test_ingest_unrecognized_sender_and_format_is_not_a_transaction(client):
+    # LED-18: a message with no debit/credit-shaped wording at all is
+    # classified `not_transaction` (spec Part 3), distinct from `failed`
+    # (which now means "recognizably transactional wording, but no amount
+    # could be extracted").
     token = _signup_household(client)
     resp = _ingest(client, token, "Hey, are we still on for dinner tonight?", "FRIEND1")
+    assert resp.status_code == 200
+    body = resp.get_json()["data"]
+    assert body["parse_status"] == "not_transaction"
+    assert body["suggested_wallet_id"] is None
+    assert body["status"] == "not_applicable"
+
+    # And it must never show up as a pending suggestion.
+    suggestions = client.get("/sms/suggestions", headers=auth_headers(token)).get_json()["data"]["suggestions"]
+    assert suggestions == []
+
+
+def test_ingest_transactional_wording_without_amount_fails_to_parse(client):
+    token = _signup_household(client)
+    resp = _ingest(client, token, "Your account was debited successfully.", "HDFCBK")
     assert resp.status_code == 200
     body = resp.get_json()["data"]
     assert body["parse_status"] == "failed"

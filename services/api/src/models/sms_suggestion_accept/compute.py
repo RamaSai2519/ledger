@@ -69,6 +69,11 @@ def accept_suggestion(sms: dict, inp, household_id: ObjectId, user_id: str) -> d
         "date": date,
         "source": "sms_confirmed",
         "sms_id": sms["_id"],
+        # LED-18: lets a *later* SMS for the same real-world transaction
+        # (e.g. bank + UPI-app double notification) dedup by transaction ID
+        # via shared.sms_parsing.find_dedup_transaction instead of only the
+        # amount+day heuristic.
+        "sms_transaction_id": sms.get("parsed_ref"),
         "recurring_rule_id": None,
         "created_at": now,
         "updated_at": now,

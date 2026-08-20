@@ -48,14 +48,72 @@ _CREDIT_REGEX = (
 _REF_REGEX_SUFFIX = r".*?Ref\.?\s?(?:No\.?)?\s*[:\-]?\s*(?P<ref>[A-Za-z0-9]+)"
 
 _BANKS = [
-    {"bank_code": "AXIS", "sender_ids": ["AXISBK", "AD-AXISBK", "VM-AXISBK"]},
-    {"bank_code": "HDFC", "sender_ids": ["HDFCBK", "AD-HDFCBK", "VM-HDFCBK"]},
-    {"bank_code": "KOTAK", "sender_ids": ["KOTAKB", "AD-KOTAKB", "VM-KOTAKB"]},
-    {"bank_code": "SBI", "sender_ids": ["SBIINB", "SBIUPI", "AD-SBIINB"]},
-    {"bank_code": "ZET", "sender_ids": ["ZETPAY", "AD-ZETPAY"]},
-    {"bank_code": "AXIO", "sender_ids": ["AXIOPL", "AD-AXIOPL", "AMZNPL"]},
-    {"bank_code": "JUPITER", "sender_ids": ["JUPCC", "AD-JUPCC"]},
-    {"bank_code": "CANARA", "sender_ids": ["CANBNK", "AD-CANBNK"]},
+    {
+        "bank_code": "AXIS",
+        "sender_ids": ["AXISBK", "AD-AXISBK", "VM-AXISBK"],
+        "institution_name": "Axis Bank",
+        "aliases": ["Axis Bank", "Axis"],
+        "keywords": ["axis bank"],
+    },
+    {
+        "bank_code": "HDFC",
+        "sender_ids": ["HDFCBK", "AD-HDFCBK", "VM-HDFCBK"],
+        "institution_name": "HDFC Bank",
+        "aliases": ["HDFC Bank", "HDFC"],
+        "keywords": ["hdfc bank"],
+    },
+    {
+        "bank_code": "KOTAK",
+        "sender_ids": ["KOTAKB", "AD-KOTAKB", "VM-KOTAKB"],
+        "institution_name": "Kotak Bank",
+        "aliases": ["Kotak Bank", "Kotak Mahindra Bank", "Kotak"],
+        "keywords": ["kotak bank"],
+    },
+    {
+        "bank_code": "SBI",
+        "sender_ids": ["SBIINB", "SBIUPI", "AD-SBIINB"],
+        "institution_name": "State Bank of India",
+        "aliases": ["State Bank of India", "SBI"],
+        "keywords": ["state bank"],
+    },
+    {
+        "bank_code": "ZET",
+        "sender_ids": ["ZETPAY", "AD-ZETPAY"],
+        "institution_name": "Zet Credit Card",
+        "aliases": ["Zet Card", "Zet"],
+        "keywords": ["zet card"],
+    },
+    {
+        "bank_code": "AXIO",
+        "sender_ids": ["AXIOPL", "AD-AXIOPL", "AMZNPL"],
+        "institution_name": "Axio (Amazon Pay Later)",
+        "aliases": ["Axio", "Amazon Pay Later"],
+        "keywords": ["pay later"],
+    },
+    {
+        "bank_code": "JUPITER",
+        "sender_ids": ["JUPCC", "AD-JUPCC"],
+        "institution_name": "Jupiter Credit Card",
+        "aliases": ["Jupiter Card", "Jupiter"],
+        "keywords": ["jupiter card"],
+    },
+    {
+        "bank_code": "CANARA",
+        "sender_ids": ["CANBNK", "AD-CANBNK"],
+        "institution_name": "Canara Bank",
+        "aliases": ["Canara Bank", "Canara"],
+        "keywords": ["canara bank"],
+    },
+    {
+        # LED-18: added from real-world QA (scripts/sms_dev) - a major
+        # sender in a live device pull that the original 8-bank seed list
+        # didn't cover at all.
+        "bank_code": "ICICI",
+        "sender_ids": ["ICICIT", "ICICIB", "AD-ICICIT"],
+        "institution_name": "ICICI Bank",
+        "aliases": ["ICICI Bank", "ICICI"],
+        "keywords": ["icici bank"],
+    },
 ]
 
 
@@ -92,6 +150,9 @@ def default_sms_parser_rules() -> list[dict]:
         {
             "bank_code": bank["bank_code"],
             "sender_ids": bank["sender_ids"],
+            "institution_name": bank["institution_name"],
+            "aliases": bank["aliases"],
+            "keywords": bank["keywords"],
             "patterns": _bank_patterns(),
             "is_active": True,
             "household_id": None,
