@@ -65,7 +65,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -90,6 +90,28 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Version from git commit count — versionCode is the raw count (so it's
+// always strictly increasing, which is what Play requires on every
+// upload); versionName is "1.0.<count>" (bump major/minor by hand here
+// for a real milestone, patch auto-tracks commits). Falls back to 1 if
+// run outside a git checkout (shallow CI clones would also under-count —
+// not a concern here since this repo's mobile build isn't CI'd, see the
+// deploy docs).
+def gitCommitCount = {
+    try {
+        def out = new ByteArrayOutputStream()
+        exec {
+            commandLine "git", "rev-list", "--count", "HEAD"
+            workingDir rootProject.file("../../..")
+            standardOutput = out
+        }
+        return out.toString().trim().toInteger()
+    } catch (ignored) {
+        return 1
+    }
+}()
+def gitVersionName = "1.0.${gitCommitCount}"
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -100,8 +122,8 @@ android {
         applicationId "com.ledgerapp.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode gitCommitCount
+        versionName gitVersionName
     }
     signingConfigs {
         debug {
@@ -137,20 +159,9 @@ android {
         release {
             signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
-    }
-}
-
-// A transitive dependency of one of the LED-9/LED-10 native libs pulls in
-// androidx.core 1.16.0, which requires compileSdk 35 + AGP 8.6+ (this
-// project is pinned to compileSdk 34 / AGP 8.5 — bumping either is a much
-// bigger blast radius than pinning this one transitive version back down to
-// one that's compileSdk-34-compatible).
-configurations.all {
-    resolutionStrategy {
-        force "androidx.core:core:1.13.1"
-        force "androidx.core:core-ktx:1.13.1"
     }
 }
 

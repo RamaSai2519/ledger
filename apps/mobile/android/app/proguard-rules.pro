@@ -8,3 +8,10 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# LED-7: WorkManager instantiates Worker subclasses via
+# Class.forName(persistedClassName) reflection, not a normal constructor
+# call R8 can trace — without this the SMS ingest handoff from
+# SmsReceiver silently fails post-minification with a
+# ClassNotFoundException swallowed inside WorkManager's own executor.
+-keep class com.ledgerapp.mobile.sms.SmsIngestWorker { *; }
