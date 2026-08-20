@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DESIGN_BRIEF.md indigo hero accent — tints the small notification
+         icon (LED-15) so system push notifications read as Ledger's brand
+         rather than Android's default gray. -->
+    <color name="notification_accent">#5B54F9</color>
+</resources>

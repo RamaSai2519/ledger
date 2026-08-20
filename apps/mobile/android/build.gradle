@@ -15,6 +15,9 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        // LED-15: reads android/app/google-services.json to configure the
+        // Firebase Android app (FCM) at build time.
+        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 

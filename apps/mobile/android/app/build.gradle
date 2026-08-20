@@ -1,6 +1,9 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// LED-15: applies android/app/google-services.json so @react-native-firebase
+// modules (messaging) can resolve the Firebase project config at build time.
+apply plugin: "com.google.gms.google-services"
 
 // LED-12: copies react-native-vector-icons' .ttf font files into the app's
 // Android assets at build time — without this, icon glyphs render as tofu

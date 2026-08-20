@@ -1,5 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {AppState} from 'react-native';
+import {useQueryClient} from '@tanstack/react-query';
 import {NavigationContainer, DarkTheme, createNavigationContainerRef} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
@@ -95,10 +96,21 @@ function usePushNotificationsGate() {
   const registered = useRef(false);
   const accessToken = useAuthStore((s) => s.accessToken);
   const householdId = useAuthStore((s) => s.householdId);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    setupNotificationOpenHandlers(navigationRef);
-  }, []);
+    // A push landing while the app is already open still has to reach the
+    // screens that read this data — otherwise a foregrounded app would show
+    // nothing until its next poll. `notifications` covers the inbox badge/
+    // list; `sms.suggestions` covers the Home sheet/inline card (design
+    // s22, the "signature moment").
+    return setupNotificationOpenHandlers(navigationRef, (data) => {
+      queryClient.invalidateQueries({queryKey: ['notifications']});
+      if (data?.type === 'sms_suggestion') {
+        queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
+      }
+    });
+  }, [queryClient]);
 
   useEffect(() => {
     if (!accessToken || !householdId || registered.current) return;
