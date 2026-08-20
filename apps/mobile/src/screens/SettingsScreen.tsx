@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Linking, PermissionsAndroid, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -72,7 +73,7 @@ export function SettingsScreen({navigation}: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={{paddingBottom: spacing.xl}}>
         <Text style={styles.title}>Settings</Text>
 
@@ -161,7 +162,7 @@ export function SettingsScreen({navigation}: Props) {
         </Pressable>
       </ScrollView>
       <BottomNavBar active="settings" />
-    </View>
+    </SafeAreaView>
   );
 }
 

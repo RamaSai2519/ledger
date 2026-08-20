@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {Swipeable} from 'react-native-gesture-handler';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -116,7 +117,7 @@ export function WalletsListScreen({navigation}: Props) {
   const totalOwe = wallets.filter((w) => LIABILITY_TYPES.has(w.type)).reduce((s, w) => s + w.current_balance, 0);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Wallets</Text>
         <Pressable onPress={() => navigation.navigate('WalletForm', undefined)} hitSlop={8}>
@@ -199,7 +200,7 @@ export function WalletsListScreen({navigation}: Props) {
         }
       />
       <BottomNavBar active="wallets" />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -212,7 +213,7 @@ export function InsightsScreen({navigation}: Props) {
   const {allLoading, allError, allEmpty, refetchAll} = useOverallInsightsState(period);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Insights</Text>
         <View style={styles.headerActions}>
@@ -261,7 +262,7 @@ export function InsightsScreen({navigation}: Props) {
         </ScrollView>
       )}
       <BottomNavBar active="insights" />
-    </View>
+    </SafeAreaView>
   );
 }
 

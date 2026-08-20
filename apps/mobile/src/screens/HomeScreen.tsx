@@ -1,5 +1,6 @@
 import React from 'react';
 import {FlatList, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useMutation, useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import type {Category, Loan, Wallet} from '@/api/client';
 import type {Budget} from '@/api/client';
 import {budgetsApi, categoriesApi, insightsApi, loansApi, notificationsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
+import {LogoMark} from '@/components/LogoMark';
 import {Sparkline} from '@/components/InsightBars';
 import {WalletCardStack} from '@/components/WalletCardStack';
 import {Skeleton, SkeletonRow} from '@/components/Skeleton';
@@ -295,12 +297,12 @@ export function HomeScreen({navigation}: Props) {
   const displayedTransactions = hasToday ? todaysTransactions : recentTransactions.slice(0, 5);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={{paddingBottom: 8}}>
         <View style={styles.topBar}>
           <View style={styles.topBarLeft}>
             <View style={styles.mark}>
-              <Text style={styles.markText}>L</Text>
+              <LogoMark size={18} />
             </View>
             <Text style={styles.greeting}>
               {greeting()}, {name}
@@ -392,7 +394,7 @@ export function HomeScreen({navigation}: Props) {
         />
       </ScrollView>
       <BottomNavBar active="home" />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -400,8 +402,7 @@ const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.background},
   topBar: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md},
   topBarLeft: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
-  mark: {width: 30, height: 30, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
-  markText: {color: colors.textPrimary, fontFamily: fontFamilies.displayBold, fontSize: 15},
+  mark: {width: 30, height: 30, borderRadius: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center'},
   greeting: {color: colors.textPrimary, fontSize: 13, fontWeight: '600'},
   bellWrap: {position: 'relative'},
   bellGlyph: {fontSize: 18, color: colors.textPrimary},
