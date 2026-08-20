@@ -5,12 +5,14 @@ from services.resources import (
     BudgetProgress,
     Budgets,
     CategoryDetail,
+    CategoryReorder,
     Categories,
     FcmTokenRegister,
     Health,
     HouseholdCreate,
     HouseholdInviteCode,
     HouseholdJoin,
+    HouseholdPreview,
     InsightCategoryBreakdown,
     InsightIncomeVsExpense,
     InsightNetWorthHistory,
@@ -51,6 +53,7 @@ def register_routes(api: Api) -> None:
     api.add_resource(HouseholdCreate, "/auth/household/create")
     api.add_resource(HouseholdJoin, "/auth/household/join")
     api.add_resource(HouseholdInviteCode, "/auth/household/invite-code")
+    api.add_resource(HouseholdPreview, "/auth/household/preview")
     api.add_resource(PinSet, "/auth/pin")
 
     api.add_resource(Wallets, "/wallets")
@@ -59,6 +62,7 @@ def register_routes(api: Api) -> None:
     api.add_resource(WalletBalanceHistory, "/wallets/<string:wallet_id>/balance-history")
 
     api.add_resource(Categories, "/categories")
+    api.add_resource(CategoryReorder, "/categories/reorder")
     api.add_resource(CategoryDetail, "/categories/<string:category_id>")
 
     api.add_resource(Transactions, "/transactions")

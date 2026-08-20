@@ -12,11 +12,13 @@ from models.budget_update import main as budget_update
 from models.category_create import main as category_create
 from models.category_delete import main as category_delete
 from models.category_list import main as category_list
+from models.category_reorder import main as category_reorder
 from models.category_update import main as category_update
 from models.fcm_token_register import main as fcm_token_register
 from models.household_create import main as household_create
 from models.household_invite_code import main as household_invite_code
 from models.household_join import main as household_join
+from models.household_preview import main as household_preview
 from models.insight_category_breakdown import main as insight_category_breakdown
 from models.insight_income_vs_expense import main as insight_income_vs_expense
 from models.insight_net_worth_history import main as insight_net_worth_history
@@ -111,6 +113,14 @@ class HouseholdInviteCode(Resource):
         return household_invite_code.process(household_invite_code.Input(user_id=get_jwt_identity()))
 
 
+class HouseholdPreview(Resource):
+    @jwt_required()
+    def get(self):
+        return household_preview.process(
+            build_input(household_preview.Input, request.args.to_dict(), user_id=get_jwt_identity())
+        )
+
+
 class PinSet(Resource):
     @jwt_required()
     def post(self):
@@ -171,6 +181,12 @@ class Categories(Resource):
     @jwt_required()
     def post(self):
         return category_create.process(build_input(category_create.Input, _body(), user_id=get_jwt_identity()))
+
+
+class CategoryReorder(Resource):
+    @jwt_required()
+    def patch(self):
+        return category_reorder.process(build_input(category_reorder.Input, _body(), user_id=get_jwt_identity()))
 
 
 class CategoryDetail(Resource):

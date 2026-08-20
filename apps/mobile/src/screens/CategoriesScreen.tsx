@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
-import {FlatList, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import DraggableFlatList, {type RenderItemParams, ScaleDecorator} from 'react-native-draggable-flatlist';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
-import type {CategoryType} from '@/api/client';
+import type {Category, CategoryType} from '@/api/client';
 import {categoriesApi} from '@/api/client';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 import {CATEGORY_ICON_FALLBACK, glyphForCategoryIcon} from '@/theme/categoryIcons';
@@ -51,9 +52,18 @@ export function CategoriesScreen({}: Props) {
     mutationFn: (id: string) => categoriesApi.update(id, {is_archived: false}),
     onSuccess: invalidate,
   });
+  const reorderMutation = useMutation({
+    mutationFn: (order: string[]) => categoriesApi.reorder(order),
+    onSuccess: invalidate,
+  });
 
   const categories = query.data?.categories ?? [];
   const archived = (archivedQuery.data?.categories ?? []).filter((c) => c.is_archived);
+
+  const handleReorder = (reordered: Category[]) => {
+    queryClient.setQueryData(['categories', 'manage', tab], {categories: reordered});
+    reorderMutation.mutate(reordered.map((c) => c.id));
+  };
 
   return (
     <View style={styles.container}>
@@ -91,87 +101,104 @@ export function CategoriesScreen({}: Props) {
         </View>
       )}
 
-      <FlatList
-        data={[...categories.map((c) => ({...c, archived: false})), ...archived.map((c) => ({...c, archived: true}))]}
+      <DraggableFlatList
+        data={categories}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{paddingHorizontal: spacing.lg, paddingTop: spacing.sm}}
+        onDragEnd={({data}) => handleReorder(data)}
         ListFooterComponent={
-          editing ? (
-            <View style={styles.editPanel}>
-              <Text style={styles.editPanelLabel}>{editing.id ? 'Editing a category' : 'New category'}</Text>
-              <View style={styles.editPanelRow}>
-                <View style={[styles.editIconTile, {backgroundColor: `${editing.color}24`, borderColor: editing.color}]}>
-                  <MaterialCommunityIcons name={CATEGORY_ICON_FALLBACK} style={[styles.editIconGlyph, {color: editing.color}]} />
-                </View>
-                <TextInput
-                  style={styles.editNameInput}
-                  value={editing.name}
-                  onChangeText={(t) => setEditing((e) => e && {...e, name: t})}
-                  placeholder="Category name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoFocus
-                />
-              </View>
-              <View style={styles.swatchRow}>
-                {SWATCHES.map((c) => (
+          <>
+            {archived.length > 0 && (
+              <View style={styles.archivedSection}>
+                <Text style={styles.archivedLabel}>Archived</Text>
+                {archived.map((item) => (
                   <Pressable
-                    key={c}
-                    style={[styles.swatch, {backgroundColor: c}, editing.color === c && styles.swatchSelected]}
-                    onPress={() => setEditing((e) => e && {...e, color: c})}
-                  />
+                    key={item.id}
+                    style={[styles.row, {opacity: 0.55}]}
+                    onPress={() => unarchiveMutation.mutate(item.id)}>
+                    <View style={styles.rowIcon}>
+                      <MaterialCommunityIcons name={glyphForCategoryIcon(item.icon)} size={17} color={colors.textSecondary} />
+                    </View>
+                    <View style={{flex: 1}}>
+                      <Text style={styles.rowName}>{item.name}</Text>
+                      <Text style={styles.rowMeta}>Archived · kept on old entries</Text>
+                    </View>
+                    <Text style={styles.rowChevron}>↺</Text>
+                  </Pressable>
                 ))}
               </View>
-              <View style={styles.editActions}>
-                <Pressable
-                  style={styles.saveButton}
-                  disabled={!editing.name.trim()}
-                  onPress={() =>
-                    editing.id
-                      ? updateMutation.mutate({id: editing.id, name: editing.name.trim(), color: editing.color})
-                      : createMutation.mutate({name: editing.name.trim(), color: editing.color})
-                  }>
-                  <Text style={styles.saveButtonText}>Save category</Text>
-                </Pressable>
-                <Pressable style={styles.cancelButton} onPress={() => setEditing(null)}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                {editing.id && (
-                  <Pressable style={styles.cancelButton} onPress={() => archiveMutation.mutate(editing.id!)}>
-                    <Text style={styles.cancelButtonText}>Archive</Text>
+            )}
+            {editing && (
+              <View style={styles.editPanel}>
+                <Text style={styles.editPanelLabel}>{editing.id ? 'Editing a category' : 'New category'}</Text>
+                <View style={styles.editPanelRow}>
+                  <View style={[styles.editIconTile, {backgroundColor: `${editing.color}24`, borderColor: editing.color}]}>
+                    <MaterialCommunityIcons name={CATEGORY_ICON_FALLBACK} style={[styles.editIconGlyph, {color: editing.color}]} />
+                  </View>
+                  <TextInput
+                    style={styles.editNameInput}
+                    value={editing.name}
+                    onChangeText={(t) => setEditing((e) => e && {...e, name: t})}
+                    placeholder="Category name"
+                    placeholderTextColor={colors.textSecondary}
+                    autoFocus
+                  />
+                </View>
+                <View style={styles.swatchRow}>
+                  {SWATCHES.map((c) => (
+                    <Pressable
+                      key={c}
+                      style={[styles.swatch, {backgroundColor: c}, editing.color === c && styles.swatchSelected]}
+                      onPress={() => setEditing((e) => e && {...e, color: c})}
+                    />
+                  ))}
+                </View>
+                <View style={styles.editActions}>
+                  <Pressable
+                    style={styles.saveButton}
+                    disabled={!editing.name.trim()}
+                    onPress={() =>
+                      editing.id
+                        ? updateMutation.mutate({id: editing.id, name: editing.name.trim(), color: editing.color})
+                        : createMutation.mutate({name: editing.name.trim(), color: editing.color})
+                    }>
+                    <Text style={styles.saveButtonText}>Save category</Text>
                   </Pressable>
-                )}
+                  <Pressable style={styles.cancelButton} onPress={() => setEditing(null)}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </Pressable>
+                  {editing.id && (
+                    <Pressable style={styles.cancelButton} onPress={() => archiveMutation.mutate(editing.id!)}>
+                      <Text style={styles.cancelButtonText}>Archive</Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
-            </View>
-          ) : null
+            )}
+          </>
         }
-        renderItem={({item}) => {
+        renderItem={({item, drag, isActive}: RenderItemParams<Category>) => {
           const isSystem = item.name === 'Balance Adjustment';
           return (
-            <Pressable
-              style={[styles.row, item.archived && {opacity: 0.55}]}
-              disabled={isSystem}
-              onPress={() =>
-                item.archived
-                  ? unarchiveMutation.mutate(item.id)
-                  : setEditing({id: item.id, name: item.name, color: item.color ?? SWATCHES[0]})
-              }>
-              <View style={[styles.rowIcon, !item.archived && {backgroundColor: `${item.color ?? colors.accent}1F`, borderColor: item.color ?? colors.accent}]}>
-                <MaterialCommunityIcons
-                  name={glyphForCategoryIcon(item.icon)}
-                  size={17}
-                  color={item.archived ? colors.textSecondary : item.color ?? colors.accent}
-                />
-              </View>
-              <View style={{flex: 1}}>
-                <Text style={styles.rowName}>{item.name}</Text>
-                <Text style={styles.rowMeta}>
-                  {item.archived ? 'Archived · kept on old entries' : item.is_default ? 'Default category' : 'Custom category'}
-                </Text>
-              </View>
-              {!isSystem && (
-                <Text style={styles.rowChevron}>{item.archived ? '↺' : '⋮'}</Text>
-              )}
-            </Pressable>
+            <ScaleDecorator>
+              <Pressable
+                style={[styles.row, isActive && styles.rowDragging]}
+                disabled={isSystem}
+                onPress={() => setEditing({id: item.id, name: item.name, color: item.color ?? SWATCHES[0]})}>
+                <View style={[styles.rowIcon, {backgroundColor: `${item.color ?? colors.accent}1F`, borderColor: item.color ?? colors.accent}]}>
+                  <MaterialCommunityIcons name={glyphForCategoryIcon(item.icon)} size={17} color={item.color ?? colors.accent} />
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={styles.rowName}>{item.name}</Text>
+                  <Text style={styles.rowMeta}>{item.is_default ? 'Default category' : 'Custom category'}</Text>
+                </View>
+                {!isSystem && (
+                  <Pressable hitSlop={10} onPressIn={drag} disabled={isSystem}>
+                    <MaterialCommunityIcons name="drag" size={20} color="#5A5A66" />
+                  </Pressable>
+                )}
+              </Pressable>
+            </ScaleDecorator>
           );
         }}
       />
@@ -198,7 +225,10 @@ const styles = StyleSheet.create({
   emptyOption: {flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.row, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   emptyOptionText: {flex: 1, color: colors.textPrimary, fontSize: 13},
   emptyOptionChevron: {color: colors.textSecondary, fontSize: 18},
-  row: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#17171F'},
+  row: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#17171F', backgroundColor: colors.background},
+  rowDragging: {backgroundColor: colors.surface, borderRadius: radius.row},
+  archivedSection: {marginTop: spacing.md},
+  archivedLabel: {fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: '#5A5A66', marginBottom: spacing.xs},
   rowIcon: {width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center'},
   rowName: {color: colors.textPrimary, fontSize: 13.5, fontWeight: '600'},
   rowMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11, marginTop: 2},

@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
-import {useMutation} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
@@ -12,15 +12,35 @@ type Props = NativeStackScreenProps<RootStackParamList, 'HouseholdJoin'>;
 
 export function HouseholdJoinScreen({navigation}: Props) {
   const [inviteCode, setInviteCode] = useState('');
+  const [step, setStep] = useState<'code' | 'preview'>('code');
   const setHouseholdId = useAuthStore((s) => s.setHouseholdId);
 
-  const mutation = useMutation({
-    mutationFn: () => householdApi.join(inviteCode.toUpperCase()),
+  const previewQuery = useQuery({
+    queryKey: ['householdPreview', inviteCode],
+    queryFn: () => householdApi.preview(inviteCode),
+    enabled: false,
+    retry: false,
+  });
+
+  const joinMutation = useMutation({
+    mutationFn: () => householdApi.join(inviteCode),
     onSuccess: (data) => {
       setHouseholdId(data.household_id, data.name);
       navigation.replace('SmsPermissionRationale');
     },
   });
+
+  const handleCodeChange = (t: string) => {
+    setInviteCode(t.toUpperCase().slice(0, 6));
+    if (step === 'preview') setStep('code');
+  };
+
+  const handleContinue = async () => {
+    const result = await previewQuery.refetch();
+    if (result.data) setStep('preview');
+  };
+
+  const handleBack = () => setStep('code');
 
   const codeChars = inviteCode.toUpperCase().padEnd(6, ' ').split('');
 
@@ -45,20 +65,55 @@ export function HouseholdJoinScreen({navigation}: Props) {
         <TextInput
           style={styles.hiddenInput}
           value={inviteCode}
-          onChangeText={(t) => setInviteCode(t.toUpperCase().slice(0, 6))}
+          onChangeText={handleCodeChange}
           autoCapitalize="characters"
           maxLength={6}
           autoFocus
+          editable={step === 'code'}
         />
         <Text style={styles.hint}>Ask your partner to send it from Settings → Household.</Text>
       </View>
 
-      {mutation.isError && <Text style={styles.error}>{(mutation.error as Error).message}</Text>}
+      {previewQuery.isError && step === 'code' && (
+        <Text style={styles.error}>{(previewQuery.error as Error).message}</Text>
+      )}
+
+      {step === 'preview' && previewQuery.data && (
+        <View style={styles.previewCard}>
+          <View style={styles.previewAvatar}>
+            <Text style={styles.previewAvatarText}>{previewQuery.data.name.trim().charAt(0).toUpperCase()}</Text>
+          </View>
+          <View style={{flex: 1}}>
+            <Text style={styles.previewName}>{previewQuery.data.name}</Text>
+            <Text style={styles.previewMeta}>
+              {previewQuery.data.member_count} member{previewQuery.data.member_count === 1 ? '' : 's'} already in
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {joinMutation.isError && <Text style={styles.error}>{(joinMutation.error as Error).message}</Text>}
 
       <View style={{flex: 1}} />
-      <Pressable style={styles.button} onPress={() => mutation.mutate()} disabled={mutation.isPending || inviteCode.length < 6}>
-        <Text style={styles.buttonText}>{mutation.isPending ? 'Joining…' : 'Join household'}</Text>
-      </Pressable>
+
+      {step === 'code' ? (
+        <Pressable
+          style={styles.button}
+          onPress={handleContinue}
+          disabled={previewQuery.isFetching || inviteCode.length < 6}
+        >
+          <Text style={styles.buttonText}>{previewQuery.isFetching ? 'Looking up…' : 'Continue'}</Text>
+        </Pressable>
+      ) : (
+        <>
+          <Pressable style={styles.backButton} onPress={handleBack} disabled={joinMutation.isPending}>
+            <Text style={styles.backButtonText}>Change code</Text>
+          </Pressable>
+          <Pressable style={styles.button} onPress={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
+            <Text style={styles.buttonText}>{joinMutation.isPending ? 'Joining…' : 'Join household'}</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }
@@ -86,6 +141,30 @@ const styles = StyleSheet.create({
   hiddenInput: {position: 'absolute', opacity: 0, height: 1, width: 1},
   hint: {fontSize: 12, color: colors.textSecondary, marginTop: spacing.sm},
   error: {color: colors.negative, marginTop: spacing.sm},
+  previewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  previewAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewAvatarText: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 18, fontWeight: '600'},
+  previewName: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 17, fontWeight: '600'},
+  previewMeta: {color: colors.textSecondary, fontSize: 13, marginTop: 2},
+  backButton: {height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm},
+  backButtonText: {color: colors.textSecondary, fontSize: 13.5, fontWeight: '600'},
   button: {height: 52, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'},
   buttonText: {color: colors.textPrimary, fontWeight: '600'},
 });

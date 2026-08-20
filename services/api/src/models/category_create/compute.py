@@ -11,6 +11,7 @@ def create_category(inp, user_id: str) -> dict:
     if categories.find_one({"household_id": household_id, "name": name, "is_archived": {"$ne": True}}):
         raise ConflictError("category_name_already_exists")
 
+    next_sort_order = categories.count_documents({"household_id": household_id})
     doc = {
         "household_id": household_id,
         "name": name,
@@ -19,6 +20,7 @@ def create_category(inp, user_id: str) -> dict:
         "color": inp.color,
         "is_default": False,
         "is_archived": False,
+        "sort_order": next_sort_order,
     }
     result = categories.insert_one(doc)
     doc["_id"] = result.inserted_id

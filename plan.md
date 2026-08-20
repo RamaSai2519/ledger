@@ -115,6 +115,7 @@ All collections below are scoped by `household_id` except `users`. Use ObjectIds
 | icon / color | string | |
 | is_default | bool | seeded categories, see §12 |
 | is_archived | bool | |
+| sort_order | int | per-household display order; user-reorderable via `PATCH /categories/reorder` (LED-15) |
 
 ### `transactions`
 | Field | Type | Notes |

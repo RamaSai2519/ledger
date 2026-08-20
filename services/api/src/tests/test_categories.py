@@ -140,3 +140,48 @@ def test_delete_system_category_blocked(client):
 
     resp = client.delete(f"/categories/{adjustment['id']}", headers=auth_headers(token))
     assert resp.status_code == 409
+
+
+def test_new_category_gets_next_sort_order(client):
+    token = _signup_household(client)
+    seeded = client.get("/categories", headers=auth_headers(token)).get_json()["data"]["categories"]
+
+    resp = client.post("/categories", json={"name": "Pets", "type": "expense"}, headers=auth_headers(token))
+    assert resp.get_json()["data"]["sort_order"] == len(seeded)
+
+
+def test_reorder_categories_success(client):
+    token = _signup_household(client)
+    categories = client.get("/categories", headers=auth_headers(token)).get_json()["data"]["categories"]
+    ids = [c["id"] for c in categories]
+    new_order = list(reversed(ids))
+
+    resp = client.patch("/categories/reorder", json={"order": new_order}, headers=auth_headers(token))
+    assert resp.status_code == 200
+    reordered_ids = [c["id"] for c in resp.get_json()["data"]["categories"]]
+    assert reordered_ids == new_order
+
+    list_resp = client.get("/categories", headers=auth_headers(token))
+    listed_ids = [c["id"] for c in list_resp.get_json()["data"]["categories"] if c["id"] in new_order]
+    assert listed_ids == new_order
+
+
+def test_reorder_categories_rejects_foreign_category(client):
+    token_a = _signup_household(client, mobile_number="9876543210", name="A")
+    token_b = _signup_household(client, mobile_number="9111111111", name="B")
+
+    categories_a = client.get("/categories", headers=auth_headers(token_a)).get_json()["data"]["categories"]
+    foreign_id = categories_a[0]["id"]
+
+    categories_b = client.get("/categories", headers=auth_headers(token_b)).get_json()["data"]["categories"]
+    order = [c["id"] for c in categories_b]
+    order[0] = foreign_id
+
+    resp = client.patch("/categories/reorder", json={"order": order}, headers=auth_headers(token_b))
+    assert resp.status_code == 400
+
+
+def test_reorder_categories_requires_order(client):
+    token = _signup_household(client)
+    resp = client.patch("/categories/reorder", json={"order": []}, headers=auth_headers(token))
+    assert resp.status_code == 400

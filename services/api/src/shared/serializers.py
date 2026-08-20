@@ -38,6 +38,7 @@ def serialize_category(category: dict) -> dict:
         "color": category.get("color"),
         "is_default": category.get("is_default", False),
         "is_archived": category.get("is_archived", False),
+        "sort_order": category.get("sort_order", 0),
     }
 
 

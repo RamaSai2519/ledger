@@ -16,5 +16,5 @@ def process(inp: Input):
     if inp.type:
         mongo_query["type"] = inp.type
 
-    categories = list(get_categories_collection().find(mongo_query).sort("name", 1))
+    categories = list(get_categories_collection().find(mongo_query).sort([("sort_order", 1), ("name", 1)]))
     return success({"categories": [serialize_category(c) for c in categories]})

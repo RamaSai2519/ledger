@@ -25,6 +25,8 @@ def _seed_default_categories(household_id: ObjectId) -> None:
         {"household_id": household_id, "name": name, "icon": icon, "type": "income", "is_default": True, "is_archived": False}
         for name, icon in DEFAULT_INCOME_CATEGORIES
     ]
+    for i, doc in enumerate(docs):
+        doc["sort_order"] = i
     categories.insert_many(docs)
 
 

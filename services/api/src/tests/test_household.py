@@ -81,3 +81,34 @@ def test_invite_code_lookup_success(client):
     resp = client.get("/auth/household/invite-code", headers=auth_headers(token))
     assert resp.status_code == 200
     assert resp.get_json()["data"]["invite_code"] == invite_code
+
+
+def test_household_preview_success(client):
+    owner_token = _signup_and_token(client, mobile_number="9876543210", name="Rama")
+    create_resp = client.post(
+        "/auth/household/create", json={"name": "Our Home"}, headers=auth_headers(owner_token)
+    )
+    invite_code = create_resp.get_json()["data"]["invite_code"]
+
+    partner_token = _signup_and_token(client, mobile_number="9123456780", name="Partner")
+    resp = client.get(
+        f"/auth/household/preview?invite_code={invite_code}", headers=auth_headers(partner_token)
+    )
+    assert resp.status_code == 200
+    body = resp.get_json()["data"]
+    assert body["name"] == "Our Home"
+    assert body["member_count"] == 1
+    assert "created_at" in body
+    assert "invite_code" not in body
+
+
+def test_household_preview_invalid_code(client):
+    token = _signup_and_token(client)
+    resp = client.get("/auth/household/preview?invite_code=ZZZZZZ", headers=auth_headers(token))
+    assert resp.status_code == 404
+    assert resp.get_json()["error"] == "invalid_invite_code"
+
+
+def test_household_preview_requires_auth(client):
+    resp = client.get("/auth/household/preview?invite_code=ABCDEF")
+    assert resp.status_code == 401

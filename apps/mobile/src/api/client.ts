@@ -70,6 +70,10 @@ export const householdApi = {
     }),
   inviteCode: () =>
     request<{invite_code: string; household_id: string}>('/auth/household/invite-code'),
+  preview: (invite_code: string) =>
+    request<{name: string; member_count: number; created_at: string}>(
+      withQuery('/auth/household/preview', {invite_code}),
+    ),
 };
 
 function withQuery(path: string, params?: Record<string, string | number | boolean | undefined>): string {
@@ -172,6 +176,7 @@ export type Category = {
   color: string | null;
   is_default: boolean;
   is_archived: boolean;
+  sort_order: number;
 };
 
 export type CategoryCreateInput = {name: string; type: CategoryType; icon?: string; color?: string};
@@ -185,6 +190,8 @@ export const categoriesApi = {
     request<Category>(`/categories/${id}`, {method: 'PATCH', body: input}),
   remove: (id: string) =>
     request<{id: string; hard_deleted?: boolean; is_archived?: boolean}>(`/categories/${id}`, {method: 'DELETE'}),
+  reorder: (order: string[]) =>
+    request<{categories: Category[]}>('/categories/reorder', {method: 'PATCH', body: {order}}),
 };
 
 export type TransactionType = 'expense' | 'income' | 'transfer' | 'adjustment';

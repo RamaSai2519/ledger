@@ -64,6 +64,12 @@ class HouseholdInviteCodeInput:
 
 
 @dataclass
+class HouseholdPreviewInput:
+    invite_code: str = ""
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
 class PinSetInput:
     pin: str = ""
     user_id: str | None = None  # populated by the resource from the JWT identity
@@ -157,6 +163,12 @@ class CategoryUpdateInput:
 @dataclass
 class CategoryDeleteInput:
     category_id: str | None = None  # populated by the resource from the URL
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class CategoryReorderInput:
+    order: list = field(default_factory=list)
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 
