@@ -15,6 +15,8 @@ from services.resources import (
     InsightIncomeVsExpense,
     InsightNetWorthHistory,
     InsightTrends,
+    LoanDetail,
+    Loans,
     Login,
     Logout,
     NotificationRead,
@@ -68,6 +70,9 @@ def register_routes(api: Api) -> None:
     api.add_resource(RecurringRules, "/recurring")
     api.add_resource(RecurringRuleDetail, "/recurring/<string:rule_id>")
     api.add_resource(RecurringRuleSkipNext, "/recurring/<string:rule_id>/skip-next")
+
+    api.add_resource(Loans, "/loans")
+    api.add_resource(LoanDetail, "/loans/<string:loan_id>")
 
     api.add_resource(Budgets, "/budgets")
     api.add_resource(BudgetDetail, "/budgets/<string:budget_id>")

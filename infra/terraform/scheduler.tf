@@ -163,3 +163,25 @@ resource "aws_scheduler_schedule" "recurring_transactions_check" {
     input    = jsonencode({ job = "recurring_transactions_check" })
   }
 }
+
+# Loan EMI due-date check (LED-14) — scans the dedicated loans collection
+# for anything due (next_due_date <= today), creates the EMI expense
+# transaction, decrements outstanding_balance by the payment's principal
+# component, and advances next_due_date by one month. Due-dates are
+# date-only, not time-of-day, so a daily cadence is sufficient, same
+# reasoning as recurring_transactions_check above. Reuses the same
+# ledger-scheduler role / Lambda target as the other schedules above.
+resource "aws_scheduler_schedule" "loan_emi_check" {
+  name                = "ledger-loan-emi-check"
+  schedule_expression = "rate(1 day)"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.api.arn
+    role_arn = aws_iam_role.ledger_scheduler.arn
+    input    = jsonencode({ job = "loan_emi_check" })
+  }
+}

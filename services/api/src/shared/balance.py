@@ -9,17 +9,16 @@ given the wallet's type and the transaction affecting it. Reversing a
 transaction (update/delete) is just applying the negated delta.
 """
 
-LIABILITY_WALLET_TYPES = {"credit_card", "pay_later", "loan"}
+LIABILITY_WALLET_TYPES = {"credit_card", "pay_later"}
 ASSET_WALLET_TYPES = {"bank_account", "cash"}
 WALLET_TYPES = ASSET_WALLET_TYPES | LIABILITY_WALLET_TYPES
 
-# "loan" is deliberately still in WALLET_TYPES/LIABILITY_WALLET_TYPES above
-# so any pre-existing loan wallet keeps computing its balance/net-worth
-# contribution correctly — it's just no longer offered when creating a new
-# wallet (see wallet_create/validate.py's CREATABLE_WALLET_TYPES). Loan
-# tracking is moving to its own dedicated feature (LED ticket filed
-# alongside this change) rather than living under wallets going forward.
-CREATABLE_WALLET_TYPES = WALLET_TYPES - {"loan"}
+# Loans now live in their own dedicated collection (LED-14) rather than as
+# a wallet type — "loan" has been fully removed from WALLET_TYPES/
+# LIABILITY_WALLET_TYPES, so no special-casing is needed here any more.
+# scripts/migrate_loan_wallets.py migrates any pre-existing loan wallet
+# into the new `loans` collection and archives the old wallet doc.
+CREATABLE_WALLET_TYPES = WALLET_TYPES
 
 TRANSACTION_TYPES = {"expense", "income", "transfer", "adjustment"}
 

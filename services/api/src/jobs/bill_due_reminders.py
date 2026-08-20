@@ -4,17 +4,16 @@ See jobs/budget_threshold_check.py's module docstring for why this is a
 plain callable function dispatched via EventBridge Scheduler rather than
 APScheduler (docs/decisions/0005-eventbridge-scheduler-for-jobs.md).
 
-Scans wallets of type credit_card/pay_later/loan whose due_day falls within
+Scans wallets of type credit_card/pay_later whose due_day falls within
 the next `bill_due_reminder_days` (default 3, shared.configs CONFIG) days,
 and fires a `bill_due` notification per wallet — guarded against
 re-notifying the same due date twice.
 
-Simplification: only credit_card_details.due_day and pay_later_details.due_day
-are read. loan_details (plan.md §4) has no due_day field in the current
-schema (principal/interest_rate/tenure_months/emi_amount/start_date only) —
-loan wallets are scanned but skipped unless a due_day happens to be present,
-since deriving a recurring EMI due-date from start_date + tenure is Phase-10
-(Recurring Transactions) territory, not this phase's scope.
+Loans no longer live as a wallet type (LED-14 moved them to their own
+`loans` collection) — their due-date reminders are handled by
+jobs/loan_emi_check.py, which pays the EMI directly rather than just
+reminding, since loans/recurring rules have next_due_date tracked
+precisely instead of a generic due_day.
 """
 import logging
 from calendar import monthrange
@@ -28,11 +27,10 @@ from shared.notify import notify_household
 
 logger = logging.getLogger(__name__)
 
-DUE_DAY_WALLET_TYPES = ("credit_card", "pay_later", "loan")
+DUE_DAY_WALLET_TYPES = ("credit_card", "pay_later")
 DETAIL_FIELD_BY_TYPE = {
     "credit_card": "credit_card_details",
     "pay_later": "pay_later_details",
-    "loan": "loan_details",
 }
 
 

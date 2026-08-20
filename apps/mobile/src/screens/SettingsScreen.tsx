@@ -129,6 +129,7 @@ export function SettingsScreen({navigation}: Props) {
           <Row glyph="category" title="Manage categories" onPress={() => navigation.navigate('Categories')} />
           <Row glyph="account-balance-wallet" title="Manage wallets" onPress={() => navigation.navigate('WalletsList')} />
           <Row glyph="autorenew" title="Recurring transactions" onPress={() => navigation.navigate('RecurringRulesList')} />
+          <Row glyph="account-balance" title="Loans" onPress={() => navigation.navigate('LoansList')} />
           <Row
             glyph="sms"
             title="SMS detection"

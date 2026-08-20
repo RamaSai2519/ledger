@@ -21,6 +21,10 @@ from models.insight_category_breakdown import main as insight_category_breakdown
 from models.insight_income_vs_expense import main as insight_income_vs_expense
 from models.insight_net_worth_history import main as insight_net_worth_history
 from models.insight_trends import main as insight_trends
+from models.loan_create import main as loan_create
+from models.loan_delete import main as loan_delete
+from models.loan_list import main as loan_list
+from models.loan_update import main as loan_update
 from models.login import main as login
 from models.logout import main as logout
 from models.notification_list import main as notification_list
@@ -288,6 +292,26 @@ class RecurringRuleSkipNext(Resource):
         return recurring_rule_skip_next.process(
             recurring_rule_skip_next.Input(rule_id=rule_id, user_id=get_jwt_identity())
         )
+
+
+class Loans(Resource):
+    @jwt_required()
+    def get(self):
+        return loan_list.process(build_input(loan_list.Input, request.args.to_dict(), user_id=get_jwt_identity()))
+
+    @jwt_required()
+    def post(self):
+        return loan_create.process(build_input(loan_create.Input, _body(), user_id=get_jwt_identity()))
+
+
+class LoanDetail(Resource):
+    @jwt_required()
+    def patch(self, loan_id):
+        return loan_update.process(loan_update.Input(body=_body(), loan_id=loan_id, user_id=get_jwt_identity()))
+
+    @jwt_required()
+    def delete(self, loan_id):
+        return loan_delete.process(loan_delete.Input(loan_id=loan_id, user_id=get_jwt_identity()))
 
 
 class InsightTrends(Resource):

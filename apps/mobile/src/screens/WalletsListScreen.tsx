@@ -19,18 +19,18 @@ const WALLET_TYPE_LABELS: Record<Wallet['type'], string> = {
   credit_card: 'Credit card',
   pay_later: 'Pay later',
   cash: 'Cash',
-  loan: 'Loan',
 };
 
-const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
+const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later']);
 
-type FilterKey = 'all' | 'bank' | 'cards' | 'cash' | 'loans';
+// Loans (LED-14) moved to their own dedicated LoansList screen — no longer
+// a wallet filter here.
+type FilterKey = 'all' | 'bank' | 'cards' | 'cash';
 const FILTERS: Array<{key: FilterKey; label: string; types: Wallet['type'][] | null}> = [
   {key: 'all', label: 'All', types: null},
   {key: 'bank', label: 'Bank', types: ['bank_account']},
   {key: 'cards', label: 'Cards', types: ['credit_card', 'pay_later']},
   {key: 'cash', label: 'Cash', types: ['cash']},
-  {key: 'loans', label: 'Loans', types: ['loan']},
 ];
 
 // s40 in the design project — swipe-left reveal at −176px (two 88px

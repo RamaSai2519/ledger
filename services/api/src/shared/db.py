@@ -64,6 +64,10 @@ def get_recurring_rules_collection():
     return get_db()["recurring_rules"]
 
 
+def get_loans_collection():
+    return get_db()["loans"]
+
+
 def get_client():
     # Ensures the client is initialized, then returns it directly for
     # session/transaction use (start_session lives on the client, not the db).

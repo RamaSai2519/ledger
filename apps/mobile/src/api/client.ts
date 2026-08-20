@@ -83,7 +83,9 @@ function withQuery(path: string, params?: Record<string, string | number | boole
 
 // ---- Core Ledger (LED-4): wallets, categories, transactions ----
 
-export type WalletType = 'bank_account' | 'credit_card' | 'pay_later' | 'cash' | 'loan';
+// "loan" was removed as a wallet type (LED-14) — loans now live in their
+// own dedicated collection/domain, see LoanApi below.
+export type WalletType = 'bank_account' | 'credit_card' | 'pay_later' | 'cash';
 
 export type CreditCardDetails = {
   credit_limit?: number;
@@ -92,13 +94,6 @@ export type CreditCardDetails = {
   min_due_percent?: number;
 };
 export type PayLaterDetails = {credit_limit?: number; billing_cycle_day?: number; due_day?: number};
-export type LoanDetails = {
-  principal?: number;
-  interest_rate?: number;
-  tenure_months?: number;
-  emi_amount?: number;
-  start_date?: string;
-};
 
 export type Wallet = {
   id: string;
@@ -115,7 +110,6 @@ export type Wallet = {
   is_archived: boolean;
   credit_card_details: CreditCardDetails | null;
   pay_later_details: PayLaterDetails | null;
-  loan_details: LoanDetails | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -132,13 +126,12 @@ export type WalletCreateInput = {
   color?: string;
   credit_card_details?: CreditCardDetails;
   pay_later_details?: PayLaterDetails;
-  loan_details?: LoanDetails;
 };
 
 export type WalletUpdateInput = Partial<
   Pick<
     Wallet,
-    'name' | 'provider' | 'account_last4' | 'icon' | 'color' | 'is_archived' | 'credit_card_details' | 'pay_later_details' | 'loan_details'
+    'name' | 'provider' | 'account_last4' | 'icon' | 'color' | 'is_archived' | 'credit_card_details' | 'pay_later_details'
   >
 >;
 
@@ -211,6 +204,7 @@ export type Transaction = {
   source: string;
   sms_id: string | null;
   recurring_rule_id: string | null;
+  loan_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -237,6 +231,7 @@ export type TransactionUpdateInput = Partial<{
 export type TransactionListParams = {
   wallet_id?: string;
   category_id?: string;
+  loan_id?: string;
   user_id?: string;
   type?: TransactionType;
   from?: string;
@@ -469,6 +464,52 @@ export const recurringApi = {
   update: (id: string, input: RecurringRuleUpdateInput) => request<RecurringRule>(`/recurring/${id}`, {method: 'PATCH', body: input}),
   remove: (id: string) => request<{id: string; deleted: boolean}>(`/recurring/${id}`, {method: 'DELETE'}),
   skipNext: (id: string) => request<RecurringRule>(`/recurring/${id}/skip-next`, {method: 'POST'}),
+};
+
+// ---- Loans (LED-14) ----
+
+export type Loan = {
+  id: string;
+  household_id: string;
+  name: string;
+  wallet_id: string;
+  category_id: string;
+  principal: number;
+  annual_interest_rate: number;
+  tenure_months: number;
+  emi_amount: number;
+  outstanding_balance: number;
+  start_date: string;
+  next_due_date: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LoanCreateInput = {
+  name: string;
+  wallet_id: string;
+  category_id: string;
+  principal: number;
+  annual_interest_rate: number;
+  tenure_months: number;
+  emi_amount: number;
+  start_date: string;
+};
+
+export type LoanUpdateInput = Partial<
+  Pick<Loan, 'name' | 'emi_amount' | 'is_active' | 'wallet_id' | 'category_id'>
+>;
+
+export const loansApi = {
+  // No GET /loans/<id> on the backend (mirrors recurring_rules, which also
+  // has no single-resource GET) — LoanDetailScreen fetches via list() and
+  // finds the loan by id.
+  list: (params?: {is_active?: boolean}) =>
+    request<{loans: Loan[]}>(withQuery('/loans', params as Record<string, string>)),
+  create: (input: LoanCreateInput) => request<Loan>('/loans', {method: 'POST', body: input}),
+  update: (id: string, input: LoanUpdateInput) => request<Loan>(`/loans/${id}`, {method: 'PATCH', body: input}),
+  remove: (id: string) => request<{id: string; deleted: boolean}>(`/loans/${id}`, {method: 'DELETE'}),
 };
 
 export const smsApi = {

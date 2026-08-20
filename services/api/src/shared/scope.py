@@ -3,6 +3,7 @@ from bson import ObjectId
 from shared.db import (
     get_budgets_collection,
     get_categories_collection,
+    get_loans_collection,
     get_recurring_rules_collection,
     get_sms_inbox_collection,
     get_transactions_collection,
@@ -76,3 +77,14 @@ def get_household_recurring_rule(household_id: ObjectId, rule_id: str) -> dict:
     if not rule:
         raise NotFoundError("recurring_rule_not_found")
     return rule
+
+
+def get_household_loan(household_id: ObjectId, loan_id: str) -> dict:
+    try:
+        oid = ObjectId(loan_id)
+    except Exception as exc:
+        raise ValidationError("invalid_loan_id") from exc
+    loan = get_loans_collection().find_one({"_id": oid, "household_id": household_id})
+    if not loan:
+        raise NotFoundError("loan_not_found")
+    return loan

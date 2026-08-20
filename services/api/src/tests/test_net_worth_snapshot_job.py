@@ -78,3 +78,52 @@ def test_job_ignores_archived_wallets(client):
 
     results = run_net_worth_snapshot(now=datetime(2026, 8, 19, tzinfo=timezone.utc))
     assert results[0]["total_assets"] == 0
+
+
+def _category(client, token, name="Loan Payment", type_="expense"):
+    resp = client.post("/categories", json={"name": name, "type": type_}, headers=auth_headers(token))
+    return resp.get_json()["data"]["id"]
+
+
+def _loan(client, token, wallet_id, category_id, **overrides):
+    body = {
+        "name": "Bike Loan",
+        "wallet_id": wallet_id,
+        "category_id": category_id,
+        "principal": 96000,
+        "annual_interest_rate": 12,
+        "tenure_months": 24,
+        "emi_amount": 4500,
+        "start_date": "2026-01-01",
+    }
+    body.update(overrides)
+    resp = client.post("/loans", json=body, headers=auth_headers(token))
+    return resp.get_json()["data"]["id"]
+
+
+def test_job_includes_active_loan_outstanding_balance_in_liabilities(client):
+    token = _signup_household(client)
+    _wallet(client, token, name="Bank", type="bank_account", opening_balance=5000)
+    wallet_id = _wallet(client, token, name="EMI Source", type="bank_account", opening_balance=2000)
+    category_id = _category(client, token)
+    loan_id = _loan(client, token, wallet_id, category_id)
+
+    results = run_net_worth_snapshot(now=datetime(2026, 8, 19, tzinfo=timezone.utc))
+    assert len(results) == 1
+    snapshot = results[0]
+    assert snapshot["total_assets"] == 7000
+    assert snapshot["total_liabilities"] == 96000
+    assert snapshot["net_worth"] == 7000 - 96000
+    assert snapshot["per_loan_breakdown"][loan_id] == 96000
+
+
+def test_job_excludes_inactive_loans_from_liabilities(client):
+    token = _signup_household(client)
+    wallet_id = _wallet(client, token, name="Bank", type="bank_account", opening_balance=1000)
+    category_id = _category(client, token)
+    loan_id = _loan(client, token, wallet_id, category_id)
+    client.patch(f"/loans/{loan_id}", json={"is_active": False}, headers=auth_headers(token))
+
+    results = run_net_worth_snapshot(now=datetime(2026, 8, 19, tzinfo=timezone.utc))
+    assert results[0]["total_liabilities"] == 0
+    assert results[0]["per_loan_breakdown"] == {}

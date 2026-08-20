@@ -10,7 +10,7 @@ import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletDetail'>;
 
-const LIABILITY_TYPES = new Set(['credit_card', 'pay_later', 'loan']);
+const LIABILITY_TYPES = new Set(['credit_card', 'pay_later']);
 const CATEGORY_COLORS = [colors.accent, '#E8A33D', '#7FE3B8', '#8FB4FF', '#D4A5FF'];
 
 export function WalletDetailScreen({route, navigation}: Props) {

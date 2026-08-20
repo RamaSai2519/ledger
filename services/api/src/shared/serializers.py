@@ -22,7 +22,6 @@ def serialize_wallet(wallet: dict) -> dict:
         "is_archived": wallet.get("is_archived", False),
         "credit_card_details": wallet.get("credit_card_details"),
         "pay_later_details": wallet.get("pay_later_details"),
-        "loan_details": wallet.get("loan_details"),
         "created_by": _str_id(wallet.get("created_by")),
         "created_at": _iso(wallet.get("created_at")),
         "updated_at": _iso(wallet.get("updated_at")),
@@ -58,6 +57,7 @@ def serialize_transaction(txn: dict) -> dict:
         "source": txn.get("source"),
         "sms_id": _str_id(txn.get("sms_id")),
         "recurring_rule_id": _str_id(txn.get("recurring_rule_id")),
+        "loan_id": _str_id(txn.get("loan_id")),
         "created_at": _iso(txn.get("created_at")),
         "updated_at": _iso(txn.get("updated_at")),
     }
@@ -145,6 +145,26 @@ def serialize_recurring_rule(rule: dict) -> dict:
         "is_active": rule.get("is_active", True),
         "created_at": _iso(rule.get("created_at")),
         "updated_at": _iso(rule.get("updated_at")),
+    }
+
+
+def serialize_loan(loan: dict) -> dict:
+    return {
+        "id": _str_id(loan["_id"]),
+        "household_id": _str_id(loan.get("household_id")),
+        "name": loan.get("name"),
+        "wallet_id": _str_id(loan.get("wallet_id")),
+        "category_id": _str_id(loan.get("category_id")),
+        "principal": loan.get("principal"),
+        "annual_interest_rate": loan.get("annual_interest_rate"),
+        "tenure_months": loan.get("tenure_months"),
+        "emi_amount": loan.get("emi_amount"),
+        "outstanding_balance": loan.get("outstanding_balance"),
+        "start_date": _iso(loan.get("start_date")),
+        "next_due_date": _iso(loan.get("next_due_date")),
+        "is_active": loan.get("is_active", True),
+        "created_at": _iso(loan.get("created_at")),
+        "updated_at": _iso(loan.get("updated_at")),
     }
 
 

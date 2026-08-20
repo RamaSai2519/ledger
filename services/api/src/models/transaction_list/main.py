@@ -27,6 +27,8 @@ def process(inp: Input):
         mongo_query["wallet_id"] = _to_object_id(inp.wallet_id, "wallet_id")
     if inp.category_id:
         mongo_query["category_id"] = _to_object_id(inp.category_id, "category_id")
+    if inp.loan_id:
+        mongo_query["loan_id"] = _to_object_id(inp.loan_id, "loan_id")
     if inp.user_id:
         mongo_query["user_id"] = _to_object_id(inp.user_id, "user_id")
     if inp.type:

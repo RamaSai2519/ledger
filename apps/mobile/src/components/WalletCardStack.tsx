@@ -4,7 +4,7 @@ import type {Wallet} from '@/api/client';
 import {colors, fontFamilies, motion, radius} from '@/theme/tokens';
 import {GradientCard} from '@/components/GradientCard';
 
-const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
+const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later']);
 
 const MAX_VISIBLE = 3;
 const CARD_HEIGHT = 108;

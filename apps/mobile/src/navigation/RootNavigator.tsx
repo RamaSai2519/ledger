@@ -28,8 +28,12 @@ import {SmsSuggestionEditScreen} from '@/screens/SmsSuggestionEditScreen';
 import {SettingsScreen} from '@/screens/SettingsScreen';
 import {RecurringRulesListScreen} from '@/screens/RecurringRulesListScreen';
 import {RecurringRuleFormScreen} from '@/screens/RecurringRuleFormScreen';
+import {LoansListScreen} from '@/screens/LoansListScreen';
+import {LoanFormScreen} from '@/screens/LoanFormScreen';
+import {LoanDetailScreen} from '@/screens/LoanDetailScreen';
 import {useAuthStore} from '@/state/authStore';
 import {colors} from '@/theme/tokens';
+import {registerForPushNotifications, requestNotificationPermission, setupNotificationOpenHandlers} from '@/native/push';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -81,8 +85,33 @@ function useAppLockGate() {
   }, []);
 }
 
+// LED-15: once a session has both an access token and a household (i.e. is
+// past onboarding/first login), request the notification permission and
+// register the device's FCM token. Runs once per cold start that reaches a
+// logged-in state, not on every accessToken refresh — re-registering the
+// same token is a harmless no-op server-side ($addToSet), but there's no
+// reason to re-request permission or re-hit the endpoint on every refresh.
+function usePushNotificationsGate() {
+  const registered = useRef(false);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const householdId = useAuthStore((s) => s.householdId);
+
+  useEffect(() => {
+    setupNotificationOpenHandlers(navigationRef);
+  }, []);
+
+  useEffect(() => {
+    if (!accessToken || !householdId || registered.current) return;
+    registered.current = true;
+    requestNotificationPermission().then((granted) => {
+      if (granted) registerForPushNotifications();
+    });
+  }, [accessToken, householdId]);
+}
+
 export function RootNavigator() {
   useAppLockGate();
+  usePushNotificationsGate();
 
   return (
     <NavigationContainer ref={navigationRef} theme={theme}>
@@ -150,6 +179,9 @@ export function RootNavigator() {
           component={RecurringRuleFormScreen}
           options={{headerShown: true, title: 'Recurring rule'}}
         />
+        <Stack.Screen name="LoansList" component={LoansListScreen} options={{headerShown: true, title: 'Loans'}} />
+        <Stack.Screen name="LoanForm" component={LoanFormScreen} options={{headerShown: true, title: 'Loan'}} />
+        <Stack.Screen name="LoanDetail" component={LoanDetailScreen} options={{headerShown: true, title: 'Loan'}} />
       </Stack.Navigator>
     </NavigationContainer>
   );

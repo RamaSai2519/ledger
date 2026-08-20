@@ -9,7 +9,6 @@ PATCHABLE_FIELDS = {
     "is_archived",
     "credit_card_details",
     "pay_later_details",
-    "loan_details",
 }
 
 IMMUTABLE_FIELDS = {"type", "opening_balance", "current_balance", "household_id", "created_by"}

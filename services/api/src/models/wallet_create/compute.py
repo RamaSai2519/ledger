@@ -24,12 +24,6 @@ def create_wallet(inp, user_id: str) -> dict:
         "is_archived": False,
         "credit_card_details": inp.credit_card_details,
         "pay_later_details": inp.pay_later_details,
-        # loan_details has no create-path Input field — "loan" isn't a
-        # creatable wallet type any more (shared/balance.py's
-        # CREATABLE_WALLET_TYPES), only still supported on pre-existing loan
-        # wallets via wallet_update. Kept here so every wallet doc has the
-        # same shape.
-        "loan_details": None,
         "created_by": ObjectId(user_id),
         "created_at": now,
         "updated_at": now,

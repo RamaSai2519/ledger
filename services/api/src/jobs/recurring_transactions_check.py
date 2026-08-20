@@ -121,6 +121,7 @@ def _auto_create_transaction(rule: dict, household_id: ObjectId) -> ObjectId:
         "source": "manual",
         "sms_id": None,
         "recurring_rule_id": rule["_id"],
+        "loan_id": None,
         "created_at": now,
         "updated_at": now,
     }

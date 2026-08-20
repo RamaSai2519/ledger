@@ -34,6 +34,7 @@ def create_transaction(inp, user_id: str) -> dict:
         "source": "manual",
         "sms_id": None,
         "recurring_rule_id": None,
+        "loan_id": None,
         "created_at": now,
         "updated_at": now,
     }

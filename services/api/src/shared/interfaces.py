@@ -84,9 +84,6 @@ class WalletCreateInput:
     color: str | None = None
     credit_card_details: dict | None = None
     pay_later_details: dict | None = None
-    # No loan_details field here — "loan" isn't a creatable wallet type any
-    # more (see shared/balance.py's CREATABLE_WALLET_TYPES); loan_details
-    # only exists on pre-existing loan wallets, editable via WalletUpdateInput.
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 
@@ -182,6 +179,7 @@ class TransactionCreateInput:
 class TransactionListInput:
     wallet_id: str | None = None
     category_id: str | None = None
+    loan_id: str | None = None
     user_id: str | None = None  # a filter value here — the client MAY set this
     type: str | None = None
     from_: str | None = None  # wire name "from"
@@ -297,6 +295,41 @@ class RecurringRuleDeleteInput:
 @dataclass
 class RecurringRuleSkipNextInput:
     rule_id: str | None = None  # populated by the resource from the URL
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+# ── loans ─────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class LoanCreateInput:
+    name: str = ""
+    wallet_id: str = ""
+    category_id: str = ""
+    principal: float = 0
+    annual_interest_rate: float = 0
+    tenure_months: int = 0
+    emi_amount: float = 0
+    start_date: str = ""
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class LoanListInput:
+    is_active: str | None = None
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class LoanUpdateInput:
+    body: dict = field(default_factory=dict)
+    loan_id: str | None = None  # populated by the resource from the URL
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class LoanDeleteInput:
+    loan_id: str | None = None  # populated by the resource from the URL
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 

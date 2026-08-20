@@ -19,7 +19,12 @@ import logging
 from datetime import datetime, timezone
 
 from shared.balance import LIABILITY_WALLET_TYPES, ASSET_WALLET_TYPES
-from shared.db import get_households_collection, get_net_worth_snapshots_collection, get_wallets_collection
+from shared.db import (
+    get_households_collection,
+    get_loans_collection,
+    get_net_worth_snapshots_collection,
+    get_wallets_collection,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +38,7 @@ def _compute_household_snapshot(household_id, as_of: datetime) -> dict:
     total_assets = 0.0
     total_liabilities = 0.0
     per_wallet_breakdown: dict[str, float] = {}
+    per_loan_breakdown: dict[str, float] = {}
 
     wallets = get_wallets_collection().find({"household_id": household_id, "is_archived": {"$ne": True}})
     for wallet in wallets:
@@ -44,6 +50,16 @@ def _compute_household_snapshot(household_id, as_of: datetime) -> dict:
         elif wallet_type in LIABILITY_WALLET_TYPES:
             total_liabilities += balance
 
+    # Loans (LED-14) live in their own collection now, not as a wallet type
+    # — their outstanding_balance is always a liability, so it's added on
+    # top of the wallet-based liability sum above rather than folding loans
+    # into LIABILITY_WALLET_TYPES (which is wallet-type-keyed only).
+    loans = get_loans_collection().find({"household_id": household_id, "is_active": True})
+    for loan in loans:
+        outstanding = loan.get("outstanding_balance", 0) or 0
+        per_loan_breakdown[str(loan["_id"])] = outstanding
+        total_liabilities += outstanding
+
     return {
         "household_id": household_id,
         "date": as_of,
@@ -51,6 +67,7 @@ def _compute_household_snapshot(household_id, as_of: datetime) -> dict:
         "total_liabilities": total_liabilities,
         "net_worth": total_assets - total_liabilities,
         "per_wallet_breakdown": per_wallet_breakdown,
+        "per_loan_breakdown": per_loan_breakdown,
     }
 
 

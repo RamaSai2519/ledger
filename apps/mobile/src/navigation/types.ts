@@ -26,4 +26,7 @@ export type RootStackParamList = {
   TransactionsList: undefined;
   RecurringRulesList: undefined;
   RecurringRuleForm: {ruleId?: string} | undefined;
+  LoansList: undefined;
+  LoanForm: {loanId?: string} | undefined;
+  LoanDetail: {loanId: string};
 };

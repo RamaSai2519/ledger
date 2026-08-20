@@ -5,9 +5,9 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useMutation, useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '@/navigation/types';
-import type {Category, Wallet} from '@/api/client';
+import type {Category, Loan, Wallet} from '@/api/client';
 import type {Budget} from '@/api/client';
-import {budgetsApi, categoriesApi, insightsApi, notificationsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
+import {budgetsApi, categoriesApi, insightsApi, loansApi, notificationsApi, smsApi, transactionsApi, walletsApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {Sparkline} from '@/components/InsightBars';
 import {WalletCardStack} from '@/components/WalletCardStack';
@@ -19,14 +19,19 @@ import {useAuthStore} from '@/state/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later', 'loan']);
+const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later']);
 const BUDGET_BAR_COLORS = [colors.accent, colors.positive, categoryHues.travel, categoryHues.rent];
 
-function computeNetWorth(wallets: Wallet[]): number {
-  return wallets.reduce((sum, w) => {
+// Loans (LED-14) no longer live as a wallet type — their outstanding
+// balance is a liability tracked in its own collection, so it's subtracted
+// separately here rather than folded into the wallet reduce above.
+function computeNetWorth(wallets: Wallet[], loans: Loan[]): number {
+  const walletNet = wallets.reduce((sum, w) => {
     if (w.is_archived) return sum;
     return LIABILITY_TYPES.has(w.type) ? sum - w.current_balance : sum + w.current_balance;
   }, 0);
+  const loanLiabilities = loans.filter((l) => l.is_active).reduce((sum, l) => sum + l.outstanding_balance, 0);
+  return walletNet - loanLiabilities;
 }
 
 function greeting(): string {
@@ -234,6 +239,7 @@ export function HomeScreen({navigation}: Props) {
   }, [navigation, queryClient]);
 
   const walletsQuery = useQuery({queryKey: ['wallets'], queryFn: () => walletsApi.list()});
+  const loansQuery = useQuery({queryKey: ['loans'], queryFn: () => loansApi.list()});
   const transactionsQuery = useQuery({
     queryKey: ['transactions', 'recent'],
     queryFn: () => transactionsApi.list({page: 1, page_size: 10}),
@@ -245,7 +251,8 @@ export function HomeScreen({navigation}: Props) {
   });
 
   const wallets = walletsQuery.data?.wallets.filter((w) => !w.is_archived) ?? [];
-  const netWorth = computeNetWorth(wallets);
+  const loans = loansQuery.data?.loans ?? [];
+  const netWorth = computeNetWorth(wallets, loans);
   const sparklinePoints = (
     netWorthHistoryQuery.data?.snapshots.slice(-6) ??
     Array.from({length: 6}, (_, i) => ({date: null as string | null, net_worth: 0}))

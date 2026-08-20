@@ -11,10 +11,6 @@ import {WALLET_TYPE_ICON} from '@/theme/walletIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WalletForm'>;
 
-// "loan" is deliberately absent — no longer a creatable wallet type (loan
-// tracking is moving to its own dedicated feature, see the LED ticket filed
-// alongside this change). The `type === 'loan'` branches further down stay
-// in place so a pre-existing loan wallet can still be viewed/edited.
 const WALLET_TYPES: {value: WalletType; label: string}[] = [
   {value: 'bank_account', label: 'Bank'},
   {value: 'credit_card', label: 'Credit card'},
@@ -53,10 +49,6 @@ export function WalletFormScreen({route, navigation}: Props) {
   const [dueDay, setDueDay] = useState('');
   const [minDuePercent, setMinDuePercent] = useState('');
   const [billingCycleDay, setBillingCycleDay] = useState('');
-  const [principal, setPrincipal] = useState('');
-  const [interestRate, setInterestRate] = useState('');
-  const [tenureMonths, setTenureMonths] = useState('');
-  const [emiAmount, setEmiAmount] = useState('');
 
   const loaded = existingQuery.data;
   React.useEffect(() => {
@@ -76,12 +68,6 @@ export function WalletFormScreen({route, navigation}: Props) {
         setCreditLimit(String(loaded.pay_later_details.credit_limit ?? ''));
         setBillingCycleDay(String(loaded.pay_later_details.billing_cycle_day ?? ''));
         setDueDay(String(loaded.pay_later_details.due_day ?? ''));
-      }
-      if (loaded.loan_details) {
-        setPrincipal(String(loaded.loan_details.principal ?? ''));
-        setInterestRate(String(loaded.loan_details.interest_rate ?? ''));
-        setTenureMonths(String(loaded.loan_details.tenure_months ?? ''));
-        setEmiAmount(String(loaded.loan_details.emi_amount ?? ''));
       }
     }
   }, [loaded]);
@@ -105,16 +91,6 @@ export function WalletFormScreen({route, navigation}: Props) {
           credit_limit: numOrUndefined(creditLimit),
           billing_cycle_day: numOrUndefined(billingCycleDay),
           due_day: numOrUndefined(dueDay),
-        },
-      };
-    }
-    if (type === 'loan') {
-      return {
-        loan_details: {
-          principal: numOrUndefined(principal),
-          interest_rate: numOrUndefined(interestRate),
-          tenure_months: numOrUndefined(tenureMonths),
-          emi_amount: numOrUndefined(emiAmount),
         },
       };
     }
@@ -244,35 +220,6 @@ export function WalletFormScreen({route, navigation}: Props) {
               </Field>
             </View>
           </View>
-        )}
-
-        {type === 'loan' && (
-          <>
-            <View style={styles.fieldRow}>
-              <View style={{flex: 1}}>
-                <Field label="Principal">
-                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={principal} onChangeText={setPrincipal} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-                </Field>
-              </View>
-              <View style={{flex: 1}}>
-                <Field label="Interest %">
-                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={interestRate} onChangeText={setInterestRate} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-                </Field>
-              </View>
-            </View>
-            <View style={styles.fieldRow}>
-              <View style={{flex: 1}}>
-                <Field label="Tenure (months)">
-                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={tenureMonths} onChangeText={setTenureMonths} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-                </Field>
-              </View>
-              <View style={{flex: 1}}>
-                <Field label="EMI amount">
-                  <TextInput style={[styles.fieldInput, styles.fieldInputMono]} value={emiAmount} onChangeText={setEmiAmount} keyboardType="numeric" placeholderTextColor={colors.textSecondary} />
-                </Field>
-              </View>
-            </View>
-          </>
         )}
 
         {showLast4Toggle && (
