@@ -50,3 +50,7 @@ npm-debug.log*
 # Firebase service account key
 services/api/src/serviceAccountKey.json
 ledger-d4744-firebase-adminsdk-fbsvc-*.json
+
+# Android release signing (generated locally, never committed)
+apps/mobile/android/app/release.keystore
+apps/mobile/android/keystore.properties
