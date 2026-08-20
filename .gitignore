@@ -47,3 +47,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+# Firebase service account key
+services/api/src/serviceAccountKey.json
+ledger-d4744-firebase-adminsdk-fbsvc-*.json
