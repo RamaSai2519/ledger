@@ -16,7 +16,7 @@ const SWIPE_VELOCITY_THRESHOLD = 0.5;
 
 function layerStyleForDepth(depth: number) {
   return {
-    top: depth * LAYER_OFFSET,
+    translateY: depth * LAYER_OFFSET,
     opacity: Math.max(0, 1 - depth * LAYER_OPACITY_STEP),
     scale: 1 - depth * LAYER_SCALE_STEP,
   };
@@ -71,6 +71,15 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
   const drag = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
   const restack = useRef(new Animated.Value(0)).current;
 
+  // PanResponder.create() only runs once (useRef's initializer is only
+  // evaluated on mount), so any closure inside it over `wallets` would be
+  // permanently stuck on whatever `wallets` was on the very first render —
+  // typically `[]`, before the wallets query resolves. Route through this
+  // ref (reassigned every render, synchronously) instead so the gesture
+  // handlers always see the current wallet list.
+  const walletsRef = useRef(wallets);
+  walletsRef.current = wallets;
+
   useEffect(() => {
     setOrder((prev) => (prev.length === wallets.length ? prev : wallets.map((_, i) => i)));
   }, [wallets.length]);
@@ -103,7 +112,8 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
         drag.setValue({x: gesture.dx * 0.3, y: Math.min(0, gesture.dy)});
       },
       onPanResponderRelease: (_, gesture) => {
-        if (wallets.length > 1 && (gesture.dy < -SWIPE_DISTANCE_THRESHOLD || gesture.vy < -SWIPE_VELOCITY_THRESHOLD)) {
+        const crossedThreshold = gesture.dy < -SWIPE_DISTANCE_THRESHOLD || gesture.vy < -SWIPE_VELOCITY_THRESHOLD;
+        if (walletsRef.current.length > 1 && crossedThreshold) {
           cycleToBack();
         } else {
           resetPosition();
@@ -137,7 +147,7 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
           const to = layerStyleForDepth(isFront ? visibleCount : depth - 1);
           const targetOpacity = isFront ? 0 : to.opacity;
 
-          const top = restack.interpolate({inputRange: [0, 1], outputRange: [from.top, to.top]});
+          const translateY = restack.interpolate({inputRange: [0, 1], outputRange: [from.translateY, to.translateY]});
           const opacity = restack.interpolate({inputRange: [0, 1], outputRange: [from.opacity, targetOpacity]});
           const scale = restack.interpolate({inputRange: [0, 1], outputRange: [from.scale, to.scale]});
 
@@ -147,13 +157,12 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
               style={[
                 styles.cardLayer,
                 {
-                  top,
                   opacity,
                   // The outgoing front card drops behind every other layer
                   // the instant the settle animation starts, so it reads as
                   // tucking behind the stack rather than sliding over it.
                   zIndex: isFront ? (cycling ? 0 : MAX_VISIBLE + 1) : MAX_VISIBLE - depth,
-                  transform: [{scale}, ...(isFront ? [{translateX: drag.x}, {translateY: drag.y}] : [])],
+                  transform: [{translateY}, {scale}, ...(isFront ? [{translateX: drag.x}, {translateY: drag.y}] : [])],
                 },
               ]}
               {...(isFront && !cycling ? panResponder.panHandlers : {})}>
@@ -167,7 +176,7 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
 
 const styles = StyleSheet.create({
   stackWrap: {height: CARD_HEIGHT + (MAX_VISIBLE - 1) * LAYER_OFFSET + 14, marginTop: 14, marginHorizontal: 20},
-  cardLayer: {position: 'absolute', left: 0, right: 0},
+  cardLayer: {position: 'absolute', top: 0, left: 0, right: 0},
   card: {padding: 16, borderRadius: radius.card, backgroundColor: colors.accent, minHeight: CARD_HEIGHT},
   cardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   cardName: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600', flexShrink: 1, marginRight: 8},

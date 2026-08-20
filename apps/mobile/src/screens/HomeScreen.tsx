@@ -255,12 +255,18 @@ export function HomeScreen({navigation}: Props) {
   }));
 
   const categoryById = new Map((categoriesQuery.data?.categories ?? []).map((c) => [c.id, c]));
-  const todaysTransactions = (transactionsQuery.data?.transactions ?? []).filter((t) => {
+  const recentTransactions = transactionsQuery.data?.transactions ?? [];
+  const todaysTransactions = recentTransactions.filter((t) => {
     const d = new Date(t.date);
     const now = new Date();
     return d.toDateString() === now.toDateString();
   });
   const todaysExpense = todaysTransactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  // recentTransactions is already sorted newest-first by the API, so when
+  // nothing happened today we fall back to the last 5 transactions overall
+  // rather than showing an empty section.
+  const hasToday = todaysTransactions.length > 0;
+  const displayedTransactions = hasToday ? todaysTransactions : recentTransactions.slice(0, 5);
 
   return (
     <View style={styles.container}>
@@ -293,7 +299,7 @@ export function HomeScreen({navigation}: Props) {
               ₹{netWorth.toLocaleString('en-IN')}
             </Text>
           )}
-          {!walletsQuery.isLoading && (
+          {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
             <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
               <Sparkline points={sparklinePoints} color={colors.accent} />
             </View>
@@ -329,8 +335,13 @@ export function HomeScreen({navigation}: Props) {
         <SmsSuggestionInlineCard navigation={navigation} />
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today</Text>
-          <Text style={styles.sectionMeta}>−₹{todaysExpense.toLocaleString('en-IN')}</Text>
+          <Text style={styles.sectionTitle}>{hasToday ? 'Today' : 'Recent'}</Text>
+          <View style={styles.sectionHeaderRight}>
+            {hasToday && <Text style={styles.sectionMeta}>−₹{todaysExpense.toLocaleString('en-IN')}</Text>}
+            <Pressable onPress={() => navigation.navigate('TransactionsList', undefined)} hitSlop={8}>
+              <Text style={styles.seeAllText}>See all</Text>
+            </Pressable>
+          </View>
         </View>
 
         {transactionsQuery.isLoading && (
@@ -339,11 +350,11 @@ export function HomeScreen({navigation}: Props) {
             <SkeletonRow />
           </View>
         )}
-        {transactionsQuery.isSuccess && todaysTransactions.length === 0 && (
-          <Text style={styles.emptyText}>No transactions yet today — tap + to add your first one.</Text>
+        {transactionsQuery.isSuccess && displayedTransactions.length === 0 && (
+          <Text style={styles.emptyText}>No transactions yet — tap + to add your first one.</Text>
         )}
         <FlatList
-          data={todaysTransactions}
+          data={displayedTransactions}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           contentContainerStyle={{paddingHorizontal: spacing.lg, gap: 2}}
@@ -433,7 +444,9 @@ const styles = StyleSheet.create({
   smsDismissText: {color: colors.textSecondary, fontSize: 12.5},
   sectionHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 4},
   sectionTitle: {color: colors.textPrimary, fontFamily: fontFamilies.display, fontSize: 14, fontWeight: '600'},
+  sectionHeaderRight: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
   sectionMeta: {color: colors.textSecondary, fontFamily: fontFamilies.monetary, fontSize: 11.5},
+  seeAllText: {color: colors.accentOnDark, fontSize: 12, fontWeight: '600'},
   stateText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg},
   emptyText: {color: colors.textSecondary, fontSize: 13, paddingHorizontal: spacing.lg, lineHeight: 19},
   errorCard: {
