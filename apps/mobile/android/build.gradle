@@ -10,6 +10,8 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // Gradle Play Publisher is only published here, not to Maven Central.
+        gradlePluginPortal()
     }
     dependencies {
         // Pinned above the react-native-gradle-plugin's own AGP 8.5.0 —
@@ -21,6 +23,12 @@ buildscript {
         // LED-15: reads android/app/google-services.json to configure the
         // Firebase Android app (FCM) at build time.
         classpath("com.google.gms:google-services:4.4.2")
+        // Uploads the signed release bundle straight to Play Console via
+        // the Google Play Android Developer API — see deploy-mobile.yml.
+        // Pinned to the 3.x line, not the latest 4.x — 4.x requires Gradle
+        // 9.1+, and this project is pinned to Gradle 8.8 (AGP 8.6.1's
+        // floor, see the classpath comment above).
+        classpath("com.github.triplet.gradle:play-publisher:3.13.0")
     }
 }
 

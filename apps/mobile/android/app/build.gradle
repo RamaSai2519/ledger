@@ -4,6 +4,11 @@ apply plugin: "com.facebook.react"
 // LED-15: applies android/app/google-services.json so @react-native-firebase
 // modules (messaging) can resolve the Firebase project config at build time.
 apply plugin: "com.google.gms.google-services"
+// Publishes the release bundle to Play Console (internal track by
+// default) — see the `play {}` block below and .github/workflows/
+// deploy-mobile.yml. No-op unless a service-account JSON is supplied, so
+// this is safe to apply even for a plain local `assembleRelease`.
+apply plugin: "com.github.triplet.play"
 
 // LED-12: copies react-native-vector-icons' .ttf font files into the app's
 // Android assets at build time — without this, icon glyphs render as tofu
@@ -110,7 +115,7 @@ def gitCommitCount = {
         return 1
     }
 }()
-def gitVersionName = "1.0.${gitCommitCount}"
+def gitVersionName = "1.2.${gitCommitCount}"
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -163,6 +168,23 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+}
+
+// Google Play Android Developer API publishing (LED-21 follow-up). The
+// service account JSON is never committed — deploy-mobile.yml writes the
+// PLAY_SERVICE_ACCOUNT_JSON secret to android/play-service-account.json
+// (this task's default credentials path) before running publishBundle;
+// PLAY_SERVICE_ACCOUNT_JSON_PATH is an escape hatch to point elsewhere
+// instead. Locally, drop the key at that same default path to run
+// `./gradlew publishReleaseBundle` by hand. Fails loudly if no credentials
+// file is present at all — that's the desired behavior, not a silent
+// no-op, since a publish task run without credentials should never look
+// like it succeeded.
+play {
+    serviceAccountCredentials.set(file(System.getenv("PLAY_SERVICE_ACCOUNT_JSON_PATH") ?: "play-service-account.json"))
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
 }
 
 dependencies {

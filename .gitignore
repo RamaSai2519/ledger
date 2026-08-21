@@ -54,3 +54,7 @@ ledger-d4744-firebase-adminsdk-fbsvc-*.json
 # Android release signing (generated locally, never committed)
 apps/mobile/android/app/release.keystore
 apps/mobile/android/keystore.properties
+
+# Play Console service account key (generated locally, never committed —
+# see .github/workflows/deploy-mobile.yml and apps/mobile/README.md)
+apps/mobile/android/play-service-account.json

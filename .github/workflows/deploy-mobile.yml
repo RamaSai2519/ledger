@@ -1,0 +1,70 @@
+name: Deploy mobile (Play Console internal testing)
+
+# LED-21 follow-up: publishes the signed release AAB to Play Console's
+# internal testing track via Gradle Play Publisher (android/app/build.gradle's
+# `play {}` block). Requires a Play Console app that already has at least one
+# manual release (Google's publishing API can't create the initial store
+# listing / content rating / data safety form — see apps/mobile/README.md's
+# "Play Console one-time setup" section) and the secrets listed there.
+#
+# workflow_dispatch-only for now, not on every push to master — an Internal
+# Testing upload is still a real, visible release to every tester on the
+# list, so it stays a deliberate action rather than firing on each merge.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Decode release keystore
+        working-directory: apps/mobile/android
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+
+      - name: Write keystore.properties
+        working-directory: apps/mobile/android
+        run: |
+          cat > keystore.properties <<EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: Write Play Console service account key
+        working-directory: apps/mobile/android
+        run: echo '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > play-service-account.json
+
+      - name: Publish release bundle to internal testing
+        working-directory: apps/mobile/android
+        run: ./gradlew publishReleaseBundle --no-daemon
+
+      - name: Clean up secrets from disk
+        if: always()
+        working-directory: apps/mobile/android
+        run: rm -f app/release.keystore keystore.properties play-service-account.json
