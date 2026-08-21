@@ -62,7 +62,7 @@ function NotificationRow({notification, onPress, dim}: {notification: Notificati
 
 export function NotificationsScreen({}: Props) {
   const queryClient = useQueryClient();
-  const query = useQuery({queryKey: ['notifications'], queryFn: () => notificationsApi.list({page_size: 50})});
+  const query = useQuery({queryKey: ['notifications'], queryFn: () => notificationsApi.list({page_size: 50, user_id: 'me'})});
 
   const markReadMutation = useMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
