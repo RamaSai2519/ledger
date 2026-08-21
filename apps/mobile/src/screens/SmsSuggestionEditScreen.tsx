@@ -5,6 +5,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import type {RootStackParamList} from '@/navigation/types';
 import {categoriesApi, smsApi, walletsApi} from '@/api/client';
+import {MerchantPickerField} from '@/components/MerchantPickerField';
 import {PickerField} from '@/components/PickerField';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -12,11 +13,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SmsSuggestionEdit'>;
 
 // "Edit before saving" step (s23 in the design project) reached from the
 // inline SMS suggestion card's pencil button — lets the household correct the
-// wallet/category/amount the backend guessed before it becomes a real
-// transaction. There's no "original message" preview here (unlike the
+// merchant/wallet/category/amount the backend guessed before it becomes a
+// real transaction. There's no "original message" preview here (unlike the
 // mockup) because raw_text is intentionally never sent to the client
-// (data-minimization, plan.md §2.3) — only the already-extracted fields
-// below ever reach this screen.
+// (data-minimization) — only the already-extracted fields below ever reach
+// this screen.
 export function SmsSuggestionEditScreen({route, navigation}: Props) {
   const {suggestion} = route.params;
   const queryClient = useQueryClient();
@@ -25,6 +26,13 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
   const [amount, setAmount] = useState(String(suggestion.parsed_amount ?? ''));
   const [walletId, setWalletId] = useState<string | null>(suggestion.suggested_wallet_id);
   const [categoryId, setCategoryId] = useState<string | null>(suggestion.suggested_category_id);
+  // LED-28: prefer the alias-resolved canonical name when one exists -
+  // falls back to the raw parsed text so the field is never blank when the
+  // parser did extract *something*, even if this household has no learned
+  // alias for it yet.
+  const [merchantName, setMerchantName] = useState<string | null>(
+    suggestion.merchant_normalized ?? suggestion.parsed_merchant
+  );
   const [justAdded, setJustAdded] = useState(false);
 
   // LED-19: a null/low-confidence prefill opens its own picker sheet on
@@ -47,6 +55,7 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
         wallet_id: walletId as string,
         category_id: categoryId as string,
         amount: Number(amount),
+        ...(merchantName ? {merchant_name: merchantName} : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
@@ -75,6 +84,8 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
         <Text style={styles.sourceMerchant}>{suggestion.parsed_merchant ?? 'Unknown merchant'}</Text>
       </View>
 
+      <MerchantPickerField label="Merchant" value={merchantName} onChange={setMerchantName} />
+
       <View style={styles.amountRow}>
         <Text style={styles.currencySymbol}>₹</Text>
         <TextInput
@@ -102,7 +113,7 @@ export function SmsSuggestionEditScreen({route, navigation}: Props) {
         autoOpen={categoryNeedsInput}
       />
 
-      <Text style={styles.hint}>We'll remember this pairing for future Swiggy-style suggestions.</Text>
+      <Text style={styles.hint}>We'll remember this merchant/category/wallet pairing for next time.</Text>
 
       {acceptMutation.isError && <Text style={styles.error}>{(acceptMutation.error as Error).message}</Text>}
 

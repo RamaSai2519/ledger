@@ -126,9 +126,9 @@ def serialize_sms_inbox(sms: dict) -> dict:
         "parse_evidence": sms.get("parse_evidence"),
         "status": sms.get("status"),
         "resolved_transaction_id": _str_id(sms.get("resolved_transaction_id")),
-        # raw_text is deliberately omitted (plan.md §2.3/§14 data minimization
-        # — never round-trip raw SMS text back to the client beyond the
-        # initial ingest request that sent it).
+        # raw_text is deliberately omitted (data minimization — never
+        # round-trip raw SMS text back to the client beyond the initial
+        # ingest request that sent it).
         "created_at": _iso(sms.get("created_at")),
         "updated_at": _iso(sms.get("updated_at")),
     }

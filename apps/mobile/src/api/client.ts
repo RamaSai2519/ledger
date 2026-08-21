@@ -404,8 +404,8 @@ export const fcmApi = {
 
 // ---- SMS Pipeline (LED-7) ----
 // raw_text is deliberately never returned by the backend serializer (data
-// minimization, plan.md §2.3) — screens only ever see the already-extracted
-// structured fields below, never the original message text.
+// minimization) — screens only ever see the already-extracted structured
+// fields below, never the original message text.
 
 export type SmsInboxSuggestion = {
   id: string;
@@ -418,6 +418,10 @@ export type SmsInboxSuggestion = {
   parsed_direction: 'debit' | 'credit' | null;
   parsed_last4: string | null;
   parsed_merchant: string | null;
+  // LED-28: the alias-resolved canonical name (e.g. "Zomato" for a raw
+  // "Zomato Media Private Limi") - falls back to null when this household
+  // has no alias for the raw text yet, same as parsed_merchant.
+  merchant_normalized: string | null;
   parsed_ref: string | null;
   suggested_wallet_id: string | null;
   suggested_category_id: string | null;
@@ -436,7 +440,18 @@ export type SmsSuggestionAcceptInput = Partial<{
   amount: number;
   type: 'expense' | 'income';
   date: string;
+  // LED-28: a picked-existing or freshly-typed canonical merchant name -
+  // becomes the transaction's merchant name and teaches the backend this
+  // raw text -> canonical mapping for next time.
+  merchant_name: string;
 }>;
+
+// ---- Merchants (LED-28) ----
+
+export const merchantsApi = {
+  list: (params?: {q?: string}) =>
+    request<{merchants: string[]}>(withQuery('/merchants', params as Record<string, string>)),
+};
 
 // ---- Recurring Transactions (LED-8) ----
 
