@@ -40,7 +40,16 @@ jobs:
           cache-dependency-path: apps/mobile/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        # The committed lockfile was generated with npm 11 — Node 20's
+        # bundled npm (10.x) resolves optional-peer-dependency edges
+        # differently and fails `npm ci` with a spurious "missing from
+        # lock file" error on a package this project doesn't even
+        # directly depend on. Pin to the npm major the lockfile was
+        # actually produced with instead of trusting whatever setup-node
+        # bundles.
+        run: |
+          npm install -g npm@11
+          npm ci
 
       - name: Decode release keystore
         working-directory: apps/mobile/android
