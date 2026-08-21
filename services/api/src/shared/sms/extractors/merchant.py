@@ -91,7 +91,20 @@ _PAYMENT_APPS = [
     ("UPI", re.compile(r"\bUPI\b", re.IGNORECASE)),
 ]
 
-_BUSINESS_SUFFIXES = re.compile(r"\b(?:LTD|LIMITED|PVT|LLP|INC|MART|STORE|STORES|MKTPLACE|RETAIL|FRESH)\b", re.IGNORECASE)
+# LED-27 real-world finding: bank SMS routinely truncate a legal entity
+# name to a fixed character budget ("Zomato Media Private Limited" ->
+# "Zomato Media Private Limi"), so LTD/LIMITED never actually appears intact
+# - and a multi-word Title-Case name like that otherwise trips the "reads as
+# a person" heuristic below purely on capitalization shape. "Private"/"Priv"
+# and other common corporate-entity words are near-impossible in a real
+# person's name, so checking for them (even truncated) is a much more
+# reliable business signal than requiring the suffix to survive intact.
+_BUSINESS_SUFFIXES = re.compile(
+    r"\b(?:LTD|LIMI(?:TED)?|PVT|PRIVATE|PRIV|LLP|INC|MART|STORE|STORES|MKTPLACE|RETAIL|FRESH"
+    r"|MEDIA|TECHNOLOGIES|TECH|SYSTEMS|SOLUTIONS|SERVICES|ENTERPRISES|INDUSTRIES"
+    r"|FOODS?|LOGISTICS|NETWORKS|COMMUNICATIONS|CONSULTING|CAPITAL|GROUP|COMPANY|CORP|LABS|DIGITAL|PAYMENTS|FINTECH)\b",
+    re.IGNORECASE,
+)
 
 
 def _clean(name: str) -> str:

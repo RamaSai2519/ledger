@@ -210,6 +210,22 @@ CORPUS: list[dict] = [
         "direction": "credit",
         "merchant_none": True,
     },
+    {
+        # LED-27 regression: bank SMS truncate a legal entity name to a
+        # fixed character budget ("Zomato Media Private Limited" -> "...
+        # Limi"), so LTD/LIMITED never appears intact. A multi-word
+        # Title-Case name like this otherwise trips the "reads as a person"
+        # shape heuristic purely on capitalization - "Private" (even
+        # truncated to "Priv"/"Limi") is a much more reliable business
+        # signal than requiring an intact legal suffix.
+        "sender_id": "HDFCBK",
+        "raw_text": "Sent Rs.198.46\nFrom HDFC Bank A/C *3842\nTo Zomato Media Private Limi\nOn 21/08/26\nRef 623325940843\nNot You?\nCall 18002586161/SMS BLOCK UPI to 7308080808",
+        "is_transaction": True,
+        "transaction_type": "upi_payment",
+        "amount": 198.46,
+        "direction": "debit",
+        "merchant": "Zomato Media Private Limi",
+    },
     # ── ATM / cash ────────────────────────────────────────────────────
     {
         "sender_id": "HDFCBK",
