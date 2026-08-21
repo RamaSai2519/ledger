@@ -8,7 +8,7 @@ All of `plan.md`'s phased roadmap (§15, Phase 0 through Phase 7) is implemented
 
 Per the Jira workflow below, most of these issues sit in **In Review** rather than **Done** — that's a process gate (only moved to Done once confirmed merged/deployed), not a signal the work is incomplete. Check an issue's own status/comments in Jira before assuming something is unbuilt; don't infer scope from this file's prose alone.
 
-**One known, real gap**: the nightly balance-reconciliation safety net (plan.md §6) exists as a tested function (`services/api/src/jobs/balance_reconciliation.py`) but is **not wired to any scheduler** — it's absent from `infra/terraform/scheduler.tf` and from `index.py`'s `scheduled_handler` dispatch table, unlike every other job in `jobs/`. It only runs if invoked manually. Worth its own Jira issue if picked up.
+The nightly balance-reconciliation safety net (plan.md §6, `services/api/src/jobs/balance_reconciliation.py`) is now wired up (`LED-20`): it runs nightly via `infra/terraform/scheduler.tf`'s `ledger-balance-reconciliation` schedule + `index.py`'s `scheduled_handler` dispatch table, and fires a `balance_drift` notification per affected household via `notify_household` on detected drift (never auto-corrects — detection only).
 
 **Known plan.md/reality drift** (implementation is correct; the spec text is stale):
 - **Scheduled jobs run via AWS EventBridge Scheduler invoking the deployed Lambda's `scheduled_handler`**, not APScheduler/Celery as plan.md §3/§15 describes — see `docs/decisions/0005-eventbridge-scheduler-for-jobs.md` for why (a zip-deployed Lambda has no persistent process for an in-process scheduler to run in).

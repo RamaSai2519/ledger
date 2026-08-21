@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 
+from jobs.balance_reconciliation import run_balance_reconciliation
 from jobs.budget_threshold_check import run_budget_threshold_check
 from jobs.bill_due_reminders import run_bill_due_reminders
 from jobs.loan_emi_check import run_loan_emi_check
@@ -54,6 +55,7 @@ SCHEDULED_JOBS = {
     "sms_purge": run_sms_purge,
     "recurring_transactions_check": run_recurring_transactions_check,
     "loan_emi_check": run_loan_emi_check,
+    "balance_reconciliation": run_balance_reconciliation,
 }
 
 

@@ -1,18 +1,23 @@
 """Nightly reconciliation safety net (plan.md §6): recomputes every wallet's
-balance from opening_balance + full transaction history, and logs any
-wallet whose cached current_balance has drifted from the recomputed value.
+balance from opening_balance + full transaction history, logs any wallet
+whose cached current_balance has drifted from the recomputed value, and
+notifies the affected household(s) so a human can decide whether to
+manually reconcile via POST /wallets/:id/reconcile. This job never
+auto-corrects a balance — detection only (see CLAUDE.md).
 
-Not wired to a scheduler yet — APScheduler wiring is LED-5 (Budgets &
-Notifications phase, plan.md §3/§15). This module is a plain importable
-function so it can be called directly (and unit-tested directly) now, and
-registered with APScheduler later without changing its signature.
+Dispatched by index.py's scheduled_handler via EventBridge Scheduler
+(infra/terraform/scheduler.tf) — see
+docs/decisions/0005-eventbridge-scheduler-for-jobs.md for why jobs are
+wired this way instead of APScheduler/Celery.
 """
 import logging
+from collections import defaultdict
 
 from bson import ObjectId
 
 from shared.balance import compute_delta
 from shared.db import get_transactions_collection, get_wallets_collection
+from shared.notify import notify_household
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +58,44 @@ def reconcile_all_wallets(household_id: ObjectId | None = None) -> list[dict]:
                 cached,
                 recomputed,
             )
-            drifted.append({"wallet_id": wallet["_id"], "cached": cached, "recomputed": recomputed})
+            drifted.append(
+                {
+                    "wallet_id": wallet["_id"],
+                    "household_id": wallet["household_id"],
+                    "wallet_name": wallet.get("name"),
+                    "cached": cached,
+                    "recomputed": recomputed,
+                }
+            )
+
+    return drifted
+
+
+def run_balance_reconciliation() -> list[dict]:
+    """Runs reconcile_all_wallets() across every household, then fires one
+    `balance_drift` notification per household with at least one drifted
+    wallet (no notification when nothing has drifted, to avoid noise).
+    Returns the flat list of drifted-wallet dicts from reconcile_all_wallets."""
+    drifted = reconcile_all_wallets()
+
+    by_household: dict[ObjectId, list[dict]] = defaultdict(list)
+    for entry in drifted:
+        by_household[entry["household_id"]].append(entry)
+
+    for household_id, entries in by_household.items():
+        payload = {
+            "wallets": [
+                {"wallet_id": str(e["wallet_id"]), "wallet_name": e["wallet_name"], "drift": e["recomputed"] - e["cached"]}
+                for e in entries
+            ]
+        }
+        if len(entries) == 1:
+            title = "Balance drift detected"
+            body = f"{entries[0]['wallet_name']} may be out of sync — please review and reconcile."
+        else:
+            title = "Balance drift detected"
+            body = f"{len(entries)} wallets may be out of sync — please review and reconcile."
+
+        notify_household(household_id, "balance_drift", payload, title, body)
 
     return drifted

@@ -185,3 +185,26 @@ resource "aws_scheduler_schedule" "loan_emi_check" {
     input    = jsonencode({ job = "loan_emi_check" })
   }
 }
+
+# Balance reconciliation safety net (plan.md §6, LED-20) — recomputes every
+# wallet's balance from opening_balance + transaction history and flags
+# drift from the cached current_balance, notifying the household on
+# detection (never auto-corrects). Runs nightly, after net_worth_snapshot
+# so a same-day drift doesn't skew that day's snapshot re-run window.
+# Reuses the same ledger-scheduler role / Lambda target as the other
+# schedules above.
+resource "aws_scheduler_schedule" "balance_reconciliation" {
+  name                         = "ledger-balance-reconciliation"
+  schedule_expression          = "cron(0 4 * * ? *)" # 04:00 UTC = 09:30 IST
+  schedule_expression_timezone = "UTC"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.api.arn
+    role_arn = aws_iam_role.ledger_scheduler.arn
+    input    = jsonencode({ job = "balance_reconciliation" })
+  }
+}
