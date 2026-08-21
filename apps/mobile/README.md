@@ -76,6 +76,6 @@ nothing to bump by hand except the `1.2.` major/minor prefix itself, for a
 real milestone.
 
 To run the same publish locally instead: drop the service-account JSON at
-`android/play-service-account.json` (gitignored) and `keystore.properties`
+`android/app/play-service-account.json` (gitignored) and `keystore.properties`
 per `android/app/build.gradle`'s existing local-signing setup, then
 `./gradlew publishReleaseBundle` from `android/`.

@@ -172,8 +172,10 @@ android {
 
 // Google Play Android Developer API publishing (LED-21 follow-up). The
 // service account JSON is never committed — deploy-mobile.yml writes the
-// PLAY_SERVICE_ACCOUNT_JSON secret to android/play-service-account.json
-// (this task's default credentials path) before running publishBundle;
+// PLAY_SERVICE_ACCOUNT_JSON secret to app/play-service-account.json (this
+// task's default credentials path, resolved relative to this module since
+// the `play {}` block below lives in app/build.gradle) before running
+// publishBundle;
 // PLAY_SERVICE_ACCOUNT_JSON_PATH is an escape hatch to point elsewhere
 // instead. Locally, drop the key at that same default path to run
 // `./gradlew publishReleaseBundle` by hand. Fails loudly if no credentials

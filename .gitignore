@@ -57,4 +57,4 @@ apps/mobile/android/keystore.properties
 
 # Play Console service account key (generated locally, never committed —
 # see .github/workflows/deploy-mobile.yml and apps/mobile/README.md)
-apps/mobile/android/play-service-account.json
+apps/mobile/android/app/play-service-account.json
