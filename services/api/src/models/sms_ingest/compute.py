@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from shared.db import get_sms_inbox_collection, get_transactions_collection
+from shared.db import get_categories_collection, get_sms_inbox_collection, get_transactions_collection
 from shared.notify import notify_household
 from shared.scope import require_household_id
 from shared.sms.types import NON_COMPLETING_TYPES
@@ -164,12 +164,40 @@ def ingest_sms(inp, user_id: str) -> dict:
     amount = parsed["parsed_amount"]
     verb = "Add as income?" if parsed["parsed_direction"] == "credit" else "Add as an expense?"
     body = f"₹{amount:.0f} at {merchant_label}. {verb}"
+
+    # LED-21: the lock-screen notification (design s21) needs the category
+    # guess and wallet label up front — it can't defer to an in-app fetch
+    # the way the notifications-list row can, since Confirm/Edit/Dismiss are
+    # rendered directly on the notification itself.
+    category_name = None
+    category_icon = None
+    if category_id is not None:
+        category = get_categories_collection().find_one({"_id": category_id})
+        if category:
+            category_name = category.get("name")
+            category_icon = category.get("icon")
+    wallet_label = None
+    if wallet is not None:
+        wallet_label = wallet["name"]
+        if wallet.get("account_last4"):
+            wallet_label += f" ••{wallet['account_last4']}"
+
     notify_household(
         household_id,
         "sms_suggestion",
-        {"sms_id": str(doc["_id"]), "amount": amount, "merchant": doc["parsed_merchant"], "direction": parsed["parsed_direction"]},
+        {
+            "sms_id": str(doc["_id"]),
+            "amount": amount,
+            "merchant": doc["parsed_merchant"],
+            "direction": parsed["parsed_direction"],
+            "category_name": category_name,
+            "category_icon": category_icon,
+            "wallet_label": wallet_label,
+            "can_confirm": category_id is not None and wallet is not None,
+        },
         "New transaction detected",
         body,
+        push_data_only=True,
     )
 
     return doc

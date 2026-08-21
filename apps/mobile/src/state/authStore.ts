@@ -180,3 +180,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     AuthTokenModule?.clearRefreshToken();
   },
 }));
+
+// LED-21: a notifee background-event handler (headless JS, e.g. a
+// Confirm/Dismiss tap on a killed app's SMS-suggestion notification) runs
+// in a fresh JS context where this store's in-memory state is never
+// hydrated — `hydrate()` isn't called there, only from a mounted
+// SplashScreen. This mirrors `hydrate`'s own refresh-token-from-Keychain
+// flow but returns the access token directly instead of routing through
+// component state, and is a no-op read (not a full session restore) when
+// the store already has a live access token, i.e. the app is actually
+// running in the foreground.
+export async function refreshAccessTokenHeadless(): Promise<string | null> {
+  const existing = useAuthStore.getState().accessToken;
+  if (existing) return existing;
+
+  const snapshot = await readPersistedSession();
+  if (!snapshot?.refreshToken) return null;
+
+  useAuthStore.setState({refreshToken: snapshot.refreshToken});
+  try {
+    const {access_token} = await authApi.refresh();
+    useAuthStore.setState({accessToken: access_token});
+    return access_token;
+  } catch {
+    return null;
+  }
+}

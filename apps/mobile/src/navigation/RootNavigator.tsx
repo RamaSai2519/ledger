@@ -35,6 +35,7 @@ import {LoanDetailScreen} from '@/screens/LoanDetailScreen';
 import {useAuthStore} from '@/state/authStore';
 import {colors} from '@/theme/tokens';
 import {registerForPushNotifications, requestNotificationPermission, setupNotificationOpenHandlers} from '@/native/push';
+import {ensureNotificationChannels, setupNotifeeOpenHandlers} from '@/native/notifications';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -109,6 +110,18 @@ function usePushNotificationsGate() {
       if (data?.type === 'sms_suggestion') {
         queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
       }
+    });
+  }, [queryClient]);
+
+  // LED-21: the notifee-built sms_suggestion notification (design s21) has
+  // its own event system, separate from RNFirebase's — Confirm/Dismiss can
+  // fire this even while foregrounded (e.g. the tray is pulled down over an
+  // open app), so the same query invalidation as above applies here too.
+  useEffect(() => {
+    ensureNotificationChannels();
+    return setupNotifeeOpenHandlers(navigationRef, () => {
+      queryClient.invalidateQueries({queryKey: ['notifications']});
+      queryClient.invalidateQueries({queryKey: ['sms', 'suggestions']});
     });
   }, [queryClient]);
 

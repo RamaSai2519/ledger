@@ -46,12 +46,18 @@ def _get_app():
     return _app
 
 
-def send_push(tokens: list[str], title: str, body: str, data: dict | None = None) -> int:
+def send_push(tokens: list[str], title: str, body: str, data: dict | None = None, data_only: bool = False) -> int:
     """Sends a push notification to each of `tokens`. Returns the number of
     tokens the send was attempted against (0 if FCM isn't configured, or
     `tokens` is empty). Never raises — a push failure must not break the
     surrounding job/endpoint, since the in-app `notifications` doc is the
-    source of truth and push is best-effort delivery on top of it."""
+    source of truth and push is best-effort delivery on top of it.
+
+    `data_only=True` (LED-21) omits the `notification` payload entirely, so
+    Android never auto-displays a default system notification — the client
+    is trusted to build its own (via notifee) from `data` alone. Requires
+    high delivery priority, since a data-only message is otherwise not
+    guaranteed prompt delivery while the app is backgrounded/killed."""
     tokens = [t for t in (tokens or []) if t]
     if not tokens:
         return 0
@@ -64,9 +70,10 @@ def send_push(tokens: list[str], title: str, body: str, data: dict | None = None
         from firebase_admin import messaging
 
         message = messaging.MulticastMessage(
-            notification=messaging.Notification(title=title, body=body),
+            notification=None if data_only else messaging.Notification(title=title, body=body),
             data={k: str(v) for k, v in (data or {}).items()},
             tokens=tokens,
+            android=messaging.AndroidConfig(priority="high") if data_only else None,
         )
         messaging.send_each_for_multicast(message, app=app)
         return len(tokens)

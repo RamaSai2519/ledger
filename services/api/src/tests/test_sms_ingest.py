@@ -1,6 +1,8 @@
 import pytest
 
 from conftest import auth_headers, signup
+from shared.category_keyword_rules_seed import seed_default_category_keyword_rules
+from shared.db import get_notifications_collection
 from shared.sms_parser_rules_seed import seed_default_sms_parser_rules
 
 
@@ -256,3 +258,31 @@ def test_ingest_missing_sender_id_fails_validation(client):
 def test_ingest_requires_auth(client):
     resp = client.post("/sms/ingest", json={"raw_text": "Rs.100 debited", "sender_id": "HDFCBK"})
     assert resp.status_code == 401
+
+
+def test_ingest_notifies_with_category_and_wallet_guess_for_notifee(client):
+    """LED-21: the sms_suggestion notification payload needs the category
+    guess and wallet label up front so the client's notifee-built
+    notification (design s21) can show a Confirm action and the "best
+    guess" line without a round trip back to the API."""
+    seed_default_category_keyword_rules()
+    token = _signup_household(client)
+    _wallet(client, token, account_last4="1234")
+
+    resp = _ingest(
+        client,
+        token,
+        "Rs.450.00 debited from A/c XX1234 at SWIGGY BANGALORE on 01-Jan-24. Avl Bal Rs.5000",
+        "HDFCBK",
+    )
+    assert resp.status_code == 200
+    sms_id = resp.get_json()["data"]["id"]
+
+    notification = get_notifications_collection().find_one({"type": "sms_suggestion"})
+    assert notification is not None
+    payload = notification["payload"]
+    assert payload["sms_id"] == sms_id
+    assert payload["merchant"] == "SWIGGY BANGALORE"
+    assert payload["wallet_label"] == "HDFC Card ••1234"
+    assert payload["category_name"] == "Food & Dining"
+    assert payload["can_confirm"] is True

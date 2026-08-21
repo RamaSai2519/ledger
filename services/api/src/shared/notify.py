@@ -22,10 +22,24 @@ def get_household_members(household_id: ObjectId) -> list[dict]:
     return list(get_users_collection().find({"_id": {"$in": member_ids}}))
 
 
-def notify_household(household_id: ObjectId, notification_type: str, payload: dict, title: str, body: str) -> list[dict]:
+def notify_household(
+    household_id: ObjectId,
+    notification_type: str,
+    payload: dict,
+    title: str,
+    body: str,
+    *,
+    push_data_only: bool = False,
+) -> list[dict]:
     """Creates one notification doc per household member and best-effort
     pushes to every registered device across the household. Returns the
-    inserted notification docs."""
+    inserted notification docs.
+
+    `push_data_only=True` (LED-21) forwards `payload` into the FCM `data`
+    map (stringified) instead of only `{"type": ...}`, and sends the push
+    with no `notification` block — for callers whose client-side rendering
+    needs the full payload up front (e.g. a rich actionable notification),
+    not just enough to invalidate a query on tap."""
     members = get_household_members(household_id)
     now = datetime.now(timezone.utc)
     notifications = get_notifications_collection()
@@ -46,5 +60,10 @@ def notify_household(household_id: ObjectId, notification_type: str, payload: di
         docs.append(doc)
         all_tokens.extend(member.get("fcm_tokens", []) or [])
 
-    send_push(all_tokens, title, body, data={"type": notification_type})
+    if push_data_only:
+        data = {"type": notification_type}
+        data.update({k: v for k, v in payload.items() if v is not None})
+        send_push(all_tokens, title, body, data=data, data_only=True)
+    else:
+        send_push(all_tokens, title, body, data={"type": notification_type})
     return docs
