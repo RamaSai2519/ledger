@@ -1,10 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, PanResponder, StyleSheet, Text, View} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {Wallet} from '@/api/client';
 import {colors, fontFamilies, motion, radius} from '@/theme/tokens';
 import {GradientCard} from '@/components/GradientCard';
 
 const LIABILITY_TYPES = new Set<Wallet['type']>(['credit_card', 'pay_later']);
+
+// Not a secret — just a UI preference, so plain AsyncStorage is fine here.
+const FRONT_WALLET_KEY = 'wallet_card_stack_front_id';
 
 const MAX_VISIBLE = 3;
 const CARD_HEIGHT = 108;
@@ -84,6 +88,28 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
     setOrder((prev) => (prev.length === wallets.length ? prev : wallets.map((_, i) => i)));
   }, [wallets.length]);
 
+  // Restore whichever wallet the user last left on top, once, the first
+  // time wallets are available — matched by id (not index) since the
+  // wallet list's order can shift between sessions. Later swipes update
+  // the stored id directly in cycleToBack rather than re-running this.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || wallets.length === 0) return;
+    restoredRef.current = true;
+    AsyncStorage.getItem(FRONT_WALLET_KEY)
+      .then((id) => {
+        if (!id) return;
+        const walletIndex = wallets.findIndex((w) => w.id === id);
+        if (walletIndex < 0) return;
+        setOrder((prev) => {
+          const pos = prev.indexOf(walletIndex);
+          if (pos <= 0) return prev;
+          return [...prev.slice(pos), ...prev.slice(0, pos)];
+        });
+      })
+      .catch(() => {});
+  }, [wallets]);
+
   const visibleCount = Math.min(MAX_VISIBLE, wallets.length);
 
   const cycleToBack = () => {
@@ -94,7 +120,12 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
     ]).start(() => {
       restack.setValue(0);
       drag.setValue({x: 0, y: 0});
-      setOrder((prev) => [...prev.slice(1), prev[0]]);
+      setOrder((prev) => {
+        const next = [...prev.slice(1), prev[0]];
+        const newFront = walletsRef.current[next[0]];
+        if (newFront) AsyncStorage.setItem(FRONT_WALLET_KEY, newFront.id).catch(() => {});
+        return next;
+      });
       setCycling(false);
     });
   };

@@ -274,6 +274,7 @@ export function HomeScreen({navigation}: Props) {
   const wallets = walletsQuery.data?.wallets.filter((w) => !w.is_archived) ?? [];
   const loans = loansQuery.data?.loans ?? [];
   const netWorth = computeNetWorth(wallets, loans);
+  const spendable = wallets.filter((w) => !LIABILITY_TYPES.has(w.type)).reduce((s, w) => s + w.current_balance, 0);
   const sparklinePoints = (
     netWorthHistoryQuery.data?.snapshots.slice(-6) ??
     Array.from({length: 6}, (_, i) => ({date: null as string | null, net_worth: 0}))
@@ -318,20 +319,32 @@ export function HomeScreen({navigation}: Props) {
           </Pressable>
         </View>
 
-        <View style={styles.netWorthBlock}>
-          <Text style={styles.netWorthLabel}>Net worth</Text>
-          {walletsQuery.isLoading ? (
-            <Skeleton style={styles.netWorthSkeleton} />
-          ) : (
-            <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
-              ₹{netWorth.toLocaleString('en-IN')}
-            </Text>
-          )}
-          {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
-            <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
-              <Sparkline points={sparklinePoints} color={colors.accent} />
-            </View>
-          )}
+        <View style={styles.topStatsRow}>
+          <View style={styles.topStatBlock}>
+            <Text style={styles.netWorthLabel}>You can spend</Text>
+            {walletsQuery.isLoading ? (
+              <Skeleton style={styles.netWorthSkeleton} />
+            ) : (
+              <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
+                ₹{spendable.toLocaleString('en-IN')}
+              </Text>
+            )}
+          </View>
+          <View style={[styles.topStatBlock, styles.topStatBlockRight]}>
+            <Text style={styles.netWorthLabel}>Net worth</Text>
+            {walletsQuery.isLoading ? (
+              <Skeleton style={styles.netWorthSkeleton} />
+            ) : (
+              <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
+                ₹{netWorth.toLocaleString('en-IN')}
+              </Text>
+            )}
+            {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
+              <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
+                <Sparkline points={sparklinePoints} color={colors.accent} />
+              </View>
+            )}
+          </View>
         </View>
 
         {walletsQuery.isError && (
@@ -421,19 +434,21 @@ const styles = StyleSheet.create({
     borderColor: colors.background,
   },
   bellBadgeText: {color: colors.textPrimary, fontSize: 9, fontWeight: '700', lineHeight: 11},
-  netWorthBlock: {paddingHorizontal: spacing.lg, paddingTop: spacing.md},
+  topStatsRow: {flexDirection: 'row', paddingHorizontal: spacing.lg, paddingTop: spacing.md, gap: spacing.md},
+  topStatBlock: {flex: 1},
+  topStatBlockRight: {alignItems: 'flex-end'},
   netWorthLabel: {fontSize: 11, letterSpacing: 0.9, textTransform: 'uppercase', color: colors.textSecondary},
   netWorthAmount: {
     color: colors.textPrimary,
     fontFamily: fontFamilies.display,
-    fontSize: 34,
-    letterSpacing: -1.1,
-    lineHeight: 34,
+    fontSize: 26,
+    letterSpacing: -0.8,
+    lineHeight: 28,
     fontWeight: '600',
     marginTop: 6,
   },
   netWorthChart: {marginTop: spacing.sm},
-  netWorthSkeleton: {width: 180, height: 34, marginTop: 6},
+  netWorthSkeleton: {width: 120, height: 28, marginTop: 6},
   card: {marginHorizontal: 16, marginTop: 4, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   cardTitle: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
   budgetHeader: {flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between'},
