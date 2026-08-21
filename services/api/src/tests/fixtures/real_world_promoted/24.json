@@ -1,0 +1,11 @@
+{
+  "id": "24",
+  "sender_id": "JX-SBMIND-S",
+  "sanitized_text": "Dear Customer, your SBM ZET Credit card ending with 4679 has been used for a UPI transaction of INR 572.0 at SWIGGY on 2026-05-16 21:48:39. Ref TESTREF987754. If it's not you, kindly report this at user9506@example.com or call 18002099335. SBM Bank India.",
+  "expected": {
+    "is_transaction": true,
+    "transaction_type": "upi_payment",
+    "amount": 572.0,
+    "merchant": "SWIGGY"
+  }
+}

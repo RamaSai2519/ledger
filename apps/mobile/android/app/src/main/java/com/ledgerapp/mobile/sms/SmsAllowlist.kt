@@ -21,6 +21,7 @@ object SmsAllowlist {
         "SBIINB",
         "SBIUPI",
         "ZETPAY",
+        "SBMIND",
         "AXIOPL",
         "AMZNPL",
         "JUPCC",

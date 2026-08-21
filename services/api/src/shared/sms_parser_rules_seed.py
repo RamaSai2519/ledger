@@ -78,7 +78,7 @@ _BANKS = [
     },
     {
         "bank_code": "ZET",
-        "sender_ids": ["ZETPAY", "AD-ZETPAY"],
+        "sender_ids": ["ZETPAY", "AD-ZETPAY", "SBMIND"],
         "institution_name": "Zet Credit Card",
         "aliases": ["Zet Card", "Zet"],
         "keywords": ["zet card"],
