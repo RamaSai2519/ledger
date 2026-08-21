@@ -169,6 +169,17 @@ CORPUS: list[dict] = [
         "amount": 200000.0,
         "direction": "debit",
     },
+    {
+        # LED-26 regression: IMPS/NEFT/RTGS are transfer *channels*, not
+        # directions - a "Received" IMPS message must resolve to credit, not
+        # silently default to debit just because it isn't UPI/card wording.
+        "sender_id": "HDFCBK",
+        "raw_text": "Received!\nRs.21.42 in HDFC Bank A/c xx3842\nOn 21-08-26\nFor IMPS -SOME SENDER- 623319977679\nAvl bal Rs.442.64",
+        "is_transaction": True,
+        "transaction_type": "imps",
+        "amount": 21.42,
+        "direction": "credit",
+    },
     # ── ATM / cash ────────────────────────────────────────────────────
     {
         "sender_id": "HDFCBK",

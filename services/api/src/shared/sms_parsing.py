@@ -96,9 +96,7 @@ def parse_sms(household_id: ObjectId, sender_id: str, raw_text: str, received_at
         return None
 
     amount = float(parsed.amount.value)
-    direction = "credit" if parsed.transaction_type.value in (
-        "credit", "upi_receipt", "cash_deposit", "refund", "interest", "salary"
-    ) else "debit"
+    direction = parsed.direction()
 
     return {
         "is_transaction": True,

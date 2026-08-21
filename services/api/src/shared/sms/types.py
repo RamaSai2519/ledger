@@ -6,6 +6,7 @@ in the rest of the app.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -112,6 +113,19 @@ CREDIT_TYPES = {
     TransactionType.SALARY,
 }
 
+# Bank-transfer *channels* rather than directions - a message can say either
+# "debited ... towards IMPS" or "Received ... For IMPS", so unlike every
+# other type above, membership in TRANSACTIONAL_TYPES alone can't tell us
+# which way the money moved. direction() falls back to the credit-verb
+# wording itself for these.
+_DIRECTION_AMBIGUOUS_TYPES = {
+    TransactionType.IMPS,
+    TransactionType.NEFT,
+    TransactionType.RTGS,
+    TransactionType.BANK_TRANSFER,
+}
+_CREDIT_VERB_RE = re.compile(r"\b(?:credited|received|deposited|added)\b", re.IGNORECASE)
+
 
 @dataclass
 class FieldValue:
@@ -189,5 +203,7 @@ class ParsedTransaction:
 
     def direction(self) -> str:
         if self.transaction_type in CREDIT_TYPES:
+            return "credit"
+        if self.transaction_type in _DIRECTION_AMBIGUOUS_TYPES and _CREDIT_VERB_RE.search(self.normalized_text):
             return "credit"
         return "debit"
