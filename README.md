@@ -1,24 +1,24 @@
 # Ledger
 
 A private household expense tracker for two people sharing one pooled
-ledger. See [`DESIGN_BRIEF.md`](DESIGN_BRIEF.md) for the product/visual
-brief and [`plan.md`](plan.md) for the full
-backend + mobile architecture and phased roadmap. [`CLAUDE.md`](CLAUDE.md)
-has operating conventions (Jira, deployment, testing) for anyone (human or
-agent) working in this repo.
+ledger. [`CLAUDE.md`](CLAUDE.md) is the living reference for this repo —
+architecture, operating conventions (Jira, deployment, testing), and
+project status — for anyone (human or agent) working here. (The original
+`plan.md`/`DESIGN_BRIEF.md` planning docs have been removed now that the
+project is fully built; see `CLAUDE.md`'s "Project status" section for a
+summary of what they used to cover and where the build ended up diverging.)
 
 ## Status
 
-All phases (0-7) from `plan.md` §15 are built and **deployed live**:
+All original phases (0-7) are built and **deployed live**:
 https://w7ychchtd1.execute-api.ap-south-1.amazonaws.com (Lambda
 `ledger-api` + HTTP API Gateway, `ap-south-1`, backed by a real MongoDB
-Atlas cluster — note the API's routes are unprefixed at the root, not
-under `/api` as `plan.md` §11 describes). Substantial post-MVP work has
-also landed: a dedicated loans domain, a layered/explainable SMS parser,
-layered wallet/category SMS prefill with a learning loop, mobile FCM
-integration, and several UI/bugfix passes. See `CLAUDE.md`'s "Project
-status" section for the full picture, known gaps, and where the plan
-document has drifted from what's actually built.
+Atlas cluster — note the API's routes are unprefixed at the root, not under
+`/api`). Substantial post-MVP work has also landed: a dedicated loans
+domain, a layered/explainable SMS parser, layered wallet/category SMS
+prefill with a learning loop, a household-scoped merchant-alias/picker
+layer, mobile FCM integration, and several UI/bugfix passes. See
+`CLAUDE.md`'s "Project status" section for the full picture and known gaps.
 
 ## Layout
 

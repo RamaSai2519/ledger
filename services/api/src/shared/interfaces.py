@@ -429,7 +429,19 @@ class SmsSuggestionAcceptInput:
     amount: float | None = None
     type: str | None = None
     date: str | None = None
+    # LED-28: a picked-existing or freshly-typed canonical merchant name -
+    # when set, becomes the transaction's merchant_name (instead of the raw
+    # parsed text) and writes a household merchant_aliases entry + keys the
+    # learned category/wallet maps off it, so future SMS for this merchant
+    # (even a differently bank-truncated raw variant) resolve consistently.
+    merchant_name: str | None = None
     sms_id: str | None = None  # populated by the resource from the URL
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class MerchantListInput:
+    q: str | None = None  # optional case-insensitive substring filter
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 

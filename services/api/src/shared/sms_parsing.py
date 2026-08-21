@@ -55,8 +55,18 @@ def _load_rules(household_id: ObjectId) -> list[dict]:
     return household_rules + global_rules
 
 
-def _load_merchant_alias_map() -> dict[str, str]:
-    return {doc["raw_key"]: doc["canonical_name"] for doc in get_merchant_alias_collection().find({})}
+def _load_merchant_alias_map(household_id: ObjectId) -> dict[str, str]:
+    """Global (household_id=None/missing, seeded) aliases plus this
+    household's own custom ones (LED-28) - household-specific entries are
+    applied last so they override a global mapping for the same raw_key
+    rather than the other way round, mirroring _load_rules's household-
+    overrides-global precedent for sms_parser_rules."""
+    collection = get_merchant_alias_collection()
+    global_docs = list(collection.find({"household_id": None}))
+    household_docs = list(collection.find({"household_id": household_id}))
+    alias_map = {doc["raw_key"]: doc["canonical_name"] for doc in global_docs}
+    alias_map.update({doc["raw_key"]: doc["canonical_name"] for doc in household_docs})
+    return alias_map
 
 
 def parse_sms(household_id: ObjectId, sender_id: str, raw_text: str, received_at: datetime | None = None) -> dict | None:
@@ -66,7 +76,7 @@ def parse_sms(household_id: ObjectId, sender_id: str, raw_text: str, received_at
     returns *something*, even if `is_transaction=False`, since telling
     "not a transaction" apart from "failed to parse" is itself useful)."""
     rules = _load_rules(household_id)
-    merchant_alias_map = _load_merchant_alias_map()
+    merchant_alias_map = _load_merchant_alias_map(household_id)
     known_merchants = set(merchant_alias_map.keys())
 
     parsed: ParsedTransaction = _pipeline.parse(
@@ -240,19 +250,22 @@ def suggest_category_layered(
     return None, None, 0.0, "none"
 
 
-def aliases_for_merchant(merchant_raw: str | None) -> list[str]:
+def aliases_for_merchant(merchant_raw: str | None, household_id: ObjectId | None = None) -> list[str]:
     """Every other raw_key sharing the same canonical `merchant_aliases` name
     as `merchant_raw` — used to populate merchant_category_map.aliases on
     accept so a *future* SMS with a differently-worded variant of the same
-    merchant can still fuzzy-match (layer 2 above)."""
+    merchant can still fuzzy-match (layer 2 above). Considers this
+    household's own aliases (LED-28) alongside the global/seeded ones."""
     key = normalize_merchant(merchant_raw)
     if not key:
         return []
-    alias_doc = get_merchant_alias_collection().find_one({"raw_key": key})
+    collection = get_merchant_alias_collection()
+    scope_query = {"$or": [{"household_id": household_id}, {"household_id": None}]}
+    alias_doc = collection.find_one({**scope_query, "raw_key": key})
     if not alias_doc:
         return []
     canonical = alias_doc["canonical_name"]
-    return [doc["raw_key"] for doc in get_merchant_alias_collection().find({"canonical_name": canonical})]
+    return [doc["raw_key"] for doc in collection.find({**scope_query, "canonical_name": canonical})]
 
 
 def _institution_name_tokens(bank_code: str | None) -> list[str]:
@@ -336,7 +349,11 @@ def resolve_wallet_layered(household_id: ObjectId, parsed: dict, raw_text: str) 
     if wallet is not None:
         return wallet, _WALLET_CONFIDENCE_LAST4, "last4"
 
-    merchant_raw = parsed.get("parsed_merchant")
+    # LED-28: prefer the alias-resolved canonical name over the raw parsed
+    # text - once a household has an alias (from an earlier accept), this is
+    # what lets a differently bank-truncated raw variant of the same
+    # merchant still hit the learned merchant_wallet_map entry.
+    merchant_raw = parsed.get("merchant_normalized") or parsed.get("parsed_merchant")
     wallet = _suggest_wallet_by_merchant_map(household_id, merchant_raw)
     if wallet is not None:
         return wallet, _WALLET_CONFIDENCE_MERCHANT_MAP, "merchant_wallet_map"

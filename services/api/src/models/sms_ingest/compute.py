@@ -130,8 +130,12 @@ def ingest_sms(inp, user_id: str) -> dict:
     # merchant_category_map.wallet_id here too would let a single accept
     # lock in a wallet with no decay guard at all, defeating the point of
     # MERCHANT_WALLET_MAP_MIN_FREQUENCY.
+    # LED-28: the alias-resolved canonical name (when one exists for this
+    # household) generalizes across bank-truncation variants of the same
+    # merchant's raw text - falls back to the raw text when no alias exists
+    # yet, same as before.
     category_id, _mapped_wallet_id, category_confidence, _category_layer = suggest_category_layered(
-        household_id, parsed["parsed_merchant"]
+        household_id, parsed["merchant_normalized"] or parsed["parsed_merchant"]
     )
     wallet, wallet_confidence, _wallet_layer = resolve_wallet_layered(household_id, parsed, inp.raw_text)
 

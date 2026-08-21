@@ -128,3 +128,73 @@ def test_accept_cross_household_not_found(client):
     token_b = _signup_household(client, mobile_number="9111111111", name="B")
     resp = client.post(f"/sms/suggestions/{sms['id']}/accept", json={}, headers=auth_headers(token_b))
     assert resp.status_code == 404
+
+
+def _zomato_raw_text(amount: str) -> str:
+    return (
+        f"Sent Rs.{amount}\nFrom HDFC Bank A/C *3842\nTo Zomato Media Private Limi\n"
+        "On 21/08/26\nRef 623325940843\nNot You?\nCall 18002586161/SMS BLOCK UPI to 7308080808"
+    )
+
+
+def test_accept_with_merchant_name_creates_alias_and_learns_mapping(client):
+    """LED-28: a picked/typed canonical merchant name on accept should (a)
+    become the transaction's merchant_name instead of the raw truncated
+    text, and (b) write a household merchant_aliases entry so a *later* SMS
+    with the same raw variant resolves straight to the canonical
+    name/category/wallet without asking again."""
+    token = _signup_household(client)
+    wallet_id = _wallet(client, token, account_last4="3842", name="HDFC")
+    category_id = _category(client, token, name="Food")
+
+    resp = client.post(
+        "/sms/ingest", json={"raw_text": _zomato_raw_text("198.46"), "sender_id": "HDFCBK"}, headers=auth_headers(token)
+    )
+    sms = resp.get_json()["data"]
+    assert sms["parsed_merchant"] == "Zomato Media Private Limi"
+    assert sms["suggested_category_id"] is None  # no learned mapping yet
+
+    accept_resp = client.post(
+        f"/sms/suggestions/{sms['id']}/accept",
+        json={"category_id": category_id, "merchant_name": "Zomato"},
+        headers=auth_headers(token),
+    )
+    assert accept_resp.status_code == 200
+    txn = accept_resp.get_json()["data"]
+    assert txn["merchant_name"] == "Zomato"
+
+    # A later SMS with the same raw truncated variant should now resolve via
+    # the freshly-written alias straight to the canonical name and the
+    # learned category/wallet - no merchant_name override needed this time.
+    resp2 = client.post(
+        "/sms/ingest", json={"raw_text": _zomato_raw_text("250.00"), "sender_id": "HDFCBK"}, headers=auth_headers(token)
+    )
+    sms2 = resp2.get_json()["data"]
+    assert sms2["parsed_merchant"] == "Zomato Media Private Limi"
+    assert sms2["merchant_normalized"] == "Zomato"
+    assert sms2["suggested_category_id"] == category_id
+    assert sms2["suggested_wallet_id"] == wallet_id
+
+
+def test_merchant_alias_from_one_household_does_not_leak_to_another(client):
+    token_a = _signup_household(client, mobile_number="9876543210", name="A")
+    _wallet(client, token_a, account_last4="3842", name="HDFC")
+    category_id = _category(client, token_a, name="Food")
+
+    sms = client.post(
+        "/sms/ingest", json={"raw_text": _zomato_raw_text("198.46"), "sender_id": "HDFCBK"}, headers=auth_headers(token_a)
+    ).get_json()["data"]
+    client.post(
+        f"/sms/suggestions/{sms['id']}/accept",
+        json={"category_id": category_id, "merchant_name": "Zomato"},
+        headers=auth_headers(token_a),
+    )
+
+    token_b = _signup_household(client, mobile_number="9111111111", name="B")
+    _wallet(client, token_b, account_last4="3842", name="HDFC")
+    sms_b = client.post(
+        "/sms/ingest", json={"raw_text": _zomato_raw_text("198.46"), "sender_id": "HDFCBK"}, headers=auth_headers(token_b)
+    ).get_json()["data"]
+    # Household B has no learned mapping of its own - A's custom alias must
+    # not leak across households.
+    assert sms_b["suggested_category_id"] is None

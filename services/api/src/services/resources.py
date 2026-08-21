@@ -29,6 +29,7 @@ from models.loan_list import main as loan_list
 from models.loan_update import main as loan_update
 from models.login import main as login
 from models.logout import main as logout
+from models.merchant_list import main as merchant_list
 from models.notification_list import main as notification_list
 from models.notification_read import main as notification_read
 from models.pin_set import main as pin_set
@@ -391,6 +392,12 @@ class NotificationRead(Resource):
         return notification_read.process(
             notification_read.Input(notification_id=notification_id, user_id=get_jwt_identity())
         )
+
+
+class Merchants(Resource):
+    @jwt_required()
+    def get(self):
+        return merchant_list.process(build_input(merchant_list.Input, request.args.to_dict(), user_id=get_jwt_identity()))
 
 
 class SmsIngest(Resource):

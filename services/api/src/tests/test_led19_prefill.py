@@ -132,11 +132,18 @@ def test_category_alias_fuzzy_match(client):
     client.post(f"/sms/suggestions/{seed_sms['id']}/accept", json={"category_id": category_id}, headers=auth_headers(token))
 
     # A differently-worded variant of the same canonical merchant (per
-    # merchant_aliases_seed.py's "Swiggy" group) should still fuzzy-match via
-    # the aliases layer 2, not just the exact layer 1.
+    # merchant_aliases_seed.py's "Swiggy" group) should still resolve to the
+    # same category. LED-28: ingest-time suggestion now keys off the
+    # alias-resolved canonical name ("Swiggy") rather than the raw text, so
+    # both "SWIGGY" and "SWIGGY BANGALORE" normalize to the exact same
+    # merchant_pattern before ever reaching suggest_category_layered - this
+    # is now an exact-layer match (0.55), not a fuzzy alias-layer one (which
+    # only ever fires for a raw variant merchant_aliases has no entry for at
+    # all, since the alias table is what populates the fuzzy `.aliases`
+    # array in the first place).
     fuzzy_sms = _ingest(client, token, merchant="SWIGGY BANGALORE", last4="1234")
     assert fuzzy_sms["suggested_category_id"] == category_id
-    assert fuzzy_sms["category_confidence"] == 0.75
+    assert fuzzy_sms["category_confidence"] == 0.55
 
 
 def test_category_keyword_heuristic(client):

@@ -21,6 +21,7 @@ from services.resources import (
     Loans,
     Login,
     Logout,
+    Merchants,
     NotificationRead,
     Notifications,
     PinSet,
@@ -89,6 +90,8 @@ def register_routes(api: Api) -> None:
 
     api.add_resource(Notifications, "/notifications")
     api.add_resource(NotificationRead, "/notifications/<string:notification_id>/read")
+
+    api.add_resource(Merchants, "/merchants")
 
     api.add_resource(SmsIngest, "/sms/ingest")
     api.add_resource(SmsSuggestions, "/sms/suggestions")
