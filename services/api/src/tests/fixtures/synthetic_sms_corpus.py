@@ -179,6 +179,36 @@ CORPUS: list[dict] = [
         "transaction_type": "imps",
         "amount": 21.42,
         "direction": "credit",
+        "merchant": "SOME SENDER",
+    },
+    {
+        # LED-26 regression: a multi-line UPI mandate template names the
+        # real merchant right before a line break ("To Netflix\n..."), which
+        # the merchant-name character class couldn't span - the match fell
+        # through to the "Not You? Call X ... to <phone>" fraud-disclaimer
+        # boilerplate later in the message and returned the phone number as
+        # the merchant instead of the real one.
+        "sender_id": "HDFCBK",
+        "raw_text": "UPI Mandate:\nSent Rs.199.00\nfrom HDFC Bank A/c 3842\nTo Netflix\n11/08/26\nRef TESTREF392309\nNot You? Call 64715980431/SMS BLOCK UPI to 3857510619",
+        "is_transaction": True,
+        "transaction_type": "upi_payment",
+        "amount": 199.0,
+        "direction": "debit",
+        "merchant": "Netflix",
+    },
+    {
+        # LED-26 regression: a masked remitter identity ("by an A/C linked
+        # to mobile x558") shape-matches the "to X" recipient pattern just
+        # like a real name would, but it's a masked phone reference, not a
+        # merchant or a counterparty - must resolve to no merchant at all
+        # rather than surfacing the masked digits as if they were a name.
+        "sender_id": "KOTAKB",
+        "raw_text": "Received Rs. 11000.00 on 16-06-26 in your Kotak Bank A/C x3737 by an A/C linked to mobile x558. IMPS Ref no TESTREF632583.",
+        "is_transaction": True,
+        "transaction_type": "imps",
+        "amount": 11000.0,
+        "direction": "credit",
+        "merchant_none": True,
     },
     # ── ATM / cash ────────────────────────────────────────────────────
     {

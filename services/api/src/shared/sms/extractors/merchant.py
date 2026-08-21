@@ -18,8 +18,17 @@ import re
 from shared.sms.merchant_normalizer import normalize_key
 from shared.sms.types import FieldValue
 
-_MERCHANT_TOKEN = r"[A-Za-z0-9&.\-_'* ]{2,40}?"
-_STOP = r"(?:\s+(?:on|via|using|ref|dt|txn)\b|[.,]|\s*$)"
+_MERCHANT_TOKEN = r"[A-Za-z0-9&.\-_'*/ ]{2,40}?"
+# LED-26 real-world finding: bank SMS routinely line-breaks right after the
+# merchant/recipient name ("To Netflix\n11/08/26\n..."). _MERCHANT_TOKEN's
+# character class can't span that newline, and without re.MULTILINE `$` only
+# matches the true end of the whole message - so a name immediately
+# followed by "\n" had no valid stop point at all, and the search fell
+# through to match a *later* occurrence of the same preposition instead
+# (commonly the "Not you? Call X / SMS BLOCK ... to <phone>" fraud-report
+# boilerplate, misread as the merchant/counterparty). A bare "\n" stops the
+# match right at the line break, same as punctuation already does.
+_STOP = r"(?:\s+(?:on|via|using|ref|dt|txn)\b|[.,\n]|\s*$)"
 
 _MERCHANT_CONTEXT_PATTERNS = [
     re.compile(rf"\bPOS\s+(?P<name>{_MERCHANT_TOKEN}){_STOP}", re.IGNORECASE),
@@ -40,6 +49,20 @@ _FROM_PATTERN = re.compile(rf"\bfrom\s+(?P<name>{_MERCHANT_TOKEN}){_STOP}", re.I
 # merchant/counterparty (spec Part 12: merchant must never be an account
 # number).
 _ACCOUNT_LOOKING = re.compile(r"^(?:A/?c\.?|Acct\.?|Account)\b", re.IGNORECASE)
+# Broader than _ACCOUNT_LOOKING: catches an account reference embedded
+# *anywhere* in the candidate, not just at the very start - e.g. "sent from
+# HDFC Bank A/c XX0000" describes the household's own source account (never
+# a counterparty), but only the "A/c XX0000" tail looks account-like.
+_CONTAINS_ACCOUNT_REF = re.compile(r"\bA/?c\.?\s*[Xx*]*\d", re.IGNORECASE)
+# LED-26 real-world finding: fraud-report boilerplate ("Not you? Call X /
+# SMS BLOCK ... to <phone>") and masked-remitter wording ("by an A/C linked
+# to mobile x558") both shape-match the "to/from X" recipient patterns just
+# as well as a real name does. Neither is a merchant or a person's name —
+# they're bare phone numbers or masked references — so both must be
+# rejected the same way _ACCOUNT_LOOKING rejects account numbers, rather
+# than accepted as the recipient just because they were the first (or only)
+# candidate the pattern found.
+_MASKED_REF_LOOKING = re.compile(r"^(?:mobile\s+[xX*]*\d+|\d{6,})$")
 
 _VPA_PATTERN = re.compile(r"\bVPA\s+(?P<vpa>[\w.\-]+@[\w.\-]+)", re.IGNORECASE)
 # Real-world finding (LED-18): Kotak's UPI-sent template never uses the
@@ -49,6 +72,15 @@ _VPA_PATTERN = re.compile(r"\bVPA\s+(?P<vpa>[\w.\-]+@[\w.\-]+)", re.IGNORECASE)
 # sanitizer uses to tell a UPI handle apart from an email address.
 _BARE_VPA_TO_RE = re.compile(r"\bto\s+(?P<vpa>[\w.\-]+@[a-zA-Z]{2,})\b(?!\.[a-zA-Z])", re.IGNORECASE)
 _UPI_P2M_PATTERN = re.compile(r"\bUPI/(?:P2M|DR|CR)/\d+/(?P<name>[A-Za-z0-9&.\-_' ]{2,40})", re.IGNORECASE)
+# Real-world finding (LED-26): IMPS credit messages often name the remitter
+# between hyphens right after the channel word - "For IMPS
+# -INNOFINSOLUTIONSPRIVATELIMITE- <ref>" - with no "on/via/using/ref/dt/txn"
+# stop-word and no punctuation before the line break, so the generic
+# _MERCHANT_CONTEXT_PATTERNS "for" rule below never finds a place to stop
+# matching and silently returns no merchant at all. Anchoring on the second
+# hyphen (immediately followed by the numeric reference) gives an explicit,
+# reliable stop point for this shape.
+_IMPS_DASH_NAME_RE = re.compile(r"\bIMPS\s*-\s*(?P<name>[A-Za-z0-9&.\-_' ]{2,40}?)\s*-\s*\d", re.IGNORECASE)
 
 _PAYMENT_APPS = [
     ("Google Pay", re.compile(r"\b(?:google\s*pay|g-?pay|gpay)\b", re.IGNORECASE)),
@@ -127,31 +159,51 @@ class MerchantExtractor:
             name = _clean(p2m_match.group("name"))
             return FieldValue(value=name, confidence=0.85, evidence=["matched UPI/P2M reference format"]), None
 
-        for pattern in _MERCHANT_CONTEXT_PATTERNS:
-            match = pattern.search(normalized_text)
-            if match:
-                name = _clean(match.group("name"))
-                if name:
+        imps_dash_match = _IMPS_DASH_NAME_RE.search(normalized_text)
+        if imps_dash_match:
+            name = _clean(imps_dash_match.group("name"))
+            if name:
+                if _looks_like_merchant(name, known):
                     return (
-                        FieldValue(value=name, confidence=0.8, evidence=[f"matched merchant-context preposition near \"{name}\""]),
+                        FieldValue(
+                            value=name,
+                            confidence=0.7,
+                            evidence=[f"extracted IMPS dash-delimited name \"{name}\" (business-shaped, resolved as merchant)"],
+                        ),
                         None,
                     )
-
-        for pattern, preposition in ((_RECIPIENT_PATTERN, "to"), (_FROM_PATTERN, "from")):
-            match = pattern.search(normalized_text)
-            if not match:
-                continue
-            name = _clean(match.group("name"))
-            if not name or _ACCOUNT_LOOKING.match(name):
-                continue
-            if _looks_like_merchant(name, known):
                 return (
-                    FieldValue(value=name, confidence=0.65, evidence=[f"\"{preposition} {name}\" resolved as merchant (known/business-shaped name)"]),
+                    None,
+                    FieldValue(
+                        value=name,
+                        confidence=0.6,
+                        evidence=[f"extracted IMPS dash-delimited name \"{name}\" (person-shaped, resolved as counterparty)"],
+                    ),
+                )
+
+        for pattern in _MERCHANT_CONTEXT_PATTERNS:
+            for match in pattern.finditer(normalized_text):
+                name = _clean(match.group("name"))
+                if not name or _ACCOUNT_LOOKING.match(name) or _CONTAINS_ACCOUNT_REF.search(name) or _MASKED_REF_LOOKING.match(name):
+                    continue
+                return (
+                    FieldValue(value=name, confidence=0.8, evidence=[f"matched merchant-context preposition near \"{name}\""]),
                     None,
                 )
-            return (
-                None,
-                FieldValue(value=name, confidence=0.6, evidence=[f"\"{preposition} {name}\" resolved as a person/counterparty, not a merchant"]),
-            )
+
+        for pattern, preposition in ((_RECIPIENT_PATTERN, "to"), (_FROM_PATTERN, "from")):
+            for match in pattern.finditer(normalized_text):
+                name = _clean(match.group("name"))
+                if not name or _ACCOUNT_LOOKING.match(name) or _CONTAINS_ACCOUNT_REF.search(name) or _MASKED_REF_LOOKING.match(name):
+                    continue
+                if _looks_like_merchant(name, known):
+                    return (
+                        FieldValue(value=name, confidence=0.65, evidence=[f"\"{preposition} {name}\" resolved as merchant (known/business-shaped name)"]),
+                        None,
+                    )
+                return (
+                    None,
+                    FieldValue(value=name, confidence=0.6, evidence=[f"\"{preposition} {name}\" resolved as a person/counterparty, not a merchant"]),
+                )
 
         return None, None

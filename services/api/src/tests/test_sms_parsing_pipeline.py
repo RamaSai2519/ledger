@@ -39,6 +39,10 @@ def test_corpus_classification_and_extraction():
             assert parsed.merchant_raw is not None, label
             assert parsed.merchant_raw.value == entry["merchant"], label
 
+        if entry.get("merchant_none"):
+            assert parsed.merchant_raw is None, label
+            assert parsed.counterparty is None, label
+
         if "counterparty" in entry:
             assert parsed.counterparty is not None, label
             assert parsed.counterparty.value == entry["counterparty"], label
