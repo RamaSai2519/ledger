@@ -1,5 +1,6 @@
 import React from 'react';
-import {FlatList, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
+import {ScrollView} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -330,15 +331,17 @@ export function HomeScreen({navigation}: Props) {
               </Text>
             )}
           </View>
-          <View style={[styles.topStatBlock, styles.topStatBlockRight]}>
-            <Text style={styles.netWorthLabel}>Net worth</Text>
-            {walletsQuery.isLoading ? (
-              <Skeleton style={styles.netWorthSkeleton} />
-            ) : (
-              <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
-                ₹{netWorth.toLocaleString('en-IN')}
-              </Text>
-            )}
+          <View style={styles.topStatBlock}>
+            <View style={styles.topStatBlockRight}>
+              <Text style={styles.netWorthLabel}>Net worth</Text>
+              {walletsQuery.isLoading ? (
+                <Skeleton style={styles.netWorthSkeleton} />
+              ) : (
+                <Text style={[styles.netWorthAmount, walletsQuery.isError && {opacity: 0.5}]}>
+                  ₹{netWorth.toLocaleString('en-IN')}
+                </Text>
+              )}
+            </View>
             {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
               <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
                 <Sparkline points={sparklinePoints} color={colors.accent} />

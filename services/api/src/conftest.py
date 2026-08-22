@@ -7,6 +7,9 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
 
 sys.path.insert(0, os.path.dirname(__file__))
 
+from functools import lru_cache
+
+import bcrypt
 import mongomock
 import pymongo
 import pytest
@@ -21,6 +24,25 @@ def mock_mongo(monkeypatch):
     db_module._client = None
     yield
     db_module._client = None
+
+
+# bcrypt.hashpw is deliberately slow (~200ms/call at the default cost
+# factor) and the suite calls it dozens of times via signup()/pin_set with
+# the same handful of passwords ("password123" etc). Cache the real hash per
+# password instead of re-deriving it every time — bcrypt.checkpw still
+# verifies against a genuine hash, so this only removes redundant work, not
+# coverage of the hashing/verification path itself.
+_real_hashpw = bcrypt.hashpw
+
+
+@lru_cache(maxsize=None)
+def _cached_hashpw(password: bytes) -> bytes:
+    return _real_hashpw(password, bcrypt.gensalt())
+
+
+@pytest.fixture(autouse=True)
+def _fast_bcrypt(monkeypatch):
+    monkeypatch.setattr(bcrypt, "hashpw", lambda password, salt=None: _cached_hashpw(password))
 
 
 @pytest.fixture

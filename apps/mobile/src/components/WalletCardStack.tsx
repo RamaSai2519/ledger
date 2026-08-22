@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, PanResponder, StyleSheet, Text, View} from 'react-native';
+import {Animated, StyleSheet, Text, View} from 'react-native';
+import {PanGestureHandler, State, type PanGestureHandlerGestureEvent} from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {Wallet} from '@/api/client';
 import {colors, fontFamilies, motion, radius} from '@/theme/tokens';
@@ -134,25 +135,31 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
     Animated.spring(drag, {toValue: {x: 0, y: 0}, useNativeDriver: true, friction: 7}).start();
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponderCapture: (_, gesture) => Math.abs(gesture.dy) > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onPanResponderMove: (_, gesture) => {
-        // Only let the drag travel upward — this is a swipe-to-cycle
-        // gesture, not a free-drag card.
-        drag.setValue({x: gesture.dx * 0.3, y: Math.min(0, gesture.dy)});
-      },
-      onPanResponderRelease: (_, gesture) => {
-        const crossedThreshold = gesture.dy < -SWIPE_DISTANCE_THRESHOLD || gesture.vy < -SWIPE_VELOCITY_THRESHOLD;
-        if (walletsRef.current.length > 1 && crossedThreshold) {
-          cycleToBack();
-        } else {
-          resetPosition();
-        }
-      },
-      onPanResponderTerminate: resetPosition,
-    }),
-  ).current;
+  // Plain core PanResponder can't coordinate with the page's ScrollView —
+  // once the page has enough content to actually scroll, the native scroll
+  // responder claims the vertical touch stream before the JS-thread
+  // PanResponder ever sees it, so the swipe stopped firing. PanGestureHandler
+  // (from react-native-gesture-handler, which HomeScreen's ScrollView is
+  // also built on) recognizes gestures on the native side, so a tightly
+  // scoped nested handler like this one reliably wins the touch over its
+  // ancestor ScrollView.
+  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    const {translationX, translationY} = event.nativeEvent;
+    // Only let the drag travel upward — this is a swipe-to-cycle gesture,
+    // not a free-drag card.
+    drag.setValue({x: translationX * 0.3, y: Math.min(0, translationY)});
+  };
+
+  const onHandlerStateChange = (event: PanGestureHandlerGestureEvent) => {
+    const {state, translationY, velocityY} = event.nativeEvent;
+    if (state !== State.END && state !== State.CANCELLED && state !== State.FAILED) return;
+    const crossedThreshold = translationY < -SWIPE_DISTANCE_THRESHOLD || velocityY < -SWIPE_VELOCITY_THRESHOLD * 1000;
+    if (state === State.END && walletsRef.current.length > 1 && crossedThreshold) {
+      cycleToBack();
+    } else {
+      resetPosition();
+    }
+  };
 
   if (wallets.length === 0) return null;
 
@@ -182,7 +189,7 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
           const opacity = restack.interpolate({inputRange: [0, 1], outputRange: [from.opacity, targetOpacity]});
           const scale = restack.interpolate({inputRange: [0, 1], outputRange: [from.scale, to.scale]});
 
-          return (
+          const layer = (
             <Animated.View
               key={wallet.id}
               style={[
@@ -195,10 +202,22 @@ export function WalletCardStack({wallets}: {wallets: Wallet[]}) {
                   zIndex: isFront ? (cycling ? 0 : MAX_VISIBLE + 1) : MAX_VISIBLE - depth,
                   transform: [{translateY}, {scale}, ...(isFront ? [{translateX: drag.x}, {translateY: drag.y}] : [])],
                 },
-              ]}
-              {...(isFront && !cycling ? panResponder.panHandlers : {})}>
+              ]}>
               <WalletFace wallet={wallet} isFront={isFront} />
             </Animated.View>
+          );
+
+          if (!isFront || cycling) return layer;
+
+          return (
+            <PanGestureHandler
+              key={wallet.id}
+              activeOffsetY={[-8, 8]}
+              failOffsetX={[-15, 15]}
+              onGestureEvent={onGestureEvent}
+              onHandlerStateChange={onHandlerStateChange}>
+              {layer}
+            </PanGestureHandler>
           );
         })}
     </View>
