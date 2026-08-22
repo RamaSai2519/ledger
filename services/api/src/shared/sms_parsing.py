@@ -375,19 +375,32 @@ def resolve_wallet_layered(household_id: ObjectId, parsed: dict, raw_text: str) 
 
 
 def find_dedup_transaction(
-    household_id: ObjectId, wallet_id: ObjectId, amount: float, when: datetime, transaction_id: str | None = None
+    household_id: ObjectId, wallet_id: ObjectId | None, amount: float, when: datetime, transaction_id: str | None = None
 ) -> dict | None:
     """Same-wallet, similar-amount, same-calendar-day existing transaction
     (plan.md §7 step 11) — if found, the SMS should silently link instead of
     prompting again. Prefers matching on `transaction_id` (spec Part 14 —
     the only field actually guaranteed unique per real transaction) when one
-    was extracted, falling back to the amount+day heuristic otherwise."""
+    was extracted, falling back to the amount+day heuristic otherwise.
+
+    The `transaction_id` lookup is household-scoped rather than wallet-scoped
+    (and `wallet_id` may be None here) deliberately: a bank ref/UTR is
+    unique per real-world transaction regardless of which wallet a given SMS
+    resolves to, so this must still catch a duplicate delivery even when
+    wallet resolution fails or a different wallet is now inferred (e.g. a
+    same-message double-send from the carrier, or a masked-account format
+    the last4 extractor doesn't yet recognize) - matching only within
+    `wallet_id` here would silently re-surface the same transaction as a new
+    suggestion any time wallet resolution is even slightly inconsistent."""
     if transaction_id:
         existing = get_transactions_collection().find_one(
-            {"household_id": household_id, "wallet_id": wallet_id, "sms_transaction_id": transaction_id}
+            {"household_id": household_id, "sms_transaction_id": transaction_id}
         )
         if existing is not None:
             return existing
+
+    if wallet_id is None:
+        return None
 
     day_start = when.replace(hour=0, minute=0, second=0, microsecond=0)
     day_end = day_start + timedelta(days=1)

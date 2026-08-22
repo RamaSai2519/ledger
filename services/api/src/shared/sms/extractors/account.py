@@ -11,9 +11,12 @@ from shared.sms.types import FieldValue
 
 _PATTERNS = [
     re.compile(r"\bcard\s+(?:ending\s+)?(?:in\s+)?[Xx*]*(?P<last4>\d{4})\b", re.IGNORECASE),
-    re.compile(r"\b(?:A/c|Ac|Acct|Account)\b\.?[^\dXx]{0,10}[Xx*]{2,}(?P<last4>\d{4})\b", re.IGNORECASE),
+    # Mask character count varies by bank - HDFC uses a single "*" (e.g.
+    # "A/C *3842") while others use "XX"/"**" (e.g. "A/c XX1234") - both are
+    # unambiguous masking, so {1,} rather than {2,}.
+    re.compile(r"\b(?:A/c|Ac|Acct|Account)\b\.?[^\dXx*]{0,10}[Xx*]{1,}(?P<last4>\d{4})\b", re.IGNORECASE),
     re.compile(r"\b(?:A/c|Ac|Acct|Account)\b\.?\s*(?P<last4>\d{4})\b", re.IGNORECASE),
-    re.compile(r"[Xx*]{2,}(?P<last4>\d{4})\b"),
+    re.compile(r"[Xx*]{1,}(?P<last4>\d{4})\b"),
 ]
 
 

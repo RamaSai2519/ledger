@@ -146,20 +146,25 @@ def ingest_sms(inp, user_id: str) -> dict:
     base_confidence = parsed["confidence_score"]
     doc["confidence_score"] = round(base_confidence * 0.5 + wallet_confidence * 0.25 + category_confidence * 0.25, 2)
 
-    if wallet is not None:
-        existing = find_dedup_transaction(
-            household_id, wallet["_id"], parsed["parsed_amount"], received_at, parsed.get("transaction_id")
-        )
-        if existing is not None:
-            # Dedup (plan.md §7 step 11, spec Part 14): silently link
-            # instead of prompting again — no sms_inbox status=suggested,
-            # no push.
-            doc["status"] = "accepted"
-            doc["resolved_transaction_id"] = existing["_id"]
-            result = inbox.insert_one(doc)
-            doc["_id"] = result.inserted_id
-            get_transactions_collection().update_one({"_id": existing["_id"]}, {"$set": {"sms_id": doc["_id"]}})
-            return doc
+    existing = find_dedup_transaction(
+        household_id,
+        wallet["_id"] if wallet is not None else None,
+        parsed["parsed_amount"],
+        received_at,
+        parsed.get("transaction_id"),
+    )
+    if existing is not None:
+        # Dedup (plan.md §7 step 11, spec Part 14): silently link
+        # instead of prompting again — no sms_inbox status=suggested,
+        # no push. Runs even when wallet resolution failed above: a
+        # transaction_id/UTR match (find_dedup_transaction's household-scoped
+        # branch) is still authoritative regardless of wallet.
+        doc["status"] = "accepted"
+        doc["resolved_transaction_id"] = existing["_id"]
+        result = inbox.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        get_transactions_collection().update_one({"_id": existing["_id"]}, {"$set": {"sms_id": doc["_id"]}})
+        return doc
 
     result = inbox.insert_one(doc)
     doc["_id"] = result.inserted_id

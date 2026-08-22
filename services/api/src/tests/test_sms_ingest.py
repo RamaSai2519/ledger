@@ -1,8 +1,9 @@
 import pytest
+from bson import ObjectId
 
 from conftest import auth_headers, signup
 from shared.category_keyword_rules_seed import seed_default_category_keyword_rules
-from shared.db import get_notifications_collection
+from shared.db import get_notifications_collection, get_transactions_collection, get_wallets_collection
 from shared.sms_parser_rules_seed import seed_default_sms_parser_rules
 
 
@@ -239,6 +240,68 @@ def test_ingest_dedup_links_existing_transaction(client):
     assert body["resolved_transaction_id"] is not None
 
     # It should not show up as a pending suggestion.
+    suggestions = client.get("/sms/suggestions", headers=auth_headers(token)).get_json()["data"]["suggestions"]
+    assert suggestions == []
+
+
+def test_ingest_single_asterisk_masked_account_resolves_wallet(client):
+    """LED-29 regression: HDFC's "A/C *3842" wording uses a single "*" mask
+    character, not "XX"/"**" like other banks - the last4 extractor
+    previously required 2+ mask chars, so this format never resolved
+    parsed_last4 at all and the wallet auto-select silently fell through to
+    lower-confidence layers (or nothing)."""
+    token = _signup_household(client)
+    _wallet(client, token, account_last4="3842")
+
+    resp = _ingest(
+        client,
+        token,
+        "Sent Rs.198.46\nFrom HDFC Bank A/C *3842\nTo Zomato Media Private Limi\nOn 21/08/26\n"
+        "Ref 623325940843\nNot You?\nCall 18002586161/SMS BLOCK UPI to 7308080808",
+        "HDFCBK",
+    )
+    assert resp.status_code == 200
+    body = resp.get_json()["data"]
+    assert body["parsed_last4"] == "3842"
+    assert body["suggested_wallet_id"] is not None
+    assert body["wallet_confidence"] == 0.95
+
+
+def test_ingest_dedup_matches_on_ref_even_when_wallet_resolution_fails(client):
+    """LED-29 regression: dedup used to be gated entirely on wallet
+    resolution succeeding (`if wallet is not None`), so any SMS whose wallet
+    couldn't be resolved (e.g. an unrecognized masked-account format) would
+    re-surface the same real-world transaction as a brand-new suggestion
+    every time it was (re-)delivered, even though the bank's own ref/UTR
+    already matched an existing transaction. A transaction_id/UTR match must
+    dedupe regardless of wallet resolution."""
+    token = _signup_household(client)
+    wallet_id = _wallet(client, token, account_last4="3842")
+    household_id = get_wallets_collection().find_one({"_id": ObjectId(wallet_id)})["household_id"]
+
+    get_transactions_collection().insert_one(
+        {
+            "household_id": household_id,
+            "wallet_id": ObjectId(wallet_id),
+            "type": "expense",
+            "amount": 198.46,
+            "sms_transaction_id": "623325940843",
+        }
+    )
+
+    # Same ref, but wrapped in wording the last4 extractor won't recognize
+    # (no masked-account marker at all), so wallet resolution fails.
+    resp = _ingest(
+        client,
+        token,
+        "Sent Rs.198.46 from HDFC Bank To Zomato Media Private Limi On 21/08/26 Ref 623325940843",
+        "HDFCBK",
+    )
+    assert resp.status_code == 200
+    body = resp.get_json()["data"]
+    assert body["status"] == "accepted"
+    assert body["resolved_transaction_id"] is not None
+
     suggestions = client.get("/sms/suggestions", headers=auth_headers(token)).get_json()["data"]["suggestions"]
     assert suggestions == []
 
