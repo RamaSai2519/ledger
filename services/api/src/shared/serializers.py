@@ -6,6 +6,15 @@ def _str_id(value):
     return str(value) if value is not None else None
 
 
+def serialize_user(user: dict) -> dict:
+    return {
+        "id": _str_id(user["_id"]),
+        "name": user.get("name"),
+        "household_id": _str_id(user.get("household_id")),
+        "accent_color": user.get("accent_color"),
+    }
+
+
 def serialize_wallet(wallet: dict) -> dict:
     return {
         "id": _str_id(wallet["_id"]),

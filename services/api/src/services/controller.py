@@ -12,6 +12,7 @@ from services.resources import (
     HouseholdCreate,
     HouseholdInviteCode,
     HouseholdJoin,
+    HouseholdMembers,
     HouseholdPreview,
     InsightCategoryBreakdown,
     InsightIncomeVsExpense,
@@ -38,6 +39,7 @@ from services.resources import (
     TransactionDetail,
     Transactions,
     TransactionTransfer,
+    UserProfile,
     WalletBalanceHistory,
     WalletDetail,
     WalletReconcile,
@@ -55,6 +57,7 @@ def register_routes(api: Api) -> None:
     api.add_resource(HouseholdJoin, "/auth/household/join")
     api.add_resource(HouseholdInviteCode, "/auth/household/invite-code")
     api.add_resource(HouseholdPreview, "/auth/household/preview")
+    api.add_resource(HouseholdMembers, "/auth/household/members")
     api.add_resource(PinSet, "/auth/pin")
 
     api.add_resource(Wallets, "/wallets")
@@ -71,6 +74,7 @@ def register_routes(api: Api) -> None:
     api.add_resource(TransactionDetail, "/transactions/<string:transaction_id>")
 
     api.add_resource(FcmTokenRegister, "/users/fcm-token")
+    api.add_resource(UserProfile, "/users/profile")
 
     api.add_resource(RecurringRules, "/recurring")
     api.add_resource(RecurringRuleDetail, "/recurring/<string:rule_id>")

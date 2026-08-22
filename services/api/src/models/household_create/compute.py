@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from shared.auth_utils import generate_invite_code
-from shared.constants import DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES
+from shared.constants import DEFAULT_ACCENT_PALETTE, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES
 from shared.db import get_categories_collection, get_households_collection, get_users_collection
 from shared.output import ConflictError, NotFoundError
 
@@ -50,7 +50,10 @@ def create_household(inp, user_id: str) -> dict:
     result = households.insert_one(household_doc)
     household_doc["_id"] = result.inserted_id
 
-    users.update_one({"_id": ObjectId(user_id)}, {"$set": {"household_id": household_doc["_id"], "updated_at": now}})
+    users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"household_id": household_doc["_id"], "accent_color": DEFAULT_ACCENT_PALETTE[0], "updated_at": now}},
+    )
     _seed_default_categories(household_doc["_id"])
 
     return household_doc

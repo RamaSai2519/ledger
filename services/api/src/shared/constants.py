@@ -35,3 +35,10 @@ SYSTEM_CATEGORY_NAMES = {"Balance Adjustment"}
 INVITE_CODE_LENGTH = 6
 INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I ambiguity
 MAX_HOUSEHOLD_MEMBERS = 2
+
+# Default per-member accent color, assigned by join order (index into
+# member_ids) at household create/join time. Mirrors
+# apps/mobile/src/theme/tokens.ts's `partnerAccents` tuple — keep both in
+# sync if either changes. A user can override their own via PATCH
+# /users/profile.
+DEFAULT_ACCENT_PALETTE = ["#5B54F9", "#E8A33D"]

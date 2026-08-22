@@ -18,6 +18,7 @@ from models.fcm_token_register import main as fcm_token_register
 from models.household_create import main as household_create
 from models.household_invite_code import main as household_invite_code
 from models.household_join import main as household_join
+from models.household_members import main as household_members
 from models.household_preview import main as household_preview
 from models.insight_category_breakdown import main as insight_category_breakdown
 from models.insight_income_vs_expense import main as insight_income_vs_expense
@@ -33,6 +34,7 @@ from models.merchant_list import main as merchant_list
 from models.notification_list import main as notification_list
 from models.notification_read import main as notification_read
 from models.pin_set import main as pin_set
+from models.profile_update import main as profile_update
 from models.recurring_rule_create import main as recurring_rule_create
 from models.recurring_rule_delete import main as recurring_rule_delete
 from models.recurring_rule_list import main as recurring_rule_list
@@ -120,6 +122,12 @@ class HouseholdPreview(Resource):
         return household_preview.process(
             build_input(household_preview.Input, request.args.to_dict(), user_id=get_jwt_identity())
         )
+
+
+class HouseholdMembers(Resource):
+    @jwt_required()
+    def get(self):
+        return household_members.process(household_members.Input(user_id=get_jwt_identity()))
 
 
 class PinSet(Resource):
@@ -249,6 +257,12 @@ class FcmTokenRegister(Resource):
     @jwt_required()
     def post(self):
         return fcm_token_register.process(build_input(fcm_token_register.Input, _body(), user_id=get_jwt_identity()))
+
+
+class UserProfile(Resource):
+    @jwt_required()
+    def patch(self):
+        return profile_update.process(profile_update.Input(body=_body(), user_id=get_jwt_identity()))
 
 
 class Budgets(Resource):

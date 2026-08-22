@@ -75,6 +75,17 @@ class PinSetInput:
     user_id: str | None = None  # populated by the resource from the JWT identity
 
 
+@dataclass
+class HouseholdMembersInput:
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
+@dataclass
+class ProfileUpdateInput:
+    body: dict = field(default_factory=dict)
+    user_id: str | None = None  # populated by the resource from the JWT identity
+
+
 # ── wallets ───────────────────────────────────────────────────────────────
 
 
