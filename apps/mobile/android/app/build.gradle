@@ -115,7 +115,7 @@ def gitCommitCount = {
         return 1
     }
 }()
-def gitVersionName = "1.2.${gitCommitCount}"
+def gitVersionName = "2.0.${gitCommitCount}"
 
 android {
     ndkVersion rootProject.ext.ndkVersion
