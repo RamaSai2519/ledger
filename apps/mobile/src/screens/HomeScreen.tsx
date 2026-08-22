@@ -342,13 +342,14 @@ export function HomeScreen({navigation}: Props) {
                 </Text>
               )}
             </View>
-            {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
-              <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
-                <Sparkline points={sparklinePoints} color={colors.accent} />
-              </View>
-            )}
           </View>
         </View>
+
+        {!walletsQuery.isLoading && sparklinePoints.length > 1 && (
+          <View style={[styles.netWorthChart, walletsQuery.isError && {opacity: 0.5}]}>
+            <Sparkline points={sparklinePoints} color={colors.accent} />
+          </View>
+        )}
 
         {walletsQuery.isError && (
           <View style={styles.errorCard}>
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 6,
   },
-  netWorthChart: {marginTop: spacing.sm},
+  netWorthChart: {marginTop: spacing.sm, paddingHorizontal: spacing.lg},
   netWorthSkeleton: {width: 120, height: 28, marginTop: 6},
   card: {marginHorizontal: 16, marginTop: 4, padding: 16, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
   cardTitle: {color: colors.textPrimary, fontSize: 12.5, fontWeight: '600'},
