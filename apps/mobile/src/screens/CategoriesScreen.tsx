@@ -102,9 +102,10 @@ export function CategoriesScreen({}: Props) {
       )}
 
       <DraggableFlatList
+        style={{flex: 1}}
         data={categories}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{paddingHorizontal: spacing.lg, paddingTop: spacing.sm}}
+        contentContainerStyle={{paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xl}}
         onDragEnd={({data}) => handleReorder(data)}
         ListFooterComponent={
           <>
