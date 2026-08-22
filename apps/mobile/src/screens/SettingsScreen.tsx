@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Linking, PermissionsAndroid, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
+import {AppState, Linking, PermissionsAndroid, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useQuery} from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import type {RootStackParamList} from '@/navigation/types';
 import {householdApi} from '@/api/client';
 import {BottomNavBar} from '@/components/BottomNavBar';
 import {isBiometricSensorAvailable} from '@/native/biometrics';
+import {isIgnoringBatteryOptimizations, requestIgnoreBatteryOptimizations} from '@/native/smsReliability';
 import {useAuthStore} from '@/state/authStore';
 import {colors, fontFamilies, radius, spacing} from '@/theme/tokens';
 
@@ -46,11 +47,27 @@ export function SettingsScreen({navigation}: Props) {
 
   const [smsDetectionOn, setSmsDetectionOn] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [batteryUnrestricted, setBatteryUnrestricted] = useState(false);
 
-  useEffect(() => {
+  const refreshReliabilityStatus = () => {
     if (Platform.OS !== 'android') return;
     PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS).then(setSmsDetectionOn);
+    isIgnoringBatteryOptimizations().then(setBatteryUnrestricted);
+  };
+
+  useEffect(() => {
+    refreshReliabilityStatus();
     isBiometricSensorAvailable().then(setBiometricAvailable);
+
+    // Both the RECEIVE_SMS/READ_SMS permission dialog and the battery
+    // optimization dialog are separate system Activities the user returns
+    // from — there's no callback for either, so re-check on the app
+    // resuming foreground instead (matches how Android reports permission/
+    // system-setting changes made outside the app).
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshReliabilityStatus();
+    });
+    return () => subscription.remove();
   }, []);
 
   const inviteCodeQuery = useQuery({queryKey: ['household', 'invite-code'], queryFn: () => householdApi.inviteCode()});
@@ -63,8 +80,15 @@ export function SettingsScreen({navigation}: Props) {
       Linking.openSettings();
       return;
     }
-    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS);
-    setSmsDetectionOn(granted === PermissionsAndroid.RESULTS.GRANTED);
+    // READ_SMS backs the periodic reconciliation safety net (LED-31) — it
+    // re-scans the inbox for anything the real-time RECEIVE_SMS path
+    // missed. Requested together since neither is useful without the
+    // other, and both are in the same system permission group.
+    const granted = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+      PermissionsAndroid.PERMISSIONS.READ_SMS,
+    ]);
+    setSmsDetectionOn(granted[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] === PermissionsAndroid.RESULTS.GRANTED);
   };
 
   const onToggleBiometric = () => {
@@ -138,6 +162,19 @@ export function SettingsScreen({navigation}: Props) {
             onPress={onToggleSms}
             right={<Toggle on={smsDetectionOn} />}
           />
+          {smsDetectionOn && Platform.OS === 'android' && (
+            <Row
+              glyph="battery-charging-full"
+              title="Reliable SMS delivery"
+              subtitle={
+                batteryUnrestricted
+                  ? 'Unrestricted — Ledger won’t be paused in the background'
+                  : 'Tap to stop your phone from pausing Ledger in the background'
+              }
+              onPress={batteryUnrestricted ? undefined : requestIgnoreBatteryOptimizations}
+              right={<Toggle on={batteryUnrestricted} />}
+            />
+          )}
         </View>
 
         <Text style={styles.sectionLabel}>Security</Text>

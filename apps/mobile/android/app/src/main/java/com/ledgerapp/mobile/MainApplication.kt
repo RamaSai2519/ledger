@@ -11,6 +11,7 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.soloader.SoLoader
 import com.ledgerapp.mobile.sms.SmsPackage
+import com.ledgerapp.mobile.sms.SmsReconciliationWorker
 
 class MainApplication : Application(), ReactApplication {
 
@@ -41,5 +42,12 @@ class MainApplication : Application(), ReactApplication {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
       load()
     }
+    // LED-31: Application.onCreate() runs on every process start for any
+    // reason — a normal JS launch, SmsReceiver waking the process for an
+    // incoming SMS, or WorkManager itself resuming persisted work — so
+    // this is the one place that guarantees the reconciliation safety net
+    // gets (re-)scheduled no matter how the app came to be running.
+    // enqueueUniquePeriodicWork(..., KEEP, ...) makes repeat calls a no-op.
+    SmsReconciliationWorker.ensureScheduled(this)
   }
 }

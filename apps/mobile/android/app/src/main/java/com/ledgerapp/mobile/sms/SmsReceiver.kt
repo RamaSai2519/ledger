@@ -10,10 +10,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 /**
  * Manifest-registered (not JS/dynamically registered) so it keeps working
@@ -37,7 +33,7 @@ class SmsReceiver : BroadcastReceiver() {
         val rawText = messages.joinToString(separator = "") { it.messageBody ?: "" }
         if (rawText.isBlank()) return
 
-        val receivedAt = isoFormat().format(Date(messages[0].timestampMillis))
+        val receivedAt = SmsTiming.isoFormat(messages[0].timestampMillis)
 
         val request = OneTimeWorkRequestBuilder<SmsIngestWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
@@ -50,20 +46,16 @@ class SmsReceiver : BroadcastReceiver() {
             )
             .build()
 
-        // Unique-by-timestamp+sender-ish key would be nicer, but APPEND is
-        // enough here: WorkManager already dedups retries of the *same*
-        // enqueued request, and true duplicate-SMS dedup is handled
-        // server-side (plan.md §7 step 11) against actual transactions.
+        // Keyed by sender+timestamp (not System.currentTimeMillis(), which
+        // made every enqueue unique and defeated APPEND_OR_REPLACE) so a
+        // redelivered broadcast or SmsReconciliationWorker rediscovering
+        // this same message collapses onto one work item instead of
+        // queuing a duplicate ingest attempt.
         WorkManager.getInstance(context.applicationContext)
             .enqueueUniqueWork(
-                "sms-ingest-${System.currentTimeMillis()}-$senderId",
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                "sms-ingest-${SmsSentLog.key(senderId, receivedAt)}",
+                ExistingWorkPolicy.KEEP,
                 request,
             )
     }
-
-    private fun isoFormat(): SimpleDateFormat =
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
 }

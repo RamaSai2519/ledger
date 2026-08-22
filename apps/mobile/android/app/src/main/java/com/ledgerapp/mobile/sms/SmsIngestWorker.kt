@@ -79,6 +79,9 @@ class SmsIngestWorker(appContext: Context, params: WorkerParameters) : Coroutine
                     }
                     val status = postJson("$API_BASE_URL/sms/ingest", ingestBody, outcome.accessToken)
                     if (status in 200..299) {
+                        if (receivedAt != null) {
+                            SmsSentLog.markSent(applicationContext, SmsSentLog.key(senderId, receivedAt))
+                        }
                         Result.success(workDataOf(KEY_SENDER_ID to senderId))
                     } else if (status in 500..599) {
                         retryOrGiveUp("sms/ingest returned $status")

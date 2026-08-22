@@ -6,10 +6,24 @@
          distribution only, never a public Play Store listing while this is
          declared, per the non-negotiable constraint in CLAUDE.md. -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!-- LED-31: backs SmsReconciliationWorker's periodic re-scan of the
+         device SMS inbox — a safety net that catches any silently-dropped
+         SMS the real-time SmsReceiver path missed (dead token, OS/OEM
+         background kill, transient network fault, etc). Still filtered
+         through SmsAllowlist before anything leaves the device — this only
+         widens *when* allow-listed messages get checked, not *which* ones
+         are eligible to be forwarded. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
     <!-- LED-15: Android 13+ requires this as a runtime-requested permission
          before FCM notifications can be shown; requested via
          PermissionsAndroid at the point registerForPushNotifications() runs. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- LED-31: lets SmsReliabilityModule prompt the user to exempt Ledger
+         from Doze/App Standby battery optimization — otherwise the OS can
+         indefinitely defer the WorkManager network job that actually
+         forwards an already-received SMS. Normal permission, no runtime
+         prompt of its own; only launching the system dialog needs consent. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
       android:name=".MainApplication"

@@ -15,3 +15,5 @@
 # SmsReceiver silently fails post-minification with a
 # ClassNotFoundException swallowed inside WorkManager's own executor.
 -keep class com.ledgerapp.mobile.sms.SmsIngestWorker { *; }
+# LED-31: same reflection-instantiation requirement as SmsIngestWorker above.
+-keep class com.ledgerapp.mobile.sms.SmsReconciliationWorker { *; }
